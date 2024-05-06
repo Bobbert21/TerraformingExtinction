@@ -6,12 +6,26 @@ using static FertilizerSO;
 public class FertilizerItems : Items
 {
     public FertilizerSO Fertilizer;
+    [HideInInspector]
+    public string Name;
+    [HideInInspector]
     public FertilizerTypes FertilizerType;
 
-    public FertilizerItems()
+
+    public FertilizerItems(FertilizerSO fertilizer)
+    {
+        Fertilizer = fertilizer;
+    }
+
+    private void Awake()
     {
         //Type from base class
-        Type = ItemType.Fertilizers;
+        Type = Fertilizer.Type;
+        Name = Fertilizer.Name;
         FertilizerType = Fertilizer.FertilizerType;
+        InventoryIcon = Fertilizer.InventoryIcon;
+        GameImage = Fertilizer.GameImage;
     }
-}
+
+   
+    }

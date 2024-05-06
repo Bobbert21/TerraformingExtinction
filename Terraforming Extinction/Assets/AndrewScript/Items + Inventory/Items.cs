@@ -1,19 +1,30 @@
 using System.Collections;
 using System.Collections.Generic;
+using UnityEngine.UI;
 using UnityEngine;
 
 
 public enum ItemType{
-    Fertilizers,
+    RedFertilizers,
+    BlueFertilizers,
+    GreenFertilizers,
+    YellowFertilizers,
     Nutrients,
-    Deposits
+    CommonDeposits,
+    UncommonDeposits,
+    RareDeposits,
+    RandomDeposits
 }
 
 public class Items : MonoBehaviour
 {
-
+    //[HideInInspector]
     public ItemType Type;
-    public int MaxQuantityForInventorySpace;
+    [HideInInspector]
+    public Sprite InventoryIcon;
+    [HideInInspector]
+    public Sprite GameImage;
+    //public int MaxQuantityForInventorySpace;
 
     // Start is called before the first frame update
     void Start()
