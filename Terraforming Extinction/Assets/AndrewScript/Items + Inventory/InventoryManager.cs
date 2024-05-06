@@ -92,13 +92,11 @@ public class InventoryManager : MonoBehaviour
             if (existingItem.quantity - quantityRemoved > 0)
             {
                 existingItem.quantity -= quantityRemoved;
-                Debug.Log("Lower Quantity of " + existingItem.individualItems.Type.ToString());
                 DisplayItems();
             }
             else if (existingItem.quantity - quantityRemoved == 0)
             {
                 ListOfInventory.Remove(existingItem);
-                Debug.Log("Remove " + existingItem.individualItems.Type.ToString());
                 DisplayItems();
             }
             else
@@ -110,7 +108,6 @@ public class InventoryManager : MonoBehaviour
     
     public void DisplayItems()
     {
-        Debug.Log("Displaying again");
         //Clear out the items in inventory
         foreach(Transform inventoryItem in ItemContent)
         {
