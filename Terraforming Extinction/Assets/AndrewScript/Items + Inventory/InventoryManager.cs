@@ -31,6 +31,7 @@ public class InventoryManager : MonoBehaviour
     public List<InventoryItem> ListOfInventory = new();
     public int MaxInventorySpace;
     public GameObject Root;
+    public GameObject Uprooter;
     public Toggle EnableRemove;
     public ItemSO testItem1;
     public ItemSO testItem2;
@@ -38,7 +39,17 @@ public class InventoryManager : MonoBehaviour
 
     public void SelectedItemFromPlayer(ItemSO itemSelected)
     {
-        ItemSelected = itemSelected;
+        //means the player is unselecting
+        if (ItemSelected == itemSelected)
+        {
+            ItemSelected = null;
+        }
+        else
+        {
+            ItemSelected = itemSelected;
+        }
+        //highlight or reset highlight
+        DisplayItems();
     }
 
     //Add Item. Default Add 1 quantity
@@ -106,6 +117,8 @@ public class InventoryManager : MonoBehaviour
             else if (existingItem.quantity - quantityRemoved == 0)
             {
                 ListOfInventory.Remove(existingItem);
+                //No longer selecting them item since gone
+                ItemSelected = null;
                 DisplayItems();
             }
             else
@@ -157,6 +170,10 @@ public class InventoryManager : MonoBehaviour
             itemIcon.sprite = inventoryItem.individualItems.InventoryIcon;
             itemQuantity.text = inventoryItem.quantity.ToString();
             itemRemoveBtn.SetActive(EnableRemove.isOn);
+            if(inventoryItem.individualItems == ItemSelected)
+            {
+                newItemObj.GetComponent<Image>().color = Color.green;
+            }
         }
     }
 
@@ -191,9 +208,21 @@ public class InventoryManager : MonoBehaviour
             else { Debug.Log("Not enough quantity to offer"); }
         }
         else { Debug.Log("No item selected"); }
-        ItemSelected= null;
     }
 
+    public void ItemOnUprooter()
+    {
+        if (ItemSelected != null)
+        {
+            var uprooterManagerScript = Uprooter.GetComponent<UprooterManager>();
+            if (CanRemoveItem(ItemSelected.SpecificType))
+            {
+                uprooterManagerScript.ItemUsed(ItemSelected);
+            }
+            else { Debug.Log("Not enough quantity to offer"); }
+        }
+        else { Debug.Log("No item selected");  }
+    }
     private void Update()
     {
         if (Input.GetKeyDown(KeyCode.C))
