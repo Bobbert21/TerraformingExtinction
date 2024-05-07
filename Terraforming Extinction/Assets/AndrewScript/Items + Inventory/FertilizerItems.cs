@@ -15,12 +15,14 @@ public class FertilizerItems : Items
     public FertilizerItems(FertilizerSO fertilizer)
     {
         Fertilizer = fertilizer;
+        ItemScriptableObject = Fertilizer;
     }
 
     private void Awake()
     {
+        ItemScriptableObject = Fertilizer;
         //Type from base class
-        Type = Fertilizer.Type;
+        SpecificType = Fertilizer.SpecificType;
         Name = Fertilizer.Name;
         FertilizerType = Fertilizer.FertilizerType;
         InventoryIcon = Fertilizer.InventoryIcon;
