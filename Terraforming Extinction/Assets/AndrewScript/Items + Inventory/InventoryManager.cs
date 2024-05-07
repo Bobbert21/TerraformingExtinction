@@ -16,10 +16,10 @@ public class InventoryManager : MonoBehaviour
     [System.Serializable]
     public class InventoryItem
     {
-        public Items individualItems;
+        public ItemSO individualItems;
         public int quantity;
 
-        public InventoryItem(Items individualItems, int quantity)
+        public InventoryItem(ItemSO individualItems, int quantity)
         {
             this.individualItems = individualItems;
             this.quantity = quantity;
@@ -30,18 +30,25 @@ public class InventoryManager : MonoBehaviour
     public GameObject InventoryItemObj;
     public List<InventoryItem> ListOfInventory = new();
     public int MaxInventorySpace;
+    public GameObject Root;
     public Toggle EnableRemove;
-    public GameObject testItem1;
-    public GameObject testItem2;
+    public ItemSO testItem1;
+    public ItemSO testItem2;
+    private ItemSO ItemSelected;
+
+    public void SelectedItemFromPlayer(ItemSO itemSelected)
+    {
+        ItemSelected = itemSelected;
+    }
 
     //Add Item. Default Add 1 quantity
-    public void AddItem(Items itemAdded, int quantityAdded = 1)
+    public void AddItem(ItemSO itemAdded, int quantityAdded = 1)
     {
         InventoryItem existingItem = null;
         // Check if the item already exists in the inventory. If the list is 0, then item added won't be in list (null)
         if (ListOfInventory.Count > 0)
         {
-            existingItem = ListOfInventory.Find(invItem => invItem.individualItems.Type == itemAdded.Type);
+            existingItem = ListOfInventory.Find(invItem => invItem.individualItems.SpecificType == itemAdded.SpecificType);
         }
 
 
@@ -53,6 +60,7 @@ public class InventoryManager : MonoBehaviour
             {
                 InventoryItem newItem = new InventoryItem(itemAdded, quantityAdded);
                 ListOfInventory.Add(newItem);
+                DisplayItems();
             }
             else
             {
@@ -63,23 +71,24 @@ public class InventoryManager : MonoBehaviour
         else
         {
             existingItem.quantity += quantityAdded;
+            DisplayItems();
         }
 
         }
 
     //If given an item script
-    public void RemoveItem(Items itemRemoved, int quantityRemoved = 1)
+    public void RemoveItem(ItemSO itemRemoved, int quantityRemoved = 1)
     {
-        RemoveItem(itemRemoved.Type, quantityRemoved);
+        RemoveItem(itemRemoved.SpecificType, quantityRemoved);
     }
 
-    public void RemoveItem(ItemType removedType, int quantityRemoved = 1)
+    public void RemoveItem(SpecificType removedType, int quantityRemoved = 1)
     {
         InventoryItem existingItem = null;
         // Check if the item already exists in the inventory. If the list is 0, then item added won't be in list (null)
         if (ListOfInventory.Count > 0)
         {
-            existingItem = ListOfInventory.Find(invItem => invItem.individualItems.Type == removedType);
+            existingItem = ListOfInventory.Find(invItem => invItem.individualItems.SpecificType == removedType);
         }
 
         //if the item added does not exist
@@ -105,7 +114,27 @@ public class InventoryManager : MonoBehaviour
             }
         }
     }
-    
+
+    public bool CanRemoveItem(SpecificType removedType, int quantityToRemove = 1)
+    {
+        InventoryItem existingItem = null;
+        // Check if the item already exists in the inventory. If the list is 0, then the item won't be in the list (null)
+        if (ListOfInventory.Count > 0)
+        {
+            existingItem = ListOfInventory.Find(invItem => invItem.individualItems.SpecificType == removedType);
+        }
+
+        // If the item doesn't exist or there's not enough quantity to remove, return false
+        if (existingItem == null || existingItem.quantity < quantityToRemove)
+        {
+            return false;
+        }
+        else
+        {
+            return true;
+        }
+    }
+
     public void DisplayItems()
     {
         //Clear out the items in inventory
@@ -123,8 +152,8 @@ public class InventoryManager : MonoBehaviour
             var itemQuantity = newItemObj.transform.Find("ItemQuantity").GetComponent<TextMeshProUGUI>();
             var itemRemoveBtn = newItemObj.transform.Find("RemoveItemButton").gameObject;
 
-            newItemScript.Type = inventoryItem.individualItems.Type;
-            itemName.text = inventoryItem.individualItems.Type.ToString();
+            newItemScript.Item = inventoryItem.individualItems;
+            itemName.text = inventoryItem.individualItems.Name.ToString();
             itemIcon.sprite = inventoryItem.individualItems.InventoryIcon;
             itemQuantity.text = inventoryItem.quantity.ToString();
             itemRemoveBtn.SetActive(EnableRemove.isOn);
@@ -149,16 +178,33 @@ public class InventoryManager : MonoBehaviour
         }
     }
 
+    //can only offer quantity = 1 and 1 item at a time
+    public void OfferingItemToRoot()
+    {
+        if (ItemSelected != null)
+        {
+            var rootItemManagerScript = Root.GetComponent<RootItemManager>();
+            if (CanRemoveItem(ItemSelected.SpecificType))
+            {
+                rootItemManagerScript.RootConversion(ItemSelected);
+            }
+            else { Debug.Log("Not enough quantity to offer"); }
+        }
+        else { Debug.Log("No item selected"); }
+        ItemSelected= null;
+    }
+
     private void Update()
     {
-        if (Input.GetKeyDown(KeyCode.Space))
+        if (Input.GetKeyDown(KeyCode.C))
         {
-            Items testItem1Script = testItem1.GetComponent<Items>();
-            AddItem(testItem1Script);
+            
+            Debug.Log(testItem1.GeneralType.ToString());
+            AddItem(testItem1);
         }else if(Input.GetKeyDown(KeyCode.B))
-        {
-            Items testItem2Script = testItem2.GetComponent<Items>();
-            AddItem(testItem2Script);
+        {   
+            Debug.Log(testItem2.SpecificType.ToString());
+            AddItem(testItem2);
         }
     }
 

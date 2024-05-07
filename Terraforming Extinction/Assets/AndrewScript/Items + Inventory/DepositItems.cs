@@ -6,7 +6,6 @@ using static DepositSO;
 
 public class DepositItems : Items
 {
-
     public DepositSO Deposit;
     [HideInInspector]
     public string Name;
@@ -16,11 +15,13 @@ public class DepositItems : Items
     public DepositItems(DepositSO deposit)
     {
         Deposit = deposit;
+        ItemScriptableObject = Deposit;
     }
 
     private void Awake()
     {
-        Type = Deposit.Type;
+        ItemScriptableObject = Deposit;
+        SpecificType = Deposit.SpecificType;
         Name = Deposit.Name;
         DepositRarity = Deposit.DepositRarity;
         InventoryIcon = Deposit.InventoryIcon;

@@ -7,6 +7,6 @@ public class NutrientItems : Items
     public int Amount;
     NutrientItems()
     {
-        Type = ItemType.Nutrients;
+        SpecificType = SpecificType.Nutrients;
     }
 }

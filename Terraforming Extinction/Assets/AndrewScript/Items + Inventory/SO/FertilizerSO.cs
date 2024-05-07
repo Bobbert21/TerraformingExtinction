@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 
 [CreateAssetMenu(fileName = "FertilizerSO", menuName = "ScriptableObject/Fertilizers")]
-public class FertilizerSO : ScriptableObject
+public class FertilizerSO : ItemSO
 {
     public enum FertilizerTypes
     {
@@ -14,9 +14,5 @@ public class FertilizerSO : ScriptableObject
         Green
     }
 
-    public string Name;
-    public ItemType Type;
     public FertilizerTypes FertilizerType;
-    public Sprite InventoryIcon;
-    public Sprite GameImage;
 }

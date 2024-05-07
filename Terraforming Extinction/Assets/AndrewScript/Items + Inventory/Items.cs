@@ -3,8 +3,12 @@ using System.Collections.Generic;
 using UnityEngine.UI;
 using UnityEngine;
 
-
-public enum ItemType{
+public enum GeneralType
+{
+    Fertilizers,
+    Deposits
+}
+public enum SpecificType{
     RedFertilizers,
     BlueFertilizers,
     GreenFertilizers,
@@ -18,23 +22,35 @@ public enum ItemType{
 
 public class Items : MonoBehaviour
 {
+    [HideInInspector]
+    public ItemSO ItemScriptableObject;
     //[HideInInspector]
-    public ItemType Type;
+    public SpecificType SpecificType;
+    [HideInInspector]
+    //may take out. Not needed 
+    public GeneralType GeneralType;
     [HideInInspector]
     public Sprite InventoryIcon;
     [HideInInspector]
     public Sprite GameImage;
     //public int MaxQuantityForInventorySpace;
 
-    // Start is called before the first frame update
-    void Start()
+    public Items SOToSpecificItemObj(ItemSO inputSO)
     {
-        
-    }
-
-    // Update is called once per frame
-    void Update()
-    {
-        
+        // Check if inputSO is actually a FertilizerSO
+        if (inputSO is FertilizerSO fertilizerSO)
+        {
+            return new FertilizerItems(fertilizerSO);
+        }
+        else if(inputSO is DepositSO depositSO)
+        {
+            return new DepositItems(depositSO);
+        }
+        else
+        {
+            // Handle the case where inputSO is not a FertilizerSO
+            Debug.LogError("Error with conversion");
+            return null;
+        }
     }
 }
