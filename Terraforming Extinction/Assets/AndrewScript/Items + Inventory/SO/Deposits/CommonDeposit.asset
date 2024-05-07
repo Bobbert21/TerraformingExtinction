@@ -13,6 +13,7 @@ MonoBehaviour:
   m_Name: CommonDeposit
   m_EditorClassIdentifier: 
   Name: Common Deposit
+  Type: 0
   DepositRarity: 0
   InventoryIcon: {fileID: -8878127814793938685, guid: d05da3fd22b6a4e4980907ba1a3fa997, type: 3}
-  GameImage: {fileID: 0}
+  GameImage: {fileID: -8878127814793938685, guid: d05da3fd22b6a4e4980907ba1a3fa997, type: 3}
