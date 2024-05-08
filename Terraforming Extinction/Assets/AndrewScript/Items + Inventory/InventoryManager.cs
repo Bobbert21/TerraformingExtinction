@@ -161,6 +161,7 @@ public class InventoryManager : MonoBehaviour
             GameObject newItemObj = Instantiate(InventoryItemObj, ItemContent);
             var newItemScript = newItemObj.GetComponent<InventoryItemController>();
             var itemName = newItemObj.transform.Find("ItemName").GetComponent<TextMeshProUGUI>();
+            Debug.Log(itemName);
             var itemIcon = newItemObj.transform.Find("ItemIcon").GetComponent<Image>();
             var itemQuantity = newItemObj.transform.Find("ItemQuantity").GetComponent<TextMeshProUGUI>();
             var itemRemoveBtn = newItemObj.transform.Find("RemoveItemButton").gameObject;
