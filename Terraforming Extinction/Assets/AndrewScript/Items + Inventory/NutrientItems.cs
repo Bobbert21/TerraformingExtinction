@@ -4,9 +4,18 @@ using UnityEngine;
 
 public class NutrientItems : Items
 {
+    public NutrientSO NutrientStats;
     public int Amount;
-    NutrientItems()
+
+    public NutrientItems(NutrientSO nutrientStats)
     {
-        SpecificType = SpecificType.Nutrients;
+
+        ItemType = ItemType.Nutrients;
+        NutrientStats = nutrientStats;
+    }
+
+    private void Awake()
+    {
+        Amount = NutrientStats.Amount;  
     }
 }

@@ -21,7 +21,7 @@ public class DepositItems : Items
     private void Awake()
     {
         ItemScriptableObject = Deposit;
-        SpecificType = Deposit.SpecificType;
+        ItemType = Deposit.Type;
         Name = Deposit.Name;
         DepositRarity = Deposit.DepositRarity;
         InventoryIcon = Deposit.InventoryIcon;

@@ -9,7 +9,7 @@ public class InventoryItemController : MonoBehaviour
     public void RemoveItem()
     {
 
-        InventoryManager.Instance.RemoveItem(Item.SpecificType);
+        InventoryManager.Instance.RemoveItem(Item.Type);
     }
 
     public void OnButtonClick()

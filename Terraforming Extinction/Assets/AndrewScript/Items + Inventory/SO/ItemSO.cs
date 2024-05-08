@@ -5,8 +5,7 @@ using UnityEngine;
 public class ItemSO : ScriptableObject
 {
     public string Name;
-    public SpecificType SpecificType;
-    public GeneralType GeneralType;
+    public ItemType Type;
     public Sprite InventoryIcon;
     public Sprite GameImage;
 }
