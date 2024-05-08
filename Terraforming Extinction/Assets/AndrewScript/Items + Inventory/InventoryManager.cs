@@ -59,7 +59,7 @@ public class InventoryManager : MonoBehaviour
         // Check if the item already exists in the inventory. If the list is 0, then item added won't be in list (null)
         if (ListOfInventory.Count > 0)
         {
-            existingItem = ListOfInventory.Find(invItem => invItem.individualItems.SpecificType == itemAdded.SpecificType);
+            existingItem = ListOfInventory.Find(invItem => invItem.individualItems.Type == itemAdded.Type);
         }
 
 
@@ -90,16 +90,16 @@ public class InventoryManager : MonoBehaviour
     //If given an item script
     public void RemoveItem(ItemSO itemRemoved, int quantityRemoved = 1)
     {
-        RemoveItem(itemRemoved.SpecificType, quantityRemoved);
+        RemoveItem(itemRemoved.Type, quantityRemoved);
     }
 
-    public void RemoveItem(SpecificType removedType, int quantityRemoved = 1)
+    public void RemoveItem(ItemType removedType, int quantityRemoved = 1)
     {
         InventoryItem existingItem = null;
         // Check if the item already exists in the inventory. If the list is 0, then item added won't be in list (null)
         if (ListOfInventory.Count > 0)
         {
-            existingItem = ListOfInventory.Find(invItem => invItem.individualItems.SpecificType == removedType);
+            existingItem = ListOfInventory.Find(invItem => invItem.individualItems.Type == removedType);
         }
 
         //if the item added does not exist
@@ -128,13 +128,13 @@ public class InventoryManager : MonoBehaviour
         }
     }
 
-    public bool CanRemoveItem(SpecificType removedType, int quantityToRemove = 1)
+    public bool CanRemoveItem(ItemType removedType, int quantityToRemove = 1)
     {
         InventoryItem existingItem = null;
         // Check if the item already exists in the inventory. If the list is 0, then the item won't be in the list (null)
         if (ListOfInventory.Count > 0)
         {
-            existingItem = ListOfInventory.Find(invItem => invItem.individualItems.SpecificType == removedType);
+            existingItem = ListOfInventory.Find(invItem => invItem.individualItems.Type == removedType);
         }
 
         // If the item doesn't exist or there's not enough quantity to remove, return false
@@ -201,7 +201,7 @@ public class InventoryManager : MonoBehaviour
         if (ItemSelected != null)
         {
             var rootItemManagerScript = Root.GetComponent<RootItemManager>();
-            if (CanRemoveItem(ItemSelected.SpecificType))
+            if (CanRemoveItem(ItemSelected.Type))
             {
                 rootItemManagerScript.RootConversion(ItemSelected);
             }
@@ -215,7 +215,7 @@ public class InventoryManager : MonoBehaviour
         if (ItemSelected != null)
         {
             var uprooterManagerScript = Uprooter.GetComponent<UprooterManager>();
-            if (CanRemoveItem(ItemSelected.SpecificType))
+            if (CanRemoveItem(ItemSelected.Type))
             {
                 uprooterManagerScript.ItemUsed(ItemSelected);
             }
@@ -228,17 +228,14 @@ public class InventoryManager : MonoBehaviour
         if (Input.GetKeyDown(KeyCode.C))
         {
             
-            Debug.Log(testItem1.GeneralType.ToString());
             AddItem(testItem1);
         }else if(Input.GetKeyDown(KeyCode.B))
-        {   
-            Debug.Log(testItem2.SpecificType.ToString());
+        
             AddItem(testItem2);
         }
     }
 
 
-}
 
 
 

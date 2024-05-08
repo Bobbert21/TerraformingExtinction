@@ -12,9 +12,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 714e26ca2d8983542a57982438a8c3ff, type: 3}
   m_Name: CommonDeposit
   m_EditorClassIdentifier: 
-  SpecificType: 5
-  GeneralType: 1
   Name: Common Deposit
-  DepositRarity: 0
+  Type: 5
   InventoryIcon: {fileID: -8878127814793938685, guid: d05da3fd22b6a4e4980907ba1a3fa997, type: 3}
   GameImage: {fileID: -8878127814793938685, guid: d05da3fd22b6a4e4980907ba1a3fa997, type: 3}
+  DepositRarity: 0

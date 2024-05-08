@@ -22,7 +22,7 @@ public class FertilizerItems : Items
     {
         ItemScriptableObject = Fertilizer;
         //Type from base class
-        SpecificType = Fertilizer.SpecificType;
+        ItemType = Fertilizer.Type;
         Name = Fertilizer.Name;
         FertilizerType = Fertilizer.FertilizerType;
         InventoryIcon = Fertilizer.InventoryIcon;

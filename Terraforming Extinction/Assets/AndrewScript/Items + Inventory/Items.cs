@@ -3,12 +3,7 @@ using System.Collections.Generic;
 using UnityEngine.UI;
 using UnityEngine;
 
-public enum GeneralType
-{
-    Fertilizers,
-    Deposits
-}
-public enum SpecificType{
+public enum ItemType{
     RedFertilizers,
     BlueFertilizers,
     GreenFertilizers,
@@ -17,18 +12,15 @@ public enum SpecificType{
     CommonDeposits,
     UncommonDeposits,
     RareDeposits,
-    RandomDeposits
+    RandomDeposits,
+    CorpseResidues
 }
 
 public class Items : MonoBehaviour
 {
     [HideInInspector]
     public ItemSO ItemScriptableObject;
-    //[HideInInspector]
-    public SpecificType SpecificType;
-    [HideInInspector]
-    //may take out. Not needed 
-    public GeneralType GeneralType;
+    public ItemType ItemType { get; set; }
     [HideInInspector]
     public Sprite InventoryIcon;
     [HideInInspector]

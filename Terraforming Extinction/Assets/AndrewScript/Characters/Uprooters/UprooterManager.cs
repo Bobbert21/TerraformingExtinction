@@ -9,10 +9,12 @@ public class UprooterManager : MonoBehaviour
     public UprooterSO Uprooter;
     //use enum to figure out which fertilizer it is keeping track of. like red is 0 so index 0 in the array
     private int[] FertilizerIntensity;
+    public int[] FertilizerLevel;
 
     private void Start()
     {
         FertilizerIntensity= new int[(int)FertilizerTypes.Count];
+        FertilizerLevel = new int[(int)FertilizerTypes.Count];
     }
 
     //when item is used on the uprooter
@@ -50,6 +52,7 @@ public class UprooterManager : MonoBehaviour
             {
                 Debug.Log(usedFertilizerLimit);
                 Uprooter = uprooterTransition;
+                FertilizerLevel[usedFertilizerIndex] += 1;
                 Debug.Log("Transition to " + Uprooter.Name);
             }
         }
