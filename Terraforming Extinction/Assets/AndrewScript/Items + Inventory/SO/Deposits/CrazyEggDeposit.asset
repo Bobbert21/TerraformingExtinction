@@ -13,8 +13,7 @@ MonoBehaviour:
   m_Name: CrazyEggDeposit
   m_EditorClassIdentifier: 
   Name: Crazy Egg
-  SpecificType: 7
-  GeneralType: 1
-  InventoryIcon: {fileID: 0}
-  GameImage: {fileID: 0}
+  Type: 8
+  InventoryIcon: {fileID: 10913, guid: 0000000000000000f000000000000000, type: 0}
+  GameImage: {fileID: -8517437225112286964, guid: d05da3fd22b6a4e4980907ba1a3fa997, type: 3}
   DepositRarity: 2

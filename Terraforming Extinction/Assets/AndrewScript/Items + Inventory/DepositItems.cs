@@ -32,6 +32,7 @@ public class DepositItems : Items
     private void Start()
     {
         gameObject.GetComponent<SpriteRenderer>().sprite = GameImage;
+        ResizeCollider();
     }
 
 

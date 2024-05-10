@@ -9,13 +9,11 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 24733c434bec5ab429bceaa0046e40d9, type: 3}
-  m_Name: UprooterTransitionRed
+  m_Script: {fileID: 11500000, guid: 1fb33d92bf3032549ab2c420b910d80c, type: 3}
+  m_Name: SadnessBlue
   m_EditorClassIdentifier: 
-  Name: RedLvl2
-  Health: 70
-  MaxHealth: 100
-  FertilizerTransitions:
-  - type: 0
-    limit: -1
-    uprooterTransition: {fileID: 0}
+  Name: Sadness Blue
+  Type: 1
+  InventoryIcon: {fileID: 0}
+  GameImage: {fileID: 0}
+  FertilizerType: 1

@@ -14,7 +14,6 @@ public class CorpseResidueItems : Items
     public ItemSO[] ItemTargets { get; set; }
     private Dictionary<GameObject, float> collisionDuration = new();
     private Dictionary<GameObject, float> collisionSpeed = new();
-    private BoxCollider2D boxCollider;
 
     private void Start()
     {
@@ -27,20 +26,10 @@ public class CorpseResidueItems : Items
         GameImage = CorpseResidueStats.GameImage;
         gameObject.GetComponent<SpriteRenderer>().sprite = GameImage;
 
-        boxCollider = GetComponent<BoxCollider2D>();
 
-        ResizeColliderToSprite();
+        ResizeCollider();
     }
 
-    void ResizeColliderToSprite()
-    {
-        // Get the size of the sprite
-        Vector2 spriteSize = GetComponent<SpriteRenderer>().sprite.bounds.size;
-
-        // Set the size of the collider to match the size of the sprite
-        boxCollider.size = spriteSize;
-        boxCollider.offset = new Vector2(spriteSize.x / 2, 0);
-    }
 
     private void OnCollisionStay2D(Collision2D collision)
     {

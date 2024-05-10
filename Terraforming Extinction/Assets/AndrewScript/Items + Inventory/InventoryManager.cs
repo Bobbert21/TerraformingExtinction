@@ -33,6 +33,10 @@ public class InventoryManager : MonoBehaviour
     public GameObject Root;
     public GameObject Uprooter;
     public Toggle EnableRemove;
+    public Button FertilizeBtn;
+    public Button OfferBtn;
+    public Button InventoryBtn;
+    public Button CloseBtn;
     public ItemSO testItem1;
     public ItemSO testItem2;
     private ItemSO ItemSelected;
