@@ -556,6 +556,12 @@ namespace RobbysUtils
             }
         }
 
+        public static Vector2 GetLerpedPoint(Vector2 startPos, Vector2 point, AnimationCurve animationCurve, float time)
+        {
+            time += Time.deltaTime;
+            return Vector2.Lerp(startPos, point, animationCurve.Evaluate(time));
+        }
+
         public static bool LerpToPoint(Transform transformToMove, Vector2 point, bool useLocalSpace, float animationSpeed = 1f, float minimumDistance = 0.01f)
         {
             if (useLocalSpace)

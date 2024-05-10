@@ -31,6 +31,8 @@ public class AttackTarget : MonoBehaviour
             {
                 if (timer <= 0)
                 {
+                    // FireProjectile()
+
                     target.parent.GetComponent<Health>().TakeDamage(5, 0, out bool isImmune);
                     timer = attackTimer;
                 }
