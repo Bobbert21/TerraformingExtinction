@@ -21,5 +21,5 @@ MonoBehaviour:
   Duration: 15
   Delay: 1
   Rarities: 0
-  FertilizedTarget: 00000000
+  FertilizedTarget: 0000000002000000
   ItemTargets: []

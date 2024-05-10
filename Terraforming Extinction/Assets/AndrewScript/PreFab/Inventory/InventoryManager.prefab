@@ -28,7 +28,7 @@ Transform:
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 619.65656, y: 125.77128, z: 2.32667}
   m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
+  m_ConstrainProportionsScale: 1
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
@@ -48,6 +48,11 @@ MonoBehaviour:
   InventoryItemObj: {fileID: 3694502426534563045, guid: 0e7439715ae472e4a801b13779d75fa0, type: 3}
   ListOfInventory: []
   MaxInventorySpace: 10
+  Root: {fileID: 0}
+  Uprooter: {fileID: 0}
   EnableRemove: {fileID: 0}
-  testItem1: {fileID: 4464848824194120806, guid: 8de0f08af05dbe641936683f0543d888, type: 3}
-  testItem2: {fileID: 5896469791397224449, guid: 916cb488f2f31814fabb41b70609d5a4, type: 3}
+  FertilzeBtn: {fileID: 0}
+  OfferBtn: {fileID: 0}
+  InventoryBtn: {fileID: 0}
+  testItem1: {fileID: 11400000, guid: abdbba9144eab21458e141879659b72a, type: 2}
+  testItem2: {fileID: 11400000, guid: a92fa895f933dd747bd55c2140e6211b, type: 2}

@@ -13,8 +13,8 @@ MonoBehaviour:
   m_Name: UprooterTest
   m_EditorClassIdentifier: 
   Name: Test
-  Health: 0
-  MaxHealth: 0
+  Health: 100
+  MaxHealth: 5
   FertilizerTransitions:
   - type: 0
     limit: 1

@@ -6,6 +6,8 @@ TagManager:
   tags:
   - Enemy
   - Plant
+  - Root
+  - Item
   layers:
   - Default
   - TransparentFX
