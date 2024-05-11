@@ -16,7 +16,7 @@ public enum ItemType{
     CorpseResidues
 }
 
-public class Items : MonoBehaviour
+public abstract class Items : MonoBehaviour
 {
     public SpriteRenderer ItemSpriteRenderer;
     public BoxCollider2D ItemCollider2D;

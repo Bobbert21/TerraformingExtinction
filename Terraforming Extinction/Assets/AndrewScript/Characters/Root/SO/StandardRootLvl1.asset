@@ -9,15 +9,13 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 24733c434bec5ab429bceaa0046e40d9, type: 3}
-  m_Name: UprooterTest
+  m_Script: {fileID: 11500000, guid: 2bf7537304d8d9348a5c5112166fcc66, type: 3}
+  m_Name: StandardRootLvl1
   m_EditorClassIdentifier: 
-  Name: Test
-  Health: 100
-  FertilizerTransitions:
-  - type: 0
-    limit: 1
-    characterTransition: {fileID: 0}
+  Name: Root Level 1
+  Health: 0
+  FertilizerTransitions: []
   NutrientTransitions:
-    limit: 2
+    limit: -1
     characterTransition: {fileID: 0}
+  NumOfUprooters: 4

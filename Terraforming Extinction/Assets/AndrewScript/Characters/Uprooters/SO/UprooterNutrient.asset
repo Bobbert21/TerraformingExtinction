@@ -10,14 +10,11 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 24733c434bec5ab429bceaa0046e40d9, type: 3}
-  m_Name: UprooterTest
+  m_Name: UprooterNutrient
   m_EditorClassIdentifier: 
-  Name: Test
-  Health: 100
-  FertilizerTransitions:
-  - type: 0
-    limit: 1
-    characterTransition: {fileID: 0}
+  Name: FED
+  Health: 0
+  FertilizerTransitions: []
   NutrientTransitions:
-    limit: 2
+    limit: -1
     characterTransition: {fileID: 0}

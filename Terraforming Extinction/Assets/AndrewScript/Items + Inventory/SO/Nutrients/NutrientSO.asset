@@ -1,0 +1,19 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bf9ee59b1c9d71c40a6ba1baff3c49b7, type: 3}
+  m_Name: NutrientSO
+  m_EditorClassIdentifier: 
+  Name: Nutrient
+  Type: 4
+  InventoryIcon: {fileID: -8878127814793938685, guid: d05da3fd22b6a4e4980907ba1a3fa997, type: 3}
+  GameImage: {fileID: -8517437225112286964, guid: d05da3fd22b6a4e4980907ba1a3fa997, type: 3}
+  Amount: 1
