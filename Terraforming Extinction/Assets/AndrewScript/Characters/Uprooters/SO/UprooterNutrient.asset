@@ -18,3 +18,8 @@ MonoBehaviour:
   NutrientTransitions:
     limit: -1
     characterTransition: {fileID: 0}
+    dialogue: []
+  InactiveDialogue: []
+  WakingUpDialogue: []
+  WaveTransitionDialogue: []
+  WaveInProgressDialogue: []
