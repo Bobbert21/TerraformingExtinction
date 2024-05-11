@@ -17,7 +17,29 @@ MonoBehaviour:
   FertilizerTransitions:
   - type: 0
     limit: 1
-    characterTransition: {fileID: 0}
+    characterTransition: {fileID: 11400000, guid: 6d62f10141874504292d11ed46f43905, type: 2}
+    dialogue:
+    - dialogue:
+      - Plant ANGRY
+    - dialogue:
+      - AM I ANGRY?
+      - OR DO I JUST NEED A SNICKERS?
+    - dialogue:
+      - Baby bottle pop
   NutrientTransitions:
     limit: 2
-    characterTransition: {fileID: 0}
+    characterTransition: {fileID: 11400000, guid: 19eb47fb31cc56b4b8aa8eb5367ed650, type: 2}
+    dialogue: []
+  InactiveDialogue: []
+  WakingUpDialogue:
+  - dialogue:
+    - I'm ready to dedicate my life...
+    - to the cause!
+  - dialogue:
+    - I will put down my life for you
+    - I will put down my life for you
+  - dialogue:
+    - I feel the energy!
+    - I feel the energy!
+  WaveTransitionDialogue: []
+  WaveInProgressDialogue: []

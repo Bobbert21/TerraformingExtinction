@@ -124,7 +124,6 @@ public class PlayerInputManager : MonoBehaviour
                             ObjSelected.GetComponent<UprooterManager>().State == UprooterState.Inactive &&
                             GameManager.Instance.CurrentNumOfUprooters < GameManager.Instance.MaxNumOfUprooters) 
                         {
-                            Debug.Log("Current Uprooters:" + GameManager.Instance.CurrentNumOfUprooters + " Max num: " + GameManager.Instance.MaxNumOfUprooters);
 
                             InventoryManager.Instance.RejoiceBtn.gameObject.SetActive(true);
 
@@ -152,7 +151,9 @@ public class PlayerInputManager : MonoBehaviour
     {
         if(ObjSelected.GetComponent<UprooterManager>() != null)
         {
-            ObjSelected.GetComponent<UprooterManager>().State = UprooterState.Ready;
+            //will prompt dialogue when waking up and in dialogue script will set active
+            ObjSelected.GetComponent<UprooterManager>().State = UprooterState.Wakingup;
+            ObjSelected.GetComponent<UprooterManager>().CreateDialogue();
             InventoryManager.Instance.RejoiceBtn.gameObject.SetActive(false);
             GameManager.Instance.CurrentNumOfUprooters += 1;
         }

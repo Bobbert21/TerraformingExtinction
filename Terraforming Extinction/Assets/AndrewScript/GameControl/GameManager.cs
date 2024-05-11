@@ -19,7 +19,9 @@ public class GameManager : MonoBehaviour
 {
     public static GameManager Instance { get; private set; }
     public GameStates CurrentState;
-    public Button StartWave;
+    public Button StartWaveBtn;
+    public GameObject DialogueBox;
+    public Canvas Canvas;
     public int MaxNumOfUprooters;
     public int CurrentNumOfUprooters = 0;
     //Singleton
@@ -35,5 +37,17 @@ public class GameManager : MonoBehaviour
             Destroy(gameObject);
         }
         CurrentState = GameStates.Start;
+    }
+
+    public void StartWaveTransition()
+    {
+        if(CurrentState == GameStates.Start ||
+            CurrentState == GameStates.WaveTransition)
+        {
+            CurrentState = GameStates.WaveInProgress;
+            StartWaveBtn.interactable = false;
+        }
+        
+
     }
 }

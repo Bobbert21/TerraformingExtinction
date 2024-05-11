@@ -11,18 +11,33 @@ public class FertilizerTransition
     public FertilizerTypes type;
     public int limit;
     public CharacterBaseSO characterTransition;
+    public DialogueCreation[] dialogue;
 }
 [System.Serializable]
 public class NutrientTransition
 {
     public int limit;
     public CharacterBaseSO characterTransition;
+    public DialogueCreation[] dialogue;
 }
 
-    public abstract class CharacterBaseSO : ScriptableObject
-    {
-        public string Name;
-        public int Health;
-        public FertilizerTransition[] FertilizerTransitions;
-        public NutrientTransition NutrientTransitions;
-    }
+[System.Serializable]
+public class DialogueCreation
+{
+    public string[] dialogue;
+}
+
+public abstract class CharacterBaseSO : ScriptableObject
+{
+    public string Name;
+    public int Health;
+    public FertilizerTransition[] FertilizerTransitions;
+    public NutrientTransition NutrientTransitions;
+    
+    public DialogueCreation[] InactiveDialogue;
+    public DialogueCreation[] WakingUpDialogue;
+    public DialogueCreation[] WaveTransitionDialogue;
+    public DialogueCreation[] WaveInProgressDialogue;
+
+}
+
