@@ -64,7 +64,8 @@ public class PlayerInputManager : MonoBehaviour
                 }
                 else if(ObjSelected.tag == "Plant")
                 {
-                    InventoryManager.Instance.FertilizeBtn.gameObject.SetActive(false);
+                    InventoryManager.Instance.FeedBtn.gameObject.SetActive(false);
+                    InventoryManager.Instance.RejoiceBtn.gameObject.SetActive(false);
                     InventoryManager.Instance.CloseBtn.onClick.Invoke();
                 }
 
@@ -106,13 +107,35 @@ public class PlayerInputManager : MonoBehaviour
                     break;
                 }else if(collidedEnvObj.tag == "Plant")
                 {
-                    ObjSelected = collidedEnvObj;
-                    //Click on inventory button
-                    InventoryManager.Instance.InventoryBtn.onClick.Invoke();
-                    //set offer button
-                    InventoryManager.Instance.FertilizeBtn.gameObject.SetActive(true);
-                    InventoryManager.Instance.Uprooter = ObjSelected;
-                    break;
+                    //Doing stuff with plants between waves, during waves or at start
+                    if(GameManager.Instance.CurrentState == GameStates.WaveTransition || 
+                        GameManager.Instance.CurrentState == GameStates.Start || 
+                        GameManager.Instance.CurrentState == GameStates.WaveInProgress)
+                    {
+                        ObjSelected = collidedEnvObj;
+                        //Click on inventory button
+                        InventoryManager.Instance.InventoryBtn.onClick.Invoke();
+                        //set offer button
+                        InventoryManager.Instance.FeedBtn.gameObject.SetActive(true);
+                        InventoryManager.Instance.Uprooter = ObjSelected;
+
+                        //Start or transition and uprooter's inactive. Rejoice!
+                        if (GameManager.Instance.CurrentState != GameStates.WaveInProgress &&
+                            ObjSelected.GetComponent<UprooterManager>().State == UprooterState.Inactive &&
+                            GameManager.Instance.CurrentNumOfUprooters < GameManager.Instance.MaxNumOfUprooters) 
+                        {
+                            Debug.Log("Current Uprooters:" + GameManager.Instance.CurrentNumOfUprooters + " Max num: " + GameManager.Instance.MaxNumOfUprooters);
+
+                            InventoryManager.Instance.RejoiceBtn.gameObject.SetActive(true);
+
+                            // Position the button above the target object
+                            Vector2 rejoicePosition = (Vector2)ObjSelected.transform.position + (Vector2.up * (ObjSelected.GetComponent<SpriteRenderer>().bounds.size.y / 2)) + Vector2.up * 20f; // Adjust the height as needed
+                            InventoryManager.Instance.RejoiceBtn.transform.position = Camera.main.WorldToScreenPoint(rejoicePosition);
+                        }
+
+                        break;
+                    }
+                    
                 }
                 else if(collidedEnvObj.tag == "Item")
                 {
@@ -122,6 +145,18 @@ public class PlayerInputManager : MonoBehaviour
                 }
             }
         }
+
+    }
+
+    public void SetUprooterActiveState()
+    {
+        if(ObjSelected.GetComponent<UprooterManager>() != null)
+        {
+            ObjSelected.GetComponent<UprooterManager>().State = UprooterState.Ready;
+            InventoryManager.Instance.RejoiceBtn.gameObject.SetActive(false);
+            GameManager.Instance.CurrentNumOfUprooters += 1;
+        }
+        
     }
 
     private float DistanceOfCollidersClosestPoints(Collider2D collider1, Collider2D collider2)

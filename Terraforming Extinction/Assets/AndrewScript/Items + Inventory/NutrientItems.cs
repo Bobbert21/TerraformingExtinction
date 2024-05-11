@@ -14,8 +14,4 @@ public class NutrientItems : Items
         NutrientStats = nutrientStats;
     }
 
-    private void Awake()
-    {
-        Amount = NutrientStats.Amount;  
-    }
 }

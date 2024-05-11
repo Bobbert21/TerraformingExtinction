@@ -33,10 +33,11 @@ public class InventoryManager : MonoBehaviour
     public GameObject Root;
     public GameObject Uprooter;
     public Toggle EnableRemove;
-    public Button FertilizeBtn;
+    public Button FeedBtn;
     public Button OfferBtn;
     public Button InventoryBtn;
     public Button CloseBtn;
+    public Button RejoiceBtn;
     public ItemSO testItem1;
     public ItemSO testItem2;
     private ItemSO ItemSelected;
@@ -205,7 +206,7 @@ public class InventoryManager : MonoBehaviour
     {
         if (ItemSelected != null)
         {
-            var rootItemManagerScript = Root.GetComponent<RootItemManager>();
+            var rootItemManagerScript = Root.GetComponent<RootManager>();
             if (CanRemoveItem(ItemSelected.Type))
             {
                 rootItemManagerScript.RootConversion(ItemSelected);
