@@ -38,6 +38,7 @@ public abstract class CharacterBaseSO : ScriptableObject
     public DialogueCreation[] WakingUpDialogue;
     public DialogueCreation[] WaveTransitionDialogue;
     public DialogueCreation[] WaveInProgressDialogue;
+    public DialogueCreation[] DamagedDialogue;
 
 }
 

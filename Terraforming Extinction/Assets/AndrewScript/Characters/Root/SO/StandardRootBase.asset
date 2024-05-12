@@ -18,4 +18,18 @@ MonoBehaviour:
   NutrientTransitions:
     limit: 2
     characterTransition: {fileID: 11400000, guid: c6c2182859c741045beea49329f764f7, type: 2}
+    dialogue:
+    - dialogue:
+      - Ahhh yes, my son
+    - dialogue:
+      - Good boy
+  InactiveDialogue: []
+  WakingUpDialogue: []
+  WaveTransitionDialogue:
+  - dialogue:
+    - Be patient, my children
+  - dialogue:
+    - The uprooters shall rise again!
+  WaveInProgressDialogue: []
+  DamagedDialogue: []
   NumOfUprooters: 3

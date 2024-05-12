@@ -4,7 +4,7 @@ using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.EventSystems;
 
-public class PlayerInputManager : MonoBehaviour
+public class PlayerInput : MonoBehaviour
 {
     public float Speed = 5f; // Speed at which the character moves
     public float SelectionDistance = 30f;
@@ -121,7 +121,7 @@ public class PlayerInputManager : MonoBehaviour
 
                         //Start or transition and uprooter's inactive. Rejoice!
                         if (GameManager.Instance.CurrentState != GameStates.WaveInProgress &&
-                            ObjSelected.GetComponent<UprooterManager>().State == UprooterState.Inactive &&
+                            ObjSelected.GetComponent<UprooterMiscController>().State == UprooterStates.Inactive &&
                             GameManager.Instance.CurrentNumOfUprooters < GameManager.Instance.MaxNumOfUprooters) 
                         {
 
@@ -149,11 +149,11 @@ public class PlayerInputManager : MonoBehaviour
 
     public void SetUprooterActiveState()
     {
-        if(ObjSelected.GetComponent<UprooterManager>() != null)
+        if(ObjSelected.GetComponent<UprooterMiscController>() != null)
         {
             //will prompt dialogue when waking up and in dialogue script will set active
-            ObjSelected.GetComponent<UprooterManager>().State = UprooterState.Wakingup;
-            ObjSelected.GetComponent<UprooterManager>().CreateDialogue();
+            ObjSelected.GetComponent<UprooterMiscController>().State = UprooterStates.Wakingup;
+            ObjSelected.GetComponent<UprooterMiscController>().CreateDialogue();
             InventoryManager.Instance.RejoiceBtn.gameObject.SetActive(false);
             GameManager.Instance.CurrentNumOfUprooters += 1;
         }

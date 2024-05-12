@@ -41,5 +41,10 @@ MonoBehaviour:
   - dialogue:
     - I feel the energy!
     - I feel the energy!
-  WaveTransitionDialogue: []
+  WaveTransitionDialogue:
+  - dialogue:
+    - We're waiting
+  - dialogue:
+    - I'm Ready To Battle
   WaveInProgressDialogue: []
+  DamagedDialogue: []

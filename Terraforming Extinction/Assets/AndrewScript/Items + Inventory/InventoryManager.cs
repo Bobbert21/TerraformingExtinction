@@ -206,7 +206,7 @@ public class InventoryManager : MonoBehaviour
     {
         if (ItemSelected != null)
         {
-            var rootItemManagerScript = Root.GetComponent<RootManager>();
+            var rootItemManagerScript = Root.GetComponent<RootMiscController>();
             if (CanRemoveItem(ItemSelected.Type))
             {
                 rootItemManagerScript.RootConversion(ItemSelected);
@@ -220,7 +220,7 @@ public class InventoryManager : MonoBehaviour
     {
         if (ItemSelected != null)
         {
-            var uprooterManagerScript = Uprooter.GetComponent<UprooterManager>();
+            var uprooterManagerScript = Uprooter.GetComponent<UprooterMiscController>();
             if (CanRemoveItem(ItemSelected.Type))
             {
                 uprooterManagerScript.ItemUsed(ItemSelected);
