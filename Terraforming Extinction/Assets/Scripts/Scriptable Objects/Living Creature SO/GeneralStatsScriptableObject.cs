@@ -48,6 +48,9 @@ public class LivingEntityStats
     [SerializeField] private float lineOfSight;
     [SerializeField] private StatusEffects statusWeaknesses;
     [SerializeField] private StatusEffects statusStrengths;
+    [SerializeField] private int projectileStatsID;
+    [SerializeField] private LayerMask projectileLayerMask;
+    [SerializeField] private float minAttackDistance;
 
     public int LivingEntityID { get => livingEntityID; set => livingEntityID = value; }
 
@@ -57,7 +60,9 @@ public class LivingEntityStats
     public float LineOfSight { get => lineOfSight; set => lineOfSight = value; }
     public StatusEffects StatusWeaknesses { get => statusWeaknesses; set => statusWeaknesses = value; }
     public StatusEffects StatusStrengths { get => statusStrengths; set => statusStrengths = value; }
-
+    public int ProjectileStatsID { get => projectileStatsID; set => projectileStatsID = value; }
+    public LayerMask ProjectileLayerMask { get => projectileLayerMask; set => projectileLayerMask = value; }
+    public float MinAttackDistance { get => minAttackDistance; set => minAttackDistance = value; }
 
 
     #region Stats that we will add after game jam/if we have enough time

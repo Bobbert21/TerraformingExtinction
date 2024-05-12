@@ -6,15 +6,26 @@ using static UnityEngine.GraphicsBuffer;
 
 public class AttackTarget : MonoBehaviour
 {
+    [Header("Linked Components")]
     [SerializeField] TargetLocator targetLocator;
     [SerializeField] Transform target;
-    [SerializeField] float distance;
-    [SerializeField] float attackTimer;
-    [SerializeField] float timer;
 
     [Header("Unit Settings")]
-    [SerializeField] float attackSpeed;
+    [SerializeField] float reloadTimer;
+    [SerializeField] float attackCooldownSpeed;
     [SerializeField] float minDistance = 0.1f; // Closest the unit will get to target
+    [SerializeField] int projectileStatsID = 0;
+    [SerializeField] LayerMask projectileLayerMask;
+
+    [Header("Debugging")]
+    [SerializeField] float distance;
+    [SerializeField] float timer;
+
+    public float ReloadTimer { get => reloadTimer; set => reloadTimer = value; }
+    public float AttackCooldownSpeed { get => attackCooldownSpeed; set => attackCooldownSpeed = value; }
+    public float MinDistance { get => minDistance; set => minDistance = value; }
+    public int ProjectileStatsID { get => projectileStatsID; set => projectileStatsID = value; }
+    public LayerMask ProjectileLayerMask { get => projectileLayerMask; set => projectileLayerMask = value; }
 
     void Start()
     {
@@ -31,16 +42,34 @@ public class AttackTarget : MonoBehaviour
             {
                 if (timer <= 0)
                 {
-                    // FireProjectile()
+                    FireProjectile(target);
 
-                    target.parent.GetComponent<Health>().TakeDamage(5, 0, out bool isImmune);
-                    timer = attackTimer;
+                    timer = reloadTimer;
                 }
                 else
-                    timer -= Time.deltaTime;
+                    timer -= Time.deltaTime * attackCooldownSpeed;
             }
             else
-                timer = attackTimer;
+                timer = reloadTimer;
         }
+    }
+
+    private void FireProjectile(Transform target)
+    {
+        var projectile = ObjectPooler.SharedInstance.GetPooledObject("Projectile");
+
+        projectile.transform.position = transform.position;
+        var statsContainer = projectile.GetComponent<ProjectileStatsContainer>();
+        statsContainer.ProjectileStatID = projectileStatsID;
+        statsContainer.StartPos = transform.position;
+        statsContainer.EndPos = target.position;
+        statsContainer.ProjecileLayerMask = projectileLayerMask;
+
+        projectile.SetActive(true);
+    }
+
+    private void OnDrawGizmos()
+    {
+        
     }
 }

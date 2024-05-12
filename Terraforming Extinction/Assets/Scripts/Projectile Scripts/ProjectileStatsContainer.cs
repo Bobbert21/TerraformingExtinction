@@ -1,12 +1,13 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel;
+using Unity.VisualScripting;
 using UnityEngine;
+using UnityEngine.UI;
+using static UnityEngine.GraphicsBuffer;
 
 public class ProjectileStatsContainer : MonoBehaviour
 {
-    [SerializeField] private int projectileStatID;
-
     [Header("Linked Components")]
     [SerializeField] private SpriteRenderer spriteRenderer;
     [SerializeField] private BoxCollider2D boxCollider2D;
@@ -15,14 +16,18 @@ public class ProjectileStatsContainer : MonoBehaviour
     [SerializeField] private Globals globals;
 
     [Header("Variables From Object Shooting This")]
+    [SerializeField] private int projectileStatID;
     [SerializeField] private Vector2 startPos;
     [SerializeField] private Vector2 endPos;
+    [SerializeField] private LayerMask projecileLayerMask;
 
     [Header("Debugging")]
     [SerializeField] private bool activate;
     [SerializeField] private bool runCode;
+    [SerializeField] private int amountOfPiercesLeft;
+    [SerializeField] private bool deactivateObject;
     [SerializeField] private float timer;
-    [SerializeField] private Vector2 originalPosition;
+    //[SerializeField] private Vector2 originalPosition;
     [SerializeField] private float time;
     [SerializeField] private float timer2 = 3;
     
@@ -30,13 +35,14 @@ public class ProjectileStatsContainer : MonoBehaviour
     [ReadOnly] [SerializeField] private ProjectileStats localizedProjectileStats;
 
 
+    public int ProjectileStatID { get => projectileStatID; set => projectileStatID = value; }
     public Vector2 StartPos { get => startPos; set => startPos = value; }
     public Vector2 EndPos { get => endPos; set => endPos = value; }
-
+    public LayerMask ProjecileLayerMask { get => projecileLayerMask; set => projecileLayerMask = value; }
 
     public void Awake()
     {
-        originalPosition = transform.position;
+        //originalPosition = transform.position;
 
         //startPos = transform.position;
         //endPos = transform.position + new Vector3(4, 3);
@@ -44,7 +50,7 @@ public class ProjectileStatsContainer : MonoBehaviour
 
     public void OnEnable()
     {
-        localizedProjectileStats = globals.ProjectileStatsScriptableObjectInstance[projectileStatID];
+        localizedProjectileStats = Globals.ProjectileStatsScriptableObject[ProjectileStatID];
 
         if (localizedProjectileStats == null)
         {
@@ -81,23 +87,70 @@ public class ProjectileStatsContainer : MonoBehaviour
                 break;
         }
 
+        gameObject.layer = Mathf.RoundToInt(Mathf.Log(projecileLayerMask.value, 2));
         spriteRenderer.sprite = localizedProjectileStats.ProjectileSprite;
+        amountOfPiercesLeft = localizedProjectileStats.Pierce;
+
+        activate = true;
+        deactivateObject = false;
     }
 
-    Vector2 animationPointEnd;
-    Vector2 pointMultiplication;
-
+    Vector2 animationEndPoint;
+    Vector2 gameEndPointAdjusted;
+    float angle;
+    float cosAngle;
+    float sinAngle;
+    Matrix2x2 rotationMatrix;
+    Matrix2x2 scalingMatrix;
     public void Update()
     {
+        if (deactivateObject)
+        {
+            gameObject.SetActive(false);
+            return;
+        }
+
         if (activate)
         {
             timer = localizedProjectileStats.LifeSpan;
             time = 0;
-
-            animationPointEnd = new Vector2(1, localizedProjectileStats.MovementPath.Evaluate(1));
-            pointMultiplication = new Vector2((endPos - startPos).x / animationPointEnd.x, (endPos - startPos).y / animationPointEnd.y);
-
             transform.position = startPos;
+
+            #region Vector Translation Code
+            Debug.Log(endPos);
+            animationEndPoint = new Vector2(1, localizedProjectileStats.MovementPath.Evaluate(1));
+            gameEndPointAdjusted = endPos - startPos;
+            
+            //angle of game start and end pos
+            float gameAngle = Mathf.Atan2(gameEndPointAdjusted.y, gameEndPointAdjusted.x);
+            //angle of anim start and end pos
+            float animAngle = Mathf.Atan2(animationEndPoint.y, animationEndPoint.x);
+            //find how much you need to turn from anim to game
+            angle = gameAngle- animAngle;
+
+            //use these values for rotation matrix (part of formula)
+            cosAngle = Mathf.Cos(angle);
+            sinAngle = Mathf.Sin(angle);
+            Debug.Log("Angle: " + angle + " cos: " + cosAngle + " sin: " + sinAngle);
+            //animation curve needs to be rotated this much
+            rotationMatrix = new Matrix2x2(cosAngle, -sinAngle, sinAngle, cosAngle);
+            //find the scaling matrix
+            //First find what the end point will be when rotated
+            Vector2 rotatedAnimEndPoint = rotationMatrix * animationEndPoint;
+            //Second: Now know how much to scale by to get to the game adjusted end point (when start is at 0,0). This is scaling matrix
+
+            Debug.Log("rotated animation end point: " + rotatedAnimEndPoint);
+            Debug.Log("game adjusted end point: " + gameEndPointAdjusted);
+            //Check how big the game end point magnitude is compared to the rotated animation end point. if anim magnitude = 0, then it means you aren't moving projectile
+            float scaling = rotatedAnimEndPoint.magnitude == 0? 0f: gameEndPointAdjusted.magnitude / rotatedAnimEndPoint.magnitude;
+            Debug.Log(scaling);
+            scalingMatrix = new Matrix2x2(scaling, 0, 0, scaling);
+
+
+            //float x_scaling = rotatedAnimEndPoint.x == 0f ? 1f:  gameEndPointAdjusted.x / rotatedAnimEndPoint.x;
+            //float y_scaling = rotatedAnimEndPoint.y == 0f ? 1f : gameEndPointAdjusted.y / rotatedAnimEndPoint.y;
+            #endregion
+
             //spriteRenderer.enabled = true;
 
             runCode = true;
@@ -106,22 +159,18 @@ public class ProjectileStatsContainer : MonoBehaviour
 
         if (runCode)
         {
-            // Point from anim curve
-            //var animationPointStart = new Vector2(time, localizedProjectileStats.MovementPath.Evaluate(time));
-            
-            
             time += Time.deltaTime;
-
-            Vector2 animationNextPoint = new Vector2(time, localizedProjectileStats.MovementPath.Evaluate(time));
-            Vector2 gameNextPos = ((animationNextPoint) * pointMultiplication) + startPos;
             
-            //transform.position = Vector2.Lerp(startPos, gameEndPos, time);
-            transform.position = Vector2.Lerp(transform.position, gameNextPos, Time.deltaTime);
+            Vector2 animationNextPoint = new Vector2(time, localizedProjectileStats.MovementPath.Evaluate(time));
+            //rotated animNextPoint to fit the game curve and then scale it. Add the startpos since we adjusted game curve to assume it starts at 0,0
+            Vector2 gameNextPos = scalingMatrix * (rotationMatrix * animationNextPoint) + startPos;
+            transform.position = Vector2.Lerp(transform.position, gameNextPos, time);
 
             if (time >= 1)
             {
-                //runCode = false;
                 time = 1;
+                runCode = false;
+                deactivateObject = true;
                 return;
             }
 
@@ -132,6 +181,7 @@ public class ProjectileStatsContainer : MonoBehaviour
                 {
                     //spriteRenderer.enabled = false;
                     runCode = false;
+                    deactivateObject = true;
 
                     timer = localizedProjectileStats.LifeSpan;
                 }
@@ -141,11 +191,42 @@ public class ProjectileStatsContainer : MonoBehaviour
         }
     }
 
+    private struct Matrix2x2
+    {
+        public float m00, m01, m10, m11;
+        public Matrix2x2(float m00, float m01, float m10, float m11)
+        {
+            this.m00 = m00; 
+            this.m01 = m01;
+            this.m10 = m10;
+            this.m11 = m11;
+        }
+        
+        public static Vector2 operator*(Matrix2x2 matrix, Vector2 vector)
+        {
+            return new Vector2
+                (
+                    matrix.m00*vector.x + matrix.m01*vector.y,
+                    matrix.m10*vector.x + matrix.m11 * vector.y
+                );
+        }
+    }
+
     public void OnTriggerEnter2D(Collider2D collision)
     {
-        print("HIT " + collision.gameObject.name);
-        //spriteRenderer.enabled = false;
-        runCode = false;
+        print("HIT " + collision.GetComponentInParent<Health>());
+
+        if (collision.transform.parent.TryGetComponent(out Health health))
+        {
+            health.TakeDamage(localizedProjectileStats.Damage, 0, out bool isImmune);
+            amountOfPiercesLeft--;
+
+            if (amountOfPiercesLeft <= 0)
+            {
+                runCode = false;
+                deactivateObject = true;
+            }
+        }
     }
 
     public void OnDrawGizmos()

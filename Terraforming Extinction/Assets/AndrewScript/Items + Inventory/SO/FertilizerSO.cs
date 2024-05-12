@@ -14,8 +14,6 @@ public enum FertilizerTypes
 
 [CreateAssetMenu(fileName = "FertilizerSO", menuName = "ScriptableObject/Fertilizers")]
 public class FertilizerSO : ItemSO
-{
-   
-
+{  
     public FertilizerTypes FertilizerType;
 }

@@ -13,4 +13,20 @@ MonoBehaviour:
   m_Name: Plant Stats
   m_EditorClassIdentifier: 
   entityCategory: 0
-  livingEntityStats: []
+  livingEntityStats:
+  - livingEntityID: 0
+    maxHealth: 100
+    reloadSpeed: 2
+    attackRangeType: 0
+    lineOfSight: 7
+    statusWeaknesses: 0
+    statusStrengths: 0
+    projectileStatsID: 0
+    projectileLayerMask:
+      serializedVersion: 2
+      m_Bits: 1024
+    minAttackDistance: 7
+    armor: 0
+    regenRate: 0
+    buffEffect: 0
+    priorityType: 0
