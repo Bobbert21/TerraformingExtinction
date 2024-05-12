@@ -5,21 +5,22 @@ using UnityEngine;
 using UnityEngine.UIElements;
 
 [System.Serializable]
-public enum UprooterState
+public enum UprooterStates
 {
     Inactive,
     Wakingup,
     Ready,
     Levelingup,
-    Attack
+    Attack,
+    Damaged
 }
 
-public class UprooterManager : MonoBehaviour
+public class UprooterMiscController : MonoBehaviour
 {
     public int Health;
     public int MaxHealth;
     public UprooterSO UprooterStats;
-    public UprooterState State = UprooterState.Inactive;
+    public UprooterStates State = UprooterStates.Inactive;
     
     //use enum to figure out which fertilizer it is keeping track of. like red is 0 so index 0 in the array
     private int[] FertilizerIntensity;
@@ -32,13 +33,16 @@ public class UprooterManager : MonoBehaviour
     public int MaxTimeForDialogue = 15;
     private float Timer;
     private int TimeToStartDialogue;
-
+    public Material InactiveShade;
+    private Material originalMaterial;
     private void Start()
     {
         FertilizerIntensity= new int[(int)FertilizerTypes.Count];
         FertilizerLevel = new int[(int)FertilizerTypes.Count];
         Timer = 0f;
         TimeToStartDialogue = Random.Range(MinTimeForDialogue, MaxTimeForDialogue);
+        originalMaterial = GetComponent<SpriteRenderer>().material;
+        GetComponent<SpriteRenderer>().material = InactiveShade;
     }
 
     //when item is used on the uprooter
@@ -76,7 +80,7 @@ public class UprooterManager : MonoBehaviour
             //If the fertilizer increases beyond the limit. -1 means there are no more limits
             if(usedFertilizerIntensity >= usedFertilizerLimit && usedFertilizerLimit != -1)
             {
-                State = UprooterState.Levelingup;
+                State = UprooterStates.Levelingup;
                 CreateDialogue(trackFertilizerTransition.dialogue);
                 UprooterStats = uprooterTransition;
                 FertilizerLevel[usedFertilizerIndex] += 1;
@@ -91,7 +95,8 @@ public class UprooterManager : MonoBehaviour
             InventoryManager.Instance.RemoveItem(itemUsed);
             if (NutrientIntensity >= UprooterStats.NutrientTransitions.limit && UprooterStats.NutrientTransitions.limit != -1)
             {
-                State = UprooterState.Levelingup;
+                //create dialogue. Will change to ready state after dialogue (just so dialogue knows to pull levelingup dialogue)
+                State = UprooterStates.Levelingup;
                 CreateDialogue(UprooterStats.NutrientTransitions.dialogue);
                 UprooterStats = (UprooterSO)UprooterStats.NutrientTransitions.characterTransition;
                 NutrientLevel += 1;
@@ -114,39 +119,69 @@ public class UprooterManager : MonoBehaviour
     {
         Timer = 0;
         TimeToStartDialogue = Random.Range(MinTimeForDialogue, MaxTimeForDialogue);
-        // Instantiate the dialogue box prefab
-        GameObject dialogueBoxInstance = Instantiate(GameManager.Instance.DialogueBox);
-        // Set the dialogue box instance as a child of the canvas
-        dialogueBoxInstance.transform.SetParent(GameManager.Instance.Canvas.transform, false); // Set 'false' to preserve world position
 
-        //position of box is above
-        dialogueBoxInstance.transform.position = (Vector2)transform.position + (Vector2.up * (gameObject.GetComponent<SpriteRenderer>().bounds.size.y / 2)) 
-            + Vector2.up* dialogueBoxInstance.GetComponent<RectTransform>().rect.height/2 +
-            Vector2.right * dialogueBoxInstance.GetComponent<RectTransform>().rect.width/3; // Adjust the offset as needed
-
-
-        DialogueCreation[] UprooterDialogue = null;
-        //pull the righth dialogue
-        if (State == UprooterState.Wakingup)
+        if (State != UprooterStates.Inactive)
         {
-            UprooterDialogue = UprooterStats.WakingUpDialogue;
-            int randomIndex = Random.Range(0,UprooterDialogue.Length);
-            dialogueBoxInstance.GetComponent<Dialogue>().Lines = UprooterDialogue[randomIndex].dialogue;
-            dialogueBoxInstance.GetComponent<Dialogue>().StartDialogue();
-            State = UprooterState.Ready;
-        }else if(State == UprooterState.Levelingup)
-        {
-            UprooterDialogue = ReceivedDialogue;
-            int randomIndex = Random.Range(0, UprooterDialogue.Length);
-            dialogueBoxInstance.GetComponent<Dialogue>().Lines = UprooterDialogue[randomIndex].dialogue;
-            dialogueBoxInstance.GetComponent<Dialogue>().StartDialogue();
-            if (GameManager.Instance.CurrentState == GameStates.WaveInProgress)
+            // Instantiate the dialogue box prefab
+            GameObject dialogueBoxInstance = Instantiate(GameManager.Instance.DialogueBox);
+            // Set the dialogue box instance as a child of the canvas
+            dialogueBoxInstance.transform.SetParent(GameManager.Instance.Canvas.transform, false); // Set 'false' to preserve world position
+
+            //position of box is above
+            dialogueBoxInstance.transform.position = (Vector2)transform.position + (Vector2.up * (gameObject.GetComponent<SpriteRenderer>().bounds.size.y / 2))
+                + Vector2.up * dialogueBoxInstance.GetComponent<RectTransform>().rect.height / 2 +
+                Vector2.right * dialogueBoxInstance.GetComponent<RectTransform>().rect.width / 3; // Adjust the offset as needed
+
+
+            DialogueCreation[] UprooterDialogue = null;
+
+            //pull the right dialogue and state
+            if (State == UprooterStates.Ready && (GameManager.Instance.CurrentState == GameStates.WaveTransition ||
+                GameManager.Instance.CurrentState == GameStates.Start))
             {
-                State = UprooterState.Attack;
+                UprooterDialogue = UprooterStats.WaveTransitionDialogue;
+                int randomIndex = Random.Range(0, UprooterDialogue.Length);
+                dialogueBoxInstance.GetComponent<Dialogue>().Lines = UprooterDialogue[randomIndex].dialogue;
+                dialogueBoxInstance.GetComponent<Dialogue>().StartDialogue();
             }
-            else
+            else if (State == UprooterStates.Wakingup)
             {
-                State = UprooterState.Ready;
+                GetComponent<SpriteRenderer>().material = originalMaterial;
+                UprooterDialogue = UprooterStats.WakingUpDialogue;
+                int randomIndex = Random.Range(0, UprooterDialogue.Length);
+                dialogueBoxInstance.GetComponent<Dialogue>().Lines = UprooterDialogue[randomIndex].dialogue;
+                dialogueBoxInstance.GetComponent<Dialogue>().StartDialogue();
+                State = UprooterStates.Ready;
+            }
+            else if (State == UprooterStates.Levelingup)
+            {
+                UprooterDialogue = ReceivedDialogue;
+                int randomIndex = Random.Range(0, UprooterDialogue.Length);
+                dialogueBoxInstance.GetComponent<Dialogue>().Lines = UprooterDialogue[randomIndex].dialogue;
+                dialogueBoxInstance.GetComponent<Dialogue>().StartDialogue();
+                if (GameManager.Instance.CurrentState == GameStates.WaveInProgress)
+                {
+                    State = UprooterStates.Attack;
+                }
+                else
+                {
+                    State = UprooterStates.Ready;
+                }
+            }
+            else if (State == UprooterStates.Damaged)
+            {
+                UprooterDialogue = UprooterStats.DamagedDialogue;
+                int randomIndex = Random.Range(0, UprooterDialogue.Length);
+                dialogueBoxInstance.GetComponent<Dialogue>().Lines = UprooterDialogue[randomIndex].dialogue;
+                dialogueBoxInstance.GetComponent<Dialogue>().StartDialogue();
+            }
+            else if (State == UprooterStates.Attack &&
+                GameManager.Instance.CurrentState == GameStates.WaveInProgress)
+            {
+                UprooterDialogue = UprooterStats.WaveInProgressDialogue;
+                int randomIndex = Random.Range(0, UprooterDialogue.Length);
+                dialogueBoxInstance.GetComponent<Dialogue>().Lines = UprooterDialogue[randomIndex].dialogue;
+                dialogueBoxInstance.GetComponent<Dialogue>().StartDialogue();
             }
         }
     }

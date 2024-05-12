@@ -35,7 +35,7 @@ public class CorpseResidueItems : Items
     {
         if(collision.gameObject.tag == "Plant")
         {
-            var collisionScript = collision.gameObject.GetComponent<UprooterManager>();
+            var collisionScript = collision.gameObject.GetComponent<UprooterMiscController>();
             bool inFertilizedTargets = false;
 
             //check if the uprooter has fertilizer level fit in fertilized target 
