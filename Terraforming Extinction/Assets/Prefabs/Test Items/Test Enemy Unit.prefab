@@ -157,6 +157,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 2758415841910078433}
+  - component: {fileID: 6133093770068872077}
   - component: {fileID: 1109628254096713987}
   - component: {fileID: 472945261008461109}
   - component: {fileID: 3913051053635893000}
@@ -188,6 +189,41 @@ Transform:
   - {fileID: 1775040279200516619}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &6133093770068872077
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7417663138913547758}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fd2fc47278b941e439b2cde094a589b1, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  entityType: 1
+  entityID: 0
+  health: {fileID: 1109628254096713987}
+  attackTarget: {fileID: 472945261008461109}
+  moveTowardsTarget: {fileID: 3913051053635893000}
+  targetLocator: {fileID: 1624821656235067624}
+  livingEntityStats:
+    livingEntityID: 0
+    maxHealth: 0
+    reloadSpeed: 0
+    attackRangeType: 0
+    lineOfSight: 0
+    statusWeaknesses: 0
+    statusStrengths: 0
+    projectileStatsID: 0
+    projectileLayerMask:
+      serializedVersion: 2
+      m_Bits: 0
+    minAttackDistance: 0
+    armor: 0
+    regenRate: 0
+    buffEffect: 0
+    priorityType: 0
 --- !u!114 &1109628254096713987
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -232,11 +268,15 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   targetLocator: {fileID: 1624821656235067624}
   target: {fileID: 0}
+  reloadTimer: 0
+  attackCooldownSpeed: 1
+  minDistance: 12
+  projectileStatsID: 1
+  projectileLayerMask:
+    serializedVersion: 2
+    m_Bits: 2048
   distance: 0
-  attackTimer: 0.1
   timer: 0
-  attackSpeed: 0
-  minDistance: 3
 --- !u!114 &3913051053635893000
 MonoBehaviour:
   m_ObjectHideFlags: 0

@@ -13,4 +13,20 @@ MonoBehaviour:
   m_Name: Alien Stats
   m_EditorClassIdentifier: 
   entityCategory: 1
-  livingEntityStats: []
+  livingEntityStats:
+  - livingEntityID: 0
+    maxHealth: 100
+    reloadSpeed: 3
+    attackRangeType: 0
+    lineOfSight: 12
+    statusWeaknesses: 0
+    statusStrengths: 0
+    projectileStatsID: 1
+    projectileLayerMask:
+      serializedVersion: 2
+      m_Bits: 2048
+    minAttackDistance: 4
+    armor: 0
+    regenRate: 0
+    buffEffect: 0
+    priorityType: 0

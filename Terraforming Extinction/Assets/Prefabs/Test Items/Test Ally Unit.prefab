@@ -9,6 +9,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 2468880245286215723}
+  - component: {fileID: 8102108491665481787}
   - component: {fileID: 1607296789205280373}
   - component: {fileID: 4755889076211744121}
   - component: {fileID: 2771894941925700150}
@@ -40,6 +41,41 @@ Transform:
   - {fileID: 6904505339272521795}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &8102108491665481787
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1995682446292687607}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fd2fc47278b941e439b2cde094a589b1, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  entityType: 0
+  entityID: 0
+  health: {fileID: 1607296789205280373}
+  attackTarget: {fileID: 4755889076211744121}
+  moveTowardsTarget: {fileID: 2771894941925700150}
+  targetLocator: {fileID: 5864827923512708367}
+  livingEntityStats:
+    livingEntityID: 0
+    maxHealth: 0
+    reloadSpeed: 0
+    attackRangeType: 0
+    lineOfSight: 0
+    statusWeaknesses: 0
+    statusStrengths: 0
+    projectileStatsID: 0
+    projectileLayerMask:
+      serializedVersion: 2
+      m_Bits: 0
+    minAttackDistance: 0
+    armor: 0
+    regenRate: 0
+    buffEffect: 0
+    priorityType: 0
 --- !u!114 &1607296789205280373
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -84,11 +120,15 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   targetLocator: {fileID: 5864827923512708367}
   target: {fileID: 0}
+  reloadTimer: 0
+  attackCooldownSpeed: 1
+  minDistance: 12
+  projectileStatsID: 0
+  projectileLayerMask:
+    serializedVersion: 2
+    m_Bits: 1024
   distance: 0
-  attackTimer: 0.05
   timer: 0
-  attackSpeed: 0
-  minDistance: 3
 --- !u!114 &2771894941925700150
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -96,7 +136,7 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1995682446292687607}
-  m_Enabled: 1
+  m_Enabled: 0
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 41cf18369e6a196428c2e66d6c77d251, type: 3}
   m_Name: 
