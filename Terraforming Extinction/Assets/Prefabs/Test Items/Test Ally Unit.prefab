@@ -250,12 +250,12 @@ MonoBehaviour:
   m_GameObject: {fileID: 1995682446292687607}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: e5ba4f30dfa2edb4a87ed67e6e83ff98, type: 3}
+  m_Script: {fileID: 11500000, guid: ec2020f13edd95e46bcdd8daa2d35da6, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
   Health: 0
   MaxHealth: 0
-  UprooterStats: {fileID: 11400000, guid: 62c3ed30e78e407418f0635a296449f8, type: 2}
+  UprooterStats: {fileID: 0}
   State: 0
   FertilizerLevel: 
   NutrientLevel: 0

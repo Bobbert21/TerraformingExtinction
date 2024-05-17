@@ -13,7 +13,7 @@ public class Globals : MonoBehaviour
     public ProjectileStatsScriptableObject ProjectileStatsScriptableObjectInstance { get => projectileStatsScriptableObject; }
 
     public static ProjectileStatsScriptableObject ProjectileStatsScriptableObject { get; set; }
-    public static GeneralStatsScriptableObject PlantStatsScriptableObject { get; set; }
+    public static GeneralStatsScriptableObject UprooterStatsScriptableObject { get; set; }
     public static GeneralStatsScriptableObject AlienStatsScriptableObject { get; set; }
 
     void Awake()
@@ -21,7 +21,7 @@ public class Globals : MonoBehaviour
         Instance = this;
 
         ProjectileStatsScriptableObject = projectileStatsScriptableObject;
-        PlantStatsScriptableObject = plantStatsScriptableObject;
+        UprooterStatsScriptableObject = plantStatsScriptableObject;
         AlienStatsScriptableObject = alienStatsScriptableObject;
     }
 
