@@ -11,7 +11,7 @@ public class LivingEntityStatsContainer : MonoBehaviour
     [SerializeField] AttackTarget attackTarget;
     [SerializeField] MoveTowardsTarget moveTowardsTarget;
     [SerializeField] TargetLocator targetLocator;
-    [SerializeField] EnemyMovement enemyMovement;
+    [SerializeField] EnemyUseCommand enemyMovement;
 
     [ReadOnly][SerializeField] private LivingEntityStats livingEntityStats;
 

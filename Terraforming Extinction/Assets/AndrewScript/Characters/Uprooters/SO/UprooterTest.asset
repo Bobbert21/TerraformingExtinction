@@ -14,6 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   Name: Test
   Health: 100
+  CharacterType: 0
   FertilizerTransitions:
   - type: 0
     limit: 1
@@ -29,7 +30,9 @@ MonoBehaviour:
   NutrientTransitions:
     limit: 2
     characterTransition: {fileID: 11400000, guid: 19eb47fb31cc56b4b8aa8eb5367ed650, type: 2}
-    dialogue: []
+    dialogue:
+    - dialogue:
+      - Yummy
   InactiveDialogue: []
   WakingUpDialogue:
   - dialogue:
