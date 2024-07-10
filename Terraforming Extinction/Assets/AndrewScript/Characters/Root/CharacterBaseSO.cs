@@ -27,10 +27,17 @@ public class DialogueCreation
     public string[] dialogue;
 }
 
+public enum CharacterTypes
+{
+    Uprooters,
+    Aliens
+}
+
 public abstract class CharacterBaseSO : ScriptableObject
 {
     public string Name;
     public int Health;
+    public CharacterTypes CharacterType;
     public FertilizerTransition[] FertilizerTransitions;
     public NutrientTransition NutrientTransitions;
     

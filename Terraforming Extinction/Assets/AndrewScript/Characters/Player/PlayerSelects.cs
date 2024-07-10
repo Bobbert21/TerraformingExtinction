@@ -3,18 +3,21 @@ using System.Collections.Generic;
 using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.EventSystems;
+using UnityEngine.UI;
 
-public class PlayerInput : MonoBehaviour
+public class PlayerSelects : MonoBehaviour
 {
-    public float Speed = 5f; // Speed at which the character moves
-    public float SelectionDistance = 30f;
-    private GameObject ObjSelected;
-    public Rigidbody2D RigidBody;
+    public float SelectionDistance = 5f;
+    public GameObject ObjSelected;
+    public Canvas canvas;
+    public Button RejoiceBtn;
+    public Button FeedBtn;
+    public Button OfferBtn;
+    public Button InventoryBtn;
 
     // Update is called once per frame
     void Update()
     {
-        PlayerMovement();
 
         if (Input.GetMouseButtonDown(0))
         {
@@ -22,33 +25,9 @@ public class PlayerInput : MonoBehaviour
         }
     }
 
-    private void PlayerMovement()
-    {
-        // Get input for horizontal and vertical movement using WASD keys
-        float horizontalInput = Input.GetAxisRaw("Horizontal"); // A and D keys
-        float verticalInput = Input.GetAxisRaw("Vertical");     // W and S keys
+    
 
-        // Combine the input into a movement vector
-        Vector2 movement = new Vector2(horizontalInput, verticalInput);
-
-        // Apply the movement as a force to the Rigidbody
-        RigidBody.velocity = movement * Speed;
-
-        if (movement != Vector2.zero) 
-        { 
-            CheckObjSelectedAvailability();
-        }
-
-        // Stop applying force when there's no input
-        if (Mathf.Approximately(horizontalInput, 0f) && Mathf.Approximately(verticalInput, 0f))
-        {
-            RigidBody.velocity = Vector2.zero;
-        }
-
-
-    }
-
-    private void CheckObjSelectedAvailability()
+    public void CheckObjSelectedAvailability()
     {
         if (ObjSelected != null)
         {
@@ -84,6 +63,7 @@ public class PlayerInput : MonoBehaviour
         //check for collision from mouse
         foreach (RaycastHit2D mouseCollidedEnv in mouseCollidedEnvs)
         {
+            //ObjSelected = null;
             GameObject collidedEnvObj = mouseCollidedEnv.collider.gameObject;
             
             Collider2D objClickedCollider = mouseCollidedEnv.collider;
@@ -107,58 +87,67 @@ public class PlayerInput : MonoBehaviour
                     break;
                 }else if(collidedEnvObj.tag == "Plant")
                 {
-                    //Doing stuff with plants between waves, during waves or at start
-                    if(GameManager.Instance.CurrentState == GameStates.WaveTransition || 
-                        GameManager.Instance.CurrentState == GameStates.Start || 
-                        GameManager.Instance.CurrentState == GameStates.WaveInProgress)
+                    Debug.Log("Into plant");
+                    
+                    var uprooterGeneralStatScript = collidedEnvObj.GetComponent<UprooterGeneralStatsContainer>();
+                    UprooterStates uprooterState = uprooterGeneralStatScript.StateManager.GetState();
+                    Debug.Log(uprooterState);
+                    //If ready or battling
+                    if(uprooterState == UprooterStates.Ready||
+                        uprooterState == UprooterStates.Battle )
                     {
                         ObjSelected = collidedEnvObj;
                         //Click on inventory button
-                        InventoryManager.Instance.InventoryBtn.onClick.Invoke();
+                        InventoryBtn.onClick.Invoke();
                         //set offer button
-                        InventoryManager.Instance.FeedBtn.gameObject.SetActive(true);
-                        InventoryManager.Instance.Uprooter = ObjSelected;
-
-                        //Start or transition and uprooter's inactive. Rejoice!
-                        if (GameManager.Instance.CurrentState != GameStates.WaveInProgress &&
-                            ObjSelected.GetComponent<UprooterMiscController>().State == UprooterStates.Inactive &&
-                            GameManager.Instance.CurrentNumOfUprooters < GameManager.Instance.MaxNumOfUprooters) 
-                        {
-
-                            InventoryManager.Instance.RejoiceBtn.gameObject.SetActive(true);
-
-                            // Position the button above the target object
-                            Vector2 rejoicePosition = (Vector2)ObjSelected.transform.position + (Vector2.up * (ObjSelected.GetComponent<SpriteRenderer>().bounds.size.y / 2)) + Vector2.up * 20f; // Adjust the height as needed
-                            InventoryManager.Instance.RejoiceBtn.transform.position = Camera.main.WorldToScreenPoint(rejoicePosition);
-                        }
-
+                        FeedBtn.gameObject.SetActive(true);
+                        ObjSelected = collidedEnvObj;
                         break;
                     }
-                    
+                    //if inactive, then can choose to rejoice
+                    else if (uprooterState == UprooterStates.Inactive &&
+                            UprooterManager.Instance.CurrentNumOfUprooters < UprooterManager.Instance.MaxNumOfUprooters)
+                    {
+                        ObjSelected = collidedEnvObj;
+                        Button newRejoice = Instantiate(RejoiceBtn);
+
+                        // Set the button as a child of the canvas
+                        newRejoice.transform.SetParent(canvas.transform, false); // Set 'false' to preserve world position
+
+                        // Get the RectTransform component of the button
+                        RectTransform rejoiceRectTransform = newRejoice.GetComponent<RectTransform>();
+
+                        // Calculate the position above the target object in world space
+                        Vector3 targetPosition = ObjSelected.transform.position;
+                        Vector3 rejoicePosition = new Vector3(targetPosition.x, targetPosition.y + ObjSelected.GetComponent<SpriteRenderer>().bounds.size.y / 2 + 0.5f, targetPosition.z);
+
+                        // Convert the world position to screen space
+                        Vector2 screenPoint = Camera.main.WorldToScreenPoint(rejoicePosition);
+
+                        // Convert the screen space position to local position within the canvas
+                        RectTransformUtility.ScreenPointToLocalPointInRectangle(canvas.GetComponent<RectTransform>(), screenPoint, null, out Vector2 canvasPos);
+                        rejoiceRectTransform.localPosition = canvasPos;
+
+                        newRejoice.gameObject.SetActive(true);
+                        newRejoice.GetComponent<Rejoice>().setPlayer(this);
+                        newRejoice.GetComponent<Rejoice>().setObject(ObjSelected);
+                        Debug.Log("Rejoice set");
+                        break;
+                    }
+
                 }
                 else if(collidedEnvObj.tag == "Item")
                 {
                     Debug.Log("Get Item");
                     InventoryManager.Instance.AddItem(collidedEnvObj.GetComponent<Items>().ItemScriptableObject, collidedEnvObj.GetComponent<Items>().Quantity);
                     Destroy(collidedEnvObj);
+                    break;
                 }
             }
         }
 
     }
-
-    public void SetUprooterActiveState()
-    {
-        if(ObjSelected.GetComponent<UprooterMiscController>() != null)
-        {
-            //will prompt dialogue when waking up and in dialogue script will set active
-            ObjSelected.GetComponent<UprooterMiscController>().State = UprooterStates.Wakingup;
-            ObjSelected.GetComponent<UprooterMiscController>().CreateDialogue();
-            InventoryManager.Instance.RejoiceBtn.gameObject.SetActive(false);
-            GameManager.Instance.CurrentNumOfUprooters += 1;
-        }
-        
-    }
+    
 
     private float DistanceOfCollidersClosestPoints(Collider2D collider1, Collider2D collider2)
     {
@@ -169,8 +158,8 @@ public class PlayerInput : MonoBehaviour
         //calculate distance
         float distance = Vector2.Distance(closestPoint1, closestPoint2);
         // Highlight closest points with GameObjects
-        HighlightPoint(closestPoint1, Color.red);
-        HighlightPoint(closestPoint2, Color.blue);
+        //HighlightPoint(closestPoint1, Color.red);
+        //HighlightPoint(closestPoint2, Color.blue);
         return distance;
     }
 
@@ -180,7 +169,7 @@ public class PlayerInput : MonoBehaviour
         // Instantiate a small sphere GameObject at the specified point
         GameObject highlightObject = GameObject.CreatePrimitive(PrimitiveType.Sphere);
         highlightObject.transform.position = point;
-        highlightObject.transform.localScale = Vector3.one * 20f; // Adjust the scale of the GameObject to make it smaller
+        highlightObject.transform.localScale = Vector3.one * 5f; // Adjust the scale of the GameObject to make it smaller
         highlightObject.GetComponent<Renderer>().material.color = color;
         Destroy(highlightObject, 1f); // Destroy the GameObject after a short delay to clean up
     }

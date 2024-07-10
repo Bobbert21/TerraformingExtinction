@@ -3,17 +3,8 @@ using System.Collections.Generic;
 using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.UIElements;
+//NOT USED ANYMORE. SPLIT UP ALL TO DIFFERENT SCRIPTS
 
-[System.Serializable]
-public enum UprooterStates
-{
-    Inactive,
-    Wakingup,
-    Ready,
-    Levelingup,
-    Attack,
-    Damaged
-}
 
 public class UprooterMiscController : MonoBehaviour
 {
@@ -108,11 +99,7 @@ public class UprooterMiscController : MonoBehaviour
 
     private void Update()
     {
-        Timer += Time.deltaTime;
-        if(Timer > TimeToStartDialogue)
-        {
-            CreateDialogue();
-        }
+        
     }
 
     public void CreateDialogue(DialogueCreation[] ReceivedDialogue = null)
@@ -161,7 +148,7 @@ public class UprooterMiscController : MonoBehaviour
                 dialogueBoxInstance.GetComponent<Dialogue>().StartDialogue();
                 if (GameManager.Instance.CurrentState == GameStates.WaveInProgress)
                 {
-                    State = UprooterStates.Attack;
+                    State = UprooterStates.Battle;
                 }
                 else
                 {
@@ -175,7 +162,7 @@ public class UprooterMiscController : MonoBehaviour
                 dialogueBoxInstance.GetComponent<Dialogue>().Lines = UprooterDialogue[randomIndex].dialogue;
                 dialogueBoxInstance.GetComponent<Dialogue>().StartDialogue();
             }
-            else if (State == UprooterStates.Attack &&
+            else if (State == UprooterStates.Battle &&
                 GameManager.Instance.CurrentState == GameStates.WaveInProgress)
             {
                 UprooterDialogue = UprooterStats.WaveInProgressDialogue;

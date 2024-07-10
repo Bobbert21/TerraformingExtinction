@@ -14,12 +14,16 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   Name: FED
   Health: 0
+  CharacterType: 0
   FertilizerTransitions: []
   NutrientTransitions:
     limit: -1
     characterTransition: {fileID: 0}
     dialogue: []
-  InactiveDialogue: []
+  InactiveDialogue:
+  - dialogue:
+    - test
   WakingUpDialogue: []
   WaveTransitionDialogue: []
   WaveInProgressDialogue: []
+  DamagedDialogue: []
