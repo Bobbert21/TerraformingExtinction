@@ -22,11 +22,11 @@ public class UprooterItemUsedOn : MonoBehaviour
     {
         if (Input.GetKeyDown(KeyCode.C))
         {
-            AddFertilizerOrNutrients(nutrientTestAdd);
+            ItemUsedOn(nutrientTestAdd);
         }
         else if (Input.GetKeyDown(KeyCode.Z))
         {
-            AddFertilizerOrNutrients(fertilizerTestAdd);
+            ItemUsedOn(fertilizerTestAdd);
         }
     }
 
@@ -38,8 +38,9 @@ public class UprooterItemUsedOn : MonoBehaviour
         get => UseStatContainer ? GetComponent<UprooterGeneralStatsContainer>().StateManager : LocalStateManager;
     }
 
+
     // when N or F is used on the uprooter
-    public void AddFertilizerOrNutrients(ItemSO itemUsed)
+    public void ItemUsedOn(ItemSO itemUsed)
     {
         if (itemUsed is FertilizerSO fertilizerUsed)
         {
@@ -48,6 +49,10 @@ public class UprooterItemUsedOn : MonoBehaviour
         else if (itemUsed is NutrientSO nutrientUsed)
         {
             StateManager.NutrientUsedOn(nutrientUsed);
+        }
+        else
+        {
+            Debug.Log("Item used is not applicable to uprooter");
         }
     }
 }

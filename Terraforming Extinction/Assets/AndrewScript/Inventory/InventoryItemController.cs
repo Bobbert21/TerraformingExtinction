@@ -14,7 +14,7 @@ public class InventoryItemController : MonoBehaviour
 
     public void OnButtonClick()
     {
-        InventoryManager.Instance.SelectedItemFromPlayer(Item);
+        InventoryManager.Instance.PlayerSelectingItem(Item);
         Debug.Log("Button clicked");
     }
 }

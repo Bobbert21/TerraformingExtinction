@@ -7,7 +7,14 @@ public class PlayerMovement : MonoBehaviour
 {
     public bool UseStatContainer = false;
     public float Speed = 5f; // Speed at which the character moves
+    public PlayerSelects LocalPlayerSelects;
     public Rigidbody2D RigidBody;
+
+    private PlayerSelects PlayerSelects
+    {
+        get => UseStatContainer ? GetComponent<PlayerGeneralStatsContainer>().playerSelects : LocalPlayerSelects;
+    }
+
     // Start is called before the first frame update
     void Start()
     {
@@ -35,10 +42,8 @@ public class PlayerMovement : MonoBehaviour
 
         if (movement != Vector2.zero)
         {
-            if(UseStatContainer)
-            {
-                GetComponent<PlayerGeneralStatsContainer>().playerSelects.CheckObjSelectedAvailability();
-            }
+            //when move away from objects, can't interact with them
+            PlayerSelects.CheckObjSelectedAvailability();
         }
 
         // Stop applying force when there's no input

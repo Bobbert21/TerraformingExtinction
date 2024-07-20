@@ -6,7 +6,7 @@ public class UprooterLevelingUpState : UprooterBaseState
 {
     public override void Enter(UprooterStateManager stateManager)
     {
-        
+
     }
     public override void Exit(UprooterStateManager stateManager)
     {
@@ -23,12 +23,7 @@ public class UprooterLevelingUpState : UprooterBaseState
 
     public override void UpdateState(UprooterStateManager stateManager)
     {
-        
-        Exit(stateManager);
-    }
 
-    public override bool CanInventoryUse()
-    {
-        return false;
+        Exit(stateManager);
     }
 }
