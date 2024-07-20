@@ -11,4 +11,5 @@ public class RootStatsContainer : CharacterGeneralStatsContainer
     public int NutrientLevel;
     public RootItemUsedOn ItemUsedOn;
     public RootDialogueController DialogueController;
+    public RootSO RootStats;
 }
