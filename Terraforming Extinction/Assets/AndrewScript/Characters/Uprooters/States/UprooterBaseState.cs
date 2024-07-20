@@ -10,7 +10,6 @@ public abstract class UprooterBaseState
     public abstract void SetState(UprooterStateManager statManager);
     public abstract void UpdateState(UprooterStateManager stateManager);
 
-    public abstract bool CanInventoryUse();
     protected UprooterStates state;
 
 }

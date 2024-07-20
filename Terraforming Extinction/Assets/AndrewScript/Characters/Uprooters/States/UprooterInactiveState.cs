@@ -26,8 +26,5 @@ public class UprooterInactiveState : UprooterBaseState
 
     }
 
-    public override bool CanInventoryUse()
-    {
-        return true;
-    }
+   
 }

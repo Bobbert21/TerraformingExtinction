@@ -3,13 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using static DepositSO;
 
-[System.Serializable]
-public enum RootStates
-{
-    Ready,
-    Levelingup,
-    Damaged
-}
+
 
 public class RootMiscController : MonoBehaviour
 {

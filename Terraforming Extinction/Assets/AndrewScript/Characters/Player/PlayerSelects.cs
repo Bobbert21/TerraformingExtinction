@@ -11,9 +11,6 @@ public class PlayerSelects : MonoBehaviour
     public GameObject ObjSelected;
     public Canvas canvas;
     public Button RejoiceBtn;
-    public Button FeedBtn;
-    public Button OfferBtn;
-    public Button InventoryBtn;
 
     // Update is called once per frame
     void Update()
@@ -34,18 +31,17 @@ public class PlayerSelects : MonoBehaviour
             Collider2D playerCollider = gameObject.GetComponent<Collider2D>();
             Collider2D itemCollider = ObjSelected.GetComponent<Collider2D>();
             float distance = DistanceOfCollidersClosestPoints(playerCollider, itemCollider);
+            //stop showing inventory options when too far away
             if(distance > SelectionDistance)
             {
                 if(ObjSelected.tag == "Root")
                 {
-                    InventoryManager.Instance.OfferBtn.gameObject.SetActive(false);
-                    InventoryManager.Instance.CloseBtn.onClick.Invoke();
+                    InventoryManager.Instance.ShowInventoryOptionsWithRoot(false);
                 }
                 else if(ObjSelected.tag == "Plant")
                 {
-                    InventoryManager.Instance.FeedBtn.gameObject.SetActive(false);
-                    InventoryManager.Instance.RejoiceBtn.gameObject.SetActive(false);
-                    InventoryManager.Instance.CloseBtn.onClick.Invoke();
+                    //make functions in Inventory Manager
+                    InventoryManager.Instance.ShowInventoryOptionsWithUprooters(false);
                 }
 
                 ObjSelected = null;
@@ -79,11 +75,8 @@ public class PlayerSelects : MonoBehaviour
                 if (collidedEnvObj.tag == "Root")
                 {
                     ObjSelected = collidedEnvObj;
-                    //Click on inventory button
-                    InventoryManager.Instance.InventoryBtn.onClick.Invoke();
+                    InventoryManager.Instance.ShowInventoryOptionsWithRoot(true);
                     InventoryManager.Instance.Root = ObjSelected;
-                    //set offer button
-                    InventoryManager.Instance.OfferBtn.gameObject.SetActive(true);
                     break;
                 }else if(collidedEnvObj.tag == "Plant")
                 {
@@ -93,15 +86,13 @@ public class PlayerSelects : MonoBehaviour
                     UprooterStates uprooterState = uprooterGeneralStatScript.StateManager.GetState();
                     Debug.Log(uprooterState);
                     //If ready or battling
+                    //move these into the statemanager code
                     if(uprooterState == UprooterStates.Ready||
                         uprooterState == UprooterStates.Battle )
                     {
                         ObjSelected = collidedEnvObj;
-                        //Click on inventory button
-                        InventoryBtn.onClick.Invoke();
-                        //set offer button
-                        FeedBtn.gameObject.SetActive(true);
-                        ObjSelected = collidedEnvObj;
+                        InventoryManager.Instance.ShowInventoryOptionsWithUprooters(true);
+                        InventoryManager.Instance.Uprooter = ObjSelected;
                         break;
                     }
                     //if inactive, then can choose to rejoice

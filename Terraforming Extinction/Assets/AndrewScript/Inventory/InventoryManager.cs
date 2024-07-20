@@ -28,21 +28,23 @@ public class InventoryManager : MonoBehaviour
 
     public Transform ItemContent;
     public GameObject InventoryItemObj;
+    public GameObject Inventory;
     public List<InventoryItem> ListOfInventory = new();
     public int MaxInventorySpace;
+    [HideInInspector]
     public GameObject Root;
+    [HideInInspector]
     public GameObject Uprooter;
     public Toggle EnableRemove;
-    public Button FeedBtn;
-    public Button OfferBtn;
-    public Button InventoryBtn;
-    public Button CloseBtn;
-    public Button RejoiceBtn;
+    public GameObject FeedBtn;
+    public GameObject OfferBtn;
+    public GameObject InventoryBtn;
+    public GameObject CloseBtn;
     public ItemSO testItem1;
     public ItemSO testItem2;
     private ItemSO ItemSelected;
 
-    public void SelectedItemFromPlayer(ItemSO itemSelected)
+    public void PlayerSelectingItem(ItemSO itemSelected)
     {
         //means the player is unselecting
         if (ItemSelected == itemSelected)
@@ -156,6 +158,7 @@ public class InventoryManager : MonoBehaviour
     public void DisplayItems()
     {
         //Clear out the items in inventory
+        Debug.Log("ItemContent: " + ItemContent);
         foreach(Transform inventoryItem in ItemContent)
         {
             Destroy(inventoryItem.gameObject);
@@ -201,6 +204,38 @@ public class InventoryManager : MonoBehaviour
         }
     }
 
+    public void ShowInventoryOptionsWithRoot(bool show_options)
+    {
+        if (show_options)
+        {
+            //it's like clicking on button
+            InventoryBtn.GetComponent<Button>().onClick.Invoke();
+            //set offer button
+            OfferBtn.gameObject.SetActive(true);
+        }
+        else
+        {
+            OfferBtn.gameObject.SetActive(false);
+            CloseBtn.GetComponent<Button>().onClick.Invoke();
+        }
+        
+    }
+
+    public void ShowInventoryOptionsWithUprooters(bool show_options)
+    {
+        if (show_options)
+        {
+            //Click on inventory button
+            InventoryBtn.GetComponent<Button>().onClick.Invoke();
+            FeedBtn.gameObject.SetActive(true);
+        }
+        else
+        {
+            FeedBtn.gameObject.SetActive(false);
+            CloseBtn.GetComponent<Button>().onClick.Invoke();
+        }
+    }
+
     //can only offer quantity = 1 and 1 item at a time
     public void OfferingItemToRoot()
     {
@@ -210,6 +245,8 @@ public class InventoryManager : MonoBehaviour
             if (CanRemoveItem(ItemSelected.Type))
             {
                 rootItemManagerScript.RootConversion(ItemSelected);
+                //remove item here
+                RemoveItem(ItemSelected.Type);
             }
             else { Debug.Log("Not enough quantity to offer"); }
         }
@@ -220,10 +257,12 @@ public class InventoryManager : MonoBehaviour
     {
         if (ItemSelected != null)
         {
-            var uprooterManagerScript = Uprooter.GetComponent<UprooterMiscController>();
+            var uprooterItemUsedOnScript = Uprooter.GetComponent<UprooterItemUsedOn>();
             if (CanRemoveItem(ItemSelected.Type))
             {
-                uprooterManagerScript.ItemUsed(ItemSelected);
+                uprooterItemUsedOnScript.ItemUsedOn(ItemSelected);
+                //remove item here
+                RemoveItem(ItemSelected.Type);
             }
             else { Debug.Log("Not enough quantity to offer"); }
         }
@@ -231,11 +270,11 @@ public class InventoryManager : MonoBehaviour
     }
     private void Update()
     {
-        if (Input.GetKeyDown(KeyCode.C))
+        if (Input.GetKeyDown(KeyCode.Q))
         {
             
             AddItem(testItem1);
-        }else if(Input.GetKeyDown(KeyCode.B))
+        }else if(Input.GetKeyDown(KeyCode.W))
         
             AddItem(testItem2);
         }

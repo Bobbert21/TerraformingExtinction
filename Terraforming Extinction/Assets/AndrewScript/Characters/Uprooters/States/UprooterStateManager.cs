@@ -122,6 +122,7 @@ public class UprooterStateManager : MonoBehaviour
         CurrentState.Enter(this);
     }
 
+    //have to change so nutrients or other items used on it will affect differently based on states
     public void NutrientUsedOn(NutrientSO nurtientUsed)
     {
         
@@ -129,10 +130,12 @@ public class UprooterStateManager : MonoBehaviour
         if (NutrientIntensity >= Stats.NutrientTransitions.limit && Stats.NutrientTransitions.limit != -1)
         {
             //could move dialoguecontroller inside state but would have to pass through the dialoguecontroller stats and intensity stats
+            //actually should try to move it in state so i can control what kind of dialogue if any goes to it
             DialogueController.CreateDialogue(Stats.NutrientTransitions.dialogue, UprooterStates.Levelingup);
             PreviousState = CurrentState;
             CurrentState = LevelingUpState;
             CurrentState.Enter(this);
+            //pass through these calculations into the states (so each state can act accordingly with the items used on it)
             NutrientLevel += 1;
             NutrientIntensity = 0;
             Stats = (UprooterSO)Stats.NutrientTransitions.characterTransition;
