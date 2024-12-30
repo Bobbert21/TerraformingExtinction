@@ -25,4 +25,17 @@ public class RootReadyState : RootBaseState
     
     }
 
+    public override bool PlayerSelects(ICharacterStateManager stateManager)
+    {
+        InventoryManager.Instance.ShowInventoryOptionsWithRoot(true);
+        RootStateManager rootStateManager = (RootStateManager)stateManager;
+        rootStateManager.ShowInventory();
+        return true;
+    }
+
+    public override void PlayerDeselects(ICharacterStateManager stateManager)
+    {
+        InventoryManager.Instance.ShowInventoryOptionsWithRoot(false);
+    }
+
 }

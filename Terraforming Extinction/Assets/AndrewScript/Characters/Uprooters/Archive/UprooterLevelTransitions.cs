@@ -7,20 +7,20 @@ public class UprooterLevelTransitions : MonoBehaviour
     public bool UseStatContainer = false;
     [Header("Local variables to debug")]
     // Local variables
-    public UprooterSO LocalStats;
+    public UprooterLevelStatSO LocalStats;
     public UprooterDialogueController DialogueController;
     public UprooterStateManager LocalStateManager;
     public int[] LocalFertilizerIntensity;
     public int[] LocalFertilizerLevel;
     public int LocalNutrientIntensity;
     public int LocalNutrientLevel;
-    private UprooterSO Stats
+    private UprooterLevelStatSO Stats
     {
-        get => UseStatContainer ? (UprooterSO)GetComponent<UprooterGeneralStatsContainer>().Stats : LocalStats;
+        get => UseStatContainer ? (UprooterLevelStatSO)GetComponent<UprooterStateStatContainer>().Stats : LocalStats;
         set
         {
             if (UseStatContainer)
-                GetComponent<CharacterGeneralStatsContainer>().Stats = value;
+                GetComponent<CharacterStateStatContainer>().Stats = value;
             else
                 LocalStats = value;
         }
@@ -28,11 +28,11 @@ public class UprooterLevelTransitions : MonoBehaviour
 
     private UprooterStateManager StateManager
     {
-        get => UseStatContainer ? GetComponent<UprooterGeneralStatsContainer>().StateManager : LocalStateManager;
+        get => UseStatContainer ? GetComponent<UprooterStateStatContainer>().StateManager : LocalStateManager;
         set
         {
             if (UseStatContainer)
-                GetComponent<UprooterGeneralStatsContainer>().StateManager = value;
+                GetComponent<UprooterStateStatContainer>().StateManager = value;
             else
                 LocalStateManager = value;
         }
@@ -40,11 +40,11 @@ public class UprooterLevelTransitions : MonoBehaviour
 
     private int[] FertilizerIntensity
     {
-        get => UseStatContainer ? GetComponent<UprooterGeneralStatsContainer>().FertilizerIntensity : LocalFertilizerIntensity;
+        get => UseStatContainer ? GetComponent<UprooterStateStatContainer>().FertilizerIntensity : LocalFertilizerIntensity;
         set
         {
             if (UseStatContainer)
-                GetComponent<UprooterGeneralStatsContainer>().FertilizerIntensity = value;
+                GetComponent<UprooterStateStatContainer>().FertilizerIntensity = value;
             else
                 LocalFertilizerIntensity = value;
         }
@@ -52,11 +52,11 @@ public class UprooterLevelTransitions : MonoBehaviour
 
     private int[] FertilizerLevel
     {
-        get => UseStatContainer ? GetComponent<UprooterGeneralStatsContainer>().FertilizerLevel : LocalFertilizerLevel;
+        get => UseStatContainer ? GetComponent<UprooterStateStatContainer>().FertilizerLevel : LocalFertilizerLevel;
         set
         {
             if (UseStatContainer)
-                GetComponent<UprooterGeneralStatsContainer>().FertilizerLevel = value;
+                GetComponent<UprooterStateStatContainer>().FertilizerLevel = value;
             else
                 LocalFertilizerLevel = value;
         }
@@ -64,11 +64,11 @@ public class UprooterLevelTransitions : MonoBehaviour
 
     private int NutrientIntensity
     {
-        get => UseStatContainer ? GetComponent<UprooterGeneralStatsContainer>().NutrientIntensity : LocalNutrientIntensity;
+        get => UseStatContainer ? GetComponent<UprooterStateStatContainer>().NutrientIntensity : LocalNutrientIntensity;
         set
         {
             if (UseStatContainer)
-                GetComponent<UprooterGeneralStatsContainer>().NutrientIntensity = value;
+                GetComponent<UprooterStateStatContainer>().NutrientIntensity = value;
             else
                 LocalNutrientIntensity = value;
         }
@@ -76,11 +76,11 @@ public class UprooterLevelTransitions : MonoBehaviour
 
     private int NutrientLevel
     {
-        get => UseStatContainer ? GetComponent<UprooterGeneralStatsContainer>().NutrientLevel : LocalNutrientLevel;
+        get => UseStatContainer ? GetComponent<UprooterStateStatContainer>().NutrientLevel : LocalNutrientLevel;
         set
         {
             if (UseStatContainer)
-                GetComponent<UprooterGeneralStatsContainer>().NutrientLevel = value;
+                GetComponent<UprooterStateStatContainer>().NutrientLevel = value;
             else
                 LocalNutrientLevel = value;
         }
@@ -97,7 +97,7 @@ public class UprooterLevelTransitions : MonoBehaviour
         }
         else
         {
-            DialogueController = GetComponent<UprooterGeneralStatsContainer>().DialogueController;
+            //DialogueController = GetComponent<UprooterGeneralStatsContainer>().DialogueController;
         }
     }
 
@@ -111,7 +111,7 @@ public class UprooterLevelTransitions : MonoBehaviour
     public void FertilizerUsed(FertilizerSO fertilizerUsed)
     {
         Debug.Log("fertilizer used");
-        UprooterSO uprooterTransition = null;
+        UprooterLevelStatSO uprooterTransition = null;
         int usedFertilizerIndex = (int)fertilizerUsed.FertilizerType;
         // add intensity based on what fertilizer is given
         FertilizerIntensity[usedFertilizerIndex] += 1;
@@ -128,7 +128,7 @@ public class UprooterLevelTransitions : MonoBehaviour
             if (usedFertilizerIndex == (int)fertilizerTransition.type)
             {
                 usedFertilizerLimit = fertilizerTransition.limit;
-                uprooterTransition = (UprooterSO)fertilizerTransition.characterTransition;
+                uprooterTransition = (UprooterLevelStatSO)fertilizerTransition.characterTransition;
                 trackFertilizerTransition = fertilizerTransition;
                 break;
             }
@@ -156,7 +156,7 @@ public class UprooterLevelTransitions : MonoBehaviour
         {
             StateManager.NutrientUsedOn(nurtientUsed);
             DialogueController.CreateDialogue(Stats.NutrientTransitions.dialogue, StateManager.GetState());
-            Stats = (UprooterSO)Stats.NutrientTransitions.characterTransition;
+            Stats = (UprooterLevelStatSO)Stats.NutrientTransitions.characterTransition;
             NutrientLevel += 1;
             NutrientIntensity = 0;
             Debug.Log("Transition to " + Stats.Name);

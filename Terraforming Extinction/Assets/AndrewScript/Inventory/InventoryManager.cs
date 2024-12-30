@@ -208,6 +208,7 @@ public class InventoryManager : MonoBehaviour
     {
         if (show_options)
         {
+            Debug.Log("Into Inventory");
             //it's like clicking on button
             InventoryBtn.GetComponent<Button>().onClick.Invoke();
             //set offer button
@@ -241,7 +242,8 @@ public class InventoryManager : MonoBehaviour
     {
         if (ItemSelected != null)
         {
-            var rootItemManagerScript = Root.GetComponent<RootMiscController>();
+            //change to getting it from the stat container rather than the item used
+            var rootItemManagerScript = Root.GetComponent<RootItemUsedOn>();
             if (CanRemoveItem(ItemSelected.Type))
             {
                 rootItemManagerScript.RootConversion(ItemSelected);
@@ -274,7 +276,7 @@ public class InventoryManager : MonoBehaviour
         {
             
             AddItem(testItem1);
-        }else if(Input.GetKeyDown(KeyCode.W))
+        }else if(Input.GetKeyDown(KeyCode.E))
         
             AddItem(testItem2);
         }

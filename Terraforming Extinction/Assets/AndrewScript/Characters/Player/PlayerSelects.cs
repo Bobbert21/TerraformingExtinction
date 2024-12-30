@@ -9,8 +9,14 @@ public class PlayerSelects : MonoBehaviour
 {
     public float SelectionDistance = 5f;
     public GameObject ObjSelected;
-    public Canvas canvas;
-    public Button RejoiceBtn;
+
+    //Create Singleton
+    public static PlayerSelects Instance;
+
+    private void Awake()
+    {
+        Instance = this;
+    }
 
     // Update is called once per frame
     void Update()
@@ -36,12 +42,17 @@ public class PlayerSelects : MonoBehaviour
             {
                 if(ObjSelected.tag == "Root")
                 {
-                    InventoryManager.Instance.ShowInventoryOptionsWithRoot(false);
+                    //make functions in Inventory Manager
+                    var rootGeneralStatScript = ObjSelected.GetComponent<RootStateStatContainer>();
+                    RootStateManager rootStateManager = rootGeneralStatScript.StateManager;
+                    rootStateManager.PlayerDeselected();
                 }
                 else if(ObjSelected.tag == "Plant")
                 {
                     //make functions in Inventory Manager
-                    InventoryManager.Instance.ShowInventoryOptionsWithUprooters(false);
+                    var uprooterGeneralStatScript = ObjSelected.GetComponent<UprooterStateStatContainer>();
+                    UprooterStateManager uprooterStateManager = uprooterGeneralStatScript.StateManager;
+                    uprooterStateManager.PlayerDeselected();
                 }
 
                 ObjSelected = null;
@@ -61,73 +72,42 @@ public class PlayerSelects : MonoBehaviour
         {
             //ObjSelected = null;
             GameObject collidedEnvObj = mouseCollidedEnv.collider.gameObject;
-            
+
             Collider2D objClickedCollider = mouseCollidedEnv.collider;
             Collider2D playerCollider = gameObject.GetComponent<Collider2D>();
 
             float distance = DistanceOfCollidersClosestPoints(objClickedCollider, playerCollider);
 
             Debug.Log("Distance from " + collidedEnvObj.name + " is " + distance);
-                
+
             if (distance < SelectionDistance)
             {
                 //Root clicked on
                 if (collidedEnvObj.tag == "Root")
                 {
-                    ObjSelected = collidedEnvObj;
-                    InventoryManager.Instance.ShowInventoryOptionsWithRoot(true);
-                    InventoryManager.Instance.Root = ObjSelected;
+                    Debug.Log("Clicked on Root");
+                    var ClickOnScript = collidedEnvObj.GetComponent<RootStateStatContainer>().ClickOn;
+                    //run the playerselected action and receive the object of the gameobject selected 
+                    GameObject rootSelected = ClickOnScript.ClickOn();
+                    if (rootSelected != null)
+                    {
+                        ObjSelected = rootSelected;
+                    }
                     break;
-                }else if(collidedEnvObj.tag == "Plant")
+                }
+                else if (collidedEnvObj.tag == "Plant")
                 {
                     Debug.Log("Into plant");
-                    
-                    var uprooterGeneralStatScript = collidedEnvObj.GetComponent<UprooterGeneralStatsContainer>();
-                    UprooterStates uprooterState = uprooterGeneralStatScript.StateManager.GetState();
-                    Debug.Log(uprooterState);
-                    //If ready or battling
-                    //move these into the statemanager code
-                    if(uprooterState == UprooterStates.Ready||
-                        uprooterState == UprooterStates.Battle )
+
+                    var ClickOnScript = collidedEnvObj.GetComponent<UprooterStateStatContainer>().ClickOn;
+                    //run the playerselected action and receive the object of the gameobject selected 
+                    GameObject uprooterSelected = ClickOnScript.ClickOn();
+                    if (uprooterSelected != null)
                     {
-                        ObjSelected = collidedEnvObj;
-                        InventoryManager.Instance.ShowInventoryOptionsWithUprooters(true);
-                        InventoryManager.Instance.Uprooter = ObjSelected;
-                        break;
+                        ObjSelected = uprooterSelected;
                     }
-                    //if inactive, then can choose to rejoice
-                    else if (uprooterState == UprooterStates.Inactive &&
-                            UprooterManager.Instance.CurrentNumOfUprooters < UprooterManager.Instance.MaxNumOfUprooters)
-                    {
-                        ObjSelected = collidedEnvObj;
-                        Button newRejoice = Instantiate(RejoiceBtn);
-
-                        // Set the button as a child of the canvas
-                        newRejoice.transform.SetParent(canvas.transform, false); // Set 'false' to preserve world position
-
-                        // Get the RectTransform component of the button
-                        RectTransform rejoiceRectTransform = newRejoice.GetComponent<RectTransform>();
-
-                        // Calculate the position above the target object in world space
-                        Vector3 targetPosition = ObjSelected.transform.position;
-                        Vector3 rejoicePosition = new Vector3(targetPosition.x, targetPosition.y + ObjSelected.GetComponent<SpriteRenderer>().bounds.size.y / 2 + 0.5f, targetPosition.z);
-
-                        // Convert the world position to screen space
-                        Vector2 screenPoint = Camera.main.WorldToScreenPoint(rejoicePosition);
-
-                        // Convert the screen space position to local position within the canvas
-                        RectTransformUtility.ScreenPointToLocalPointInRectangle(canvas.GetComponent<RectTransform>(), screenPoint, null, out Vector2 canvasPos);
-                        rejoiceRectTransform.localPosition = canvasPos;
-
-                        newRejoice.gameObject.SetActive(true);
-                        newRejoice.GetComponent<Rejoice>().setPlayer(this);
-                        newRejoice.GetComponent<Rejoice>().setObject(ObjSelected);
-                        Debug.Log("Rejoice set");
-                        break;
-                    }
-
                 }
-                else if(collidedEnvObj.tag == "Item")
+                else if (collidedEnvObj.tag == "Item")
                 {
                     Debug.Log("Get Item");
                     InventoryManager.Instance.AddItem(collidedEnvObj.GetComponent<Items>().ItemScriptableObject, collidedEnvObj.GetComponent<Items>().Quantity);
@@ -136,7 +116,6 @@ public class PlayerSelects : MonoBehaviour
                 }
             }
         }
-
     }
     
 

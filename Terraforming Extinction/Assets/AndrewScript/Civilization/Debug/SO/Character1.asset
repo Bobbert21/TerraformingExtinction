@@ -1,0 +1,70 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1f32bea3a024c634a80e5c2b7305753a, type: 3}
+  m_Name: Character1
+  m_EditorClassIdentifier: 
+  Name: Character 1
+  Stats:
+    L: 30
+    DB: 50
+    NB: 80
+  RelationshipSheet:
+    PR:
+    - ActionCharacteristics: 0
+      Identifiers: {fileID: 11400000, guid: eae63b249c4f6ef498a77b3c835ef9ca, type: 2}
+      Stats:
+        L: 0
+        DB: 5
+        NB: 100
+    - ActionCharacteristics: 0
+      Identifiers: {fileID: 11400000, guid: 4e3850a2a57dc9944b49c1b5561d702a, type: 2}
+      Stats:
+        L: 0
+        DB: -30
+        NB: -95
+    - ActionCharacteristics: 0
+      Identifiers: {fileID: 11400000, guid: f9a1bd29f631d4d42aeab9db43350467, type: 2}
+      Stats:
+        L: 0
+        DB: 60
+        NB: 60
+    - ActionCharacteristics: 0
+      Identifiers: {fileID: 11400000, guid: c990ca82c6686864daa3cf37d1ef0852, type: 2}
+      Stats:
+        L: 10
+        DB: 0
+        NB: 0
+    SR: []
+    ModR:
+    - ActionCharacteristics: 0
+      Identifiers: {fileID: 11400000, guid: 4e3850a2a57dc9944b49c1b5561d702a, type: 2}
+      Stats:
+        L: -40
+        DB: -20
+        NB: 0
+    - ActionCharacteristics: 0
+      Identifiers: {fileID: 11400000, guid: c990ca82c6686864daa3cf37d1ef0852, type: 2}
+      Stats:
+        L: 120
+        DB: 0
+        NB: 0
+  FriendsTest:
+  - {fileID: 11400000, guid: eae63b249c4f6ef498a77b3c835ef9ca, type: 2}
+  EnemyTest:
+  - {fileID: 11400000, guid: 4e3850a2a57dc9944b49c1b5561d702a, type: 2}
+  Identifier: 0
+  BIdentity: 2
+  RiskAversion: 1.5
+  RewardInclination: 10
+  EmpathyLevel: 10
+  SelfEfficacy: 20
+  ProgressInclination: 10

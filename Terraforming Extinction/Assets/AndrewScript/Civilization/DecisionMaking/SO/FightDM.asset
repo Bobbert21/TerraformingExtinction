@@ -1,0 +1,45 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0f5f4cf94c429d743a844d910b2bd797, type: 3}
+  m_Name: FightDM
+  m_EditorClassIdentifier: 
+  Name: Fight
+  Action: 1
+  Context: 0
+  DMType: 1
+  Perspectives:
+  - Name: Consume DB
+    Description: 
+    RewardType: 0
+    Empathy: 
+    Target: DB(A)
+    Predictor: (DB(A) + DB(N))/2 + (L(A) - L(N))/2
+  - Name: Eliminate threats to friends' DB by attacking threat's DB
+    Description: 
+    RewardType: 4
+    Empathy: 
+    Target: DB(F)
+    Predictor: DB(F) + F-ModR:DB(N) * -(1 - Mathf.Max(((DB(A) + DB(N)) / 2 + (L(N)
+      - L(A)) / 2), 0) / DB(N))
+  - Name: Eliminate threats to friends' L by attacking threat's L
+    Description: 
+    RewardType: 4
+    Empathy: 
+    Target: L(F)
+    Predictor: L(F) + F-ModR:L(N) * -(1 - Mathf.Max((L(N) - L(A) * 1.5), 0) / L(N))
+  - Name: Lose L
+    Description: Hurt while fighting
+    RewardType: 6
+    Empathy: 
+    Target: L(A)
+    Predictor: 'Mathf.Max(L(A) -  L(N) * 1.1, 0) '
+  ComplexGoalActions: []

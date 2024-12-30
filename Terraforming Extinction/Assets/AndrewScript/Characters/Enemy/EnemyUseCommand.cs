@@ -23,7 +23,7 @@ public class EnemyUseCommand : MonoBehaviour
             GameObject objectAround = other.gameObject;
 
             //check if it is a character
-            if (objectAround.TryGetComponent<CharacterGeneralStatsContainer>(out var objectAroundCharacterScript))
+            if (objectAround.TryGetComponent<CharacterStateStatContainer>(out var objectAroundCharacterScript))
             {
                 Debug.Log("object around script: " + objectAroundCharacterScript);
                 objectsAround.Add(other.gameObject);

@@ -64,7 +64,7 @@ public class CommandEngine
                     foreach (GameObject objectAround in objectsAround)
                     {
                         //if all objects around are not characters, then should do wander
-                        CharacterGeneralStatsContainer statsContainer = objectAround.GetComponent<CharacterGeneralStatsContainer>();
+                        CharacterStateStatContainer statsContainer = objectAround.GetComponent<CharacterStateStatContainer>();
                         //make sure they have a script of interest
                         if (statsContainer != null && statsContainer.Stats != null)
                         {
@@ -79,7 +79,7 @@ public class CommandEngine
                                     moveCommand.SetTargetLocation(objectAround.transform.position);
                                     commandOutput = moveCommand;
                                 }
-                                //too far. Go attack
+                                //near enough. Go attack
                                 else
                                 {
                                     commandOutput = attackCommand;

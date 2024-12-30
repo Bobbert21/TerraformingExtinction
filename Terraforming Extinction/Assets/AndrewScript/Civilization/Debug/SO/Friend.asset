@@ -1,0 +1,44 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1f32bea3a024c634a80e5c2b7305753a, type: 3}
+  m_Name: Friend
+  m_EditorClassIdentifier: 
+  Name: Friend
+  Stats:
+    L: 30
+    DB: 70
+    NB: 40
+  RelationshipSheet:
+    PR: []
+    SR: []
+    ModR:
+    - ActionCharacteristics: 0
+      Identifiers: {fileID: 11400000, guid: f9a1bd29f631d4d42aeab9db43350467, type: 2}
+      Stats:
+        L: -20
+        DB: -80
+        NB: 0
+    - ActionCharacteristics: 0
+      Identifiers: {fileID: 11400000, guid: 4e3850a2a57dc9944b49c1b5561d702a, type: 2}
+      Stats:
+        L: -60
+        DB: -80
+        NB: 0
+  FriendsTest: []
+  EnemyTest: []
+  Identifier: 0
+  BIdentity: 1
+  RiskAversion: 0
+  RewardInclination: 0
+  EmpathyLevel: 0
+  SelfEfficacy: 0
+  ProgressInclination: 0
