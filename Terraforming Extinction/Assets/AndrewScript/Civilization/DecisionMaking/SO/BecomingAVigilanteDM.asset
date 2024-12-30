@@ -1,0 +1,60 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0f5f4cf94c429d743a844d910b2bd797, type: 3}
+  m_Name: BecomingAVigilanteDM
+  m_EditorClassIdentifier: 
+  Name: Becoming a vigilante
+  Action: 0
+  Context: 0
+  DMType: 2
+  Perspectives:
+  - Name: Lose L due to danger
+    Description: It is dangerous but scaled with your perceived strength as a vigilante
+    RewardType: 6
+    Empathy: 
+    Target: L(A)
+    Predictor: 'Mathf.Max(Mathf.Min( L(A) - (L(A) * (1 + A-ModR:L(-Vigilante-)/150)
+      - L(E(-1))*1.2), 0) + L(A), 0) '
+  - Name: Eliminate L threats to your friends
+    Description: 
+    RewardType: 4
+    Empathy: 
+    Target: L(F)
+    Predictor: Mathf.Max((L(F) + F(-1)-ModR:L(E(-1)) * -(1 - Mathf.Max((L(E(-1))
+      - L(A) * 1.1 * (1 + A-ModR:L(-Vigilante-) / 150))/ L(E(-1)), 0))), 0)
+  - Name: Eliminate DB threats to your friends
+    Description: 
+    RewardType: 4
+    Empathy: 
+    Target: DB(F)
+    Predictor: 'Mathf.Max( DB(F) + F(-1)-ModR:DB(E(-1)) * -(1-((DB(A) + DB(E(-1)))
+      / 2 - (L(E(-1)) - L(A) * (1 + A-ModR:L(-Vigilante-) / 150)) / 2) / DB(E(-1))), 
+      0 ) '
+  - Name: Eliminate L threats to yourself
+    Description: 
+    RewardType: 4
+    Empathy: 
+    Target: L(A)
+    Predictor: Mathf.Max((L(A) + A-ModR:L(E(-1)) * -(1 - Mathf.Max( (L(E(-1)) - L(A)
+      * 1.1 * (1 + A-ModR:L(-Vigilante-) / 150))/ L(E(-1)), 0))),     0)
+  - Name: ' Eliminate DB threats to yourself'
+    Description: 
+    RewardType: 4
+    Empathy: 
+    Target: DB(A)
+    Predictor: Mathf.Max(DB(A) + A-ModR:DB(E(-1)) * -(1- Mathf.Max( (( DB(E(-1))
+      - ((DB(A) + DB(E(-1))) / 2 - (L(E(-1)) - L(A) * (1 + A-ModR:L(-Vigilante-)
+      / 150)) / 2))) / DB(E(-1)), 0)), 0)
+  ComplexGoalActions:
+  - {fileID: 11400000, guid: 6399c7886e4a4e143ae1a8d590c89761, type: 2}
+  - {fileID: 11400000, guid: 2e910ffa94abfe24cb5bb56cbb473607, type: 2}
+  - {fileID: 11400000, guid: 525eda4fd0872f243839d6333358de65, type: 2}

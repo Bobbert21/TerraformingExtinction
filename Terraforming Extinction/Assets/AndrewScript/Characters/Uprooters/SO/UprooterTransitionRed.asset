@@ -9,13 +9,16 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 24733c434bec5ab429bceaa0046e40d9, type: 3}
+  m_Script: {fileID: 11500000, guid: 7c1e6a7c39f41824198213657d37c12d, type: 3}
   m_Name: UprooterTransitionRed
   m_EditorClassIdentifier: 
-  Name: RedLvl2
-  Health: 70
-  MaxHealth: 100
-  FertilizerTransitions:
-  - type: 0
-    limit: -1
-    uprooterTransition: {fileID: 0}
+  Name: 
+  CharacterType: 0
+  FertilizerTransitions: []
+  NutrientTransitions:
+    limit: 0
+    characterTransition: {fileID: 0}
+    dialogue: []
+  MinTimeForDialogue: 8
+  MaxTimeForDialogue: 15
+  DialogueLinesWithStates: []

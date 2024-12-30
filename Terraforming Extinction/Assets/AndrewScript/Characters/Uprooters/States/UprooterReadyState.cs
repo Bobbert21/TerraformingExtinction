@@ -25,7 +25,18 @@ public class UprooterReadyState : UprooterBaseState
     {
 
     }
+    public override bool PlayerSelects(ICharacterStateManager stateManager)
+    {
+        InventoryManager.Instance.ShowInventoryOptionsWithUprooters(true);
+        UprooterStateManager uprooterStateManager = (UprooterStateManager)stateManager;
+        uprooterStateManager.ShowInventory();
+        return true;
+    }
 
-    
+    public override void PlayerDeselects(ICharacterStateManager stateManager)
+    {
+        InventoryManager.Instance.ShowInventoryOptionsWithUprooters(false);
+    }
+
 
 }

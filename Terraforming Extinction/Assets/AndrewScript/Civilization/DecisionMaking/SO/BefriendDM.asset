@@ -1,0 +1,68 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0f5f4cf94c429d743a844d910b2bd797, type: 3}
+  m_Name: BefriendDM
+  m_EditorClassIdentifier: 
+  Name: Befriend by tribute
+  Action: 0
+  Context: 0
+  DMType: 1
+  Perspectives:
+  - Name: Consume NB by tribute
+    Description: Tribute can prove nurturing with tribute
+    RewardType: 0
+    Empathy: 
+    Target: NB(A)
+    Predictor: L(A) * 0.2 * 30/N-PR:NB(A) + NB(A)
+  - Name: Consume L by tribute
+    Description: Lose the tribute
+    RewardType: 6
+    Empathy: 
+    Target: L(A)
+    Predictor: L(A) - L(A) * 0.1
+  - Name: Lose NB from rejection of tribute
+    Description: Rejected from tribute then loses NB
+    RewardType: 6
+    Empathy: 
+    Target: NB(A)
+    Predictor: L(A) * -0.2 * 30/(100-N-PR:NB(A)) + NB(A)
+  - Name: Consume NB from association
+    Description: Can consume (or technically deplete) NB based on reputation of env
+    RewardType: 0
+    Empathy: 
+    Target: NB(A)
+    Predictor: (NB(N) - NB(A))/3 + NB(A)
+  - Name: Consume DB from association
+    Description: Can consume (or technically deplete) DB based on reputation of env
+    RewardType: 0
+    Empathy: 
+    Target: DB(A)
+    Predictor: (DB(N) - DB(A))/3 + DB(A)
+  - Name: Consume DB from association
+    Description: Can consume (or technically deplete) DB based on reputation of env
+    RewardType: 0
+    Empathy: 
+    Target: DB(A)
+    Predictor: (DB(N) - DB(A))/3 + DB(A)
+  - Name: Consume L from their nurturing reputation
+    Description: 
+    RewardType: 0
+    Empathy: 
+    Target: L(A)
+    Predictor: NB(N) * 0.15 + L(A)
+  - Name: Consume L from their protection
+    Description: env DB can protect from danger
+    RewardType: 0
+    Empathy: 
+    Target: L(A)
+    Predictor: DB(N) * 0.15 + L(A)
+  ComplexGoalActions: []

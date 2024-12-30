@@ -35,7 +35,7 @@ public class UprooterItemUsedOn : MonoBehaviour
 
     private UprooterStateManager StateManager
     {
-        get => UseStatContainer ? GetComponent<UprooterGeneralStatsContainer>().StateManager : LocalStateManager;
+        get => UseStatContainer ? GetComponent<UprooterStateStatContainer>().StateManager : LocalStateManager;
     }
 
 

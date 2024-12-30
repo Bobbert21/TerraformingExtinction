@@ -26,4 +26,14 @@ public class UprooterLevelingUpState : UprooterBaseState
 
         Exit(stateManager);
     }
+
+    public override bool PlayerSelects(ICharacterStateManager stateManager)
+    {
+        throw new System.NotImplementedException();
+    }
+
+    public override void PlayerDeselects(ICharacterStateManager stateManager)
+    {
+
+    }
 }

@@ -10,7 +10,7 @@ public class UprooterMiscController : MonoBehaviour
 {
     public int Health;
     public int MaxHealth;
-    public UprooterSO UprooterStats;
+    public UprooterLevelStatSO UprooterStats;
     public UprooterStates State = UprooterStates.Inactive;
     
     //use enum to figure out which fertilizer it is keeping track of. like red is 0 so index 0 in the array
@@ -42,7 +42,7 @@ public class UprooterMiscController : MonoBehaviour
         //using fertilizer as item
         if(itemUsed is FertilizerSO fertilizerUsed)
         {
-            UprooterSO uprooterTransition = null;
+            UprooterLevelStatSO uprooterTransition = null;
             int usedFertilizerIndex = (int)fertilizerUsed.FertilizerType;
             //add intensity based on what fertilizer is given
             FertilizerIntensity[usedFertilizerIndex] += 1;
@@ -62,7 +62,7 @@ public class UprooterMiscController : MonoBehaviour
                 if(usedFertilizerIndex == (int)fertilizerTransition.type)
                 {
                     usedFertilizerLimit = fertilizerTransition.limit;
-                    uprooterTransition = (UprooterSO)fertilizerTransition.characterTransition;
+                    uprooterTransition = (UprooterLevelStatSO)fertilizerTransition.characterTransition;
                     //for dialogue when changing to another color
                     trackFertilizerTransition = fertilizerTransition;
                     break;
@@ -89,7 +89,7 @@ public class UprooterMiscController : MonoBehaviour
                 //create dialogue. Will change to ready state after dialogue (just so dialogue knows to pull levelingup dialogue)
                 State = UprooterStates.Levelingup;
                 CreateDialogue(UprooterStats.NutrientTransitions.dialogue);
-                UprooterStats = (UprooterSO)UprooterStats.NutrientTransitions.characterTransition;
+                UprooterStats = (UprooterLevelStatSO)UprooterStats.NutrientTransitions.characterTransition;
                 NutrientLevel += 1;
                 NutrientIntensity = 0;
                 Debug.Log("Transition to " + UprooterStats.Name);
@@ -102,7 +102,7 @@ public class UprooterMiscController : MonoBehaviour
         
     }
 
-    public void CreateDialogue(DialogueCreation[] ReceivedDialogue = null)
+    public void CreateDialogue(DialogueLines[] ReceivedDialogue = null)
     {
         Timer = 0;
         TimeToStartDialogue = Random.Range(MinTimeForDialogue, MaxTimeForDialogue);
@@ -119,8 +119,8 @@ public class UprooterMiscController : MonoBehaviour
                 + Vector2.up * dialogueBoxInstance.GetComponent<RectTransform>().rect.height / 2 +
                 Vector2.right * dialogueBoxInstance.GetComponent<RectTransform>().rect.width / 3; // Adjust the offset as needed
 
-
-            DialogueCreation[] UprooterDialogue = null;
+            /*
+            DialogueLines[] UprooterDialogue = null;
 
             //pull the right dialogue and state
             if (State == UprooterStates.Ready && (GameManager.Instance.CurrentState == GameStates.WaveTransition ||
@@ -170,6 +170,7 @@ public class UprooterMiscController : MonoBehaviour
                 dialogueBoxInstance.GetComponent<Dialogue>().Lines = UprooterDialogue[randomIndex].dialogue;
                 dialogueBoxInstance.GetComponent<Dialogue>().StartDialogue();
             }
+            */
         }
     }
 

@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.SocialPlatforms;
 
 public class RootItemUsedOn : MonoBehaviour
 {
@@ -11,20 +12,30 @@ public class RootItemUsedOn : MonoBehaviour
     private int CommonCutoff = 100;
     private int UncommonCutoff;
     private int RareCutoff;
-    bool UseStatContainer = false;
+    public bool UseStatContainer = false;
     [Header("Local Variables")]
-    public RootSO LocalRootStats;
-    public int LocalNutrientLevel;
-    public int LocalNutrientIntensity;
+    [SerializeField]
+    private RootStateManager LocalStateManager;
+    [SerializeField]
+    private RootLevelStatSO LocalRootStats;
+    [SerializeField]
+    private int LocalNutrientLevel;
+    [SerializeField]
+    private int LocalNutrientIntensity;
 
-    private RootSO RootStats
+    private RootStateManager StateManager
     {
-        get => UseStatContainer ? GetComponent<RootStatsContainer>().RootStats : LocalRootStats;
+        get => UseStatContainer ? GetComponent<RootStateStatContainer>().StateManager : LocalStateManager;
+    }
+
+    private RootLevelStatSO RootStats
+    {
+        get => UseStatContainer ? (RootLevelStatSO)GetComponent<CharacterStateStatContainer>().Stats : LocalRootStats;
         set
         {
             if (UseStatContainer)
             {
-                GetComponent<RootStatsContainer>().RootStats = value;
+                GetComponent<RootStateStatContainer>().Stats = value;
             }
             else
             {
@@ -35,12 +46,12 @@ public class RootItemUsedOn : MonoBehaviour
 
     private int NutrientLevel
     {
-        get => UseStatContainer ? GetComponent<RootStatsContainer>().NutrientLevel : LocalNutrientLevel;
+        get => UseStatContainer ? GetComponent<RootStateStatContainer>().NutrientLevel : LocalNutrientLevel;
         set
         {
             if (UseStatContainer)
             {
-                GetComponent<RootStatsContainer>().NutrientLevel = value;
+                GetComponent<RootStateStatContainer>().NutrientLevel = value;
             }
             else
             {
@@ -50,12 +61,12 @@ public class RootItemUsedOn : MonoBehaviour
     }
     private int NutrientIntensity
     {
-        get => UseStatContainer ? GetComponent<RootStatsContainer>().NutrientIntensity : LocalNutrientIntensity;
+        get => UseStatContainer ? GetComponent<RootStateStatContainer>().NutrientIntensity : LocalNutrientIntensity;
         set
         {
             if (UseStatContainer)
             {
-                GetComponent<RootStatsContainer>().NutrientIntensity = value;
+                GetComponent<RootStateStatContainer>().NutrientIntensity = value;
             }
             else
             {
@@ -124,6 +135,7 @@ public class RootItemUsedOn : MonoBehaviour
         else if (itemUsed is NutrientSO nutrientUsed)
         {
             Debug.Log("Nutrient used on root");
+            /*
             NutrientIntensity += 1;
             //remove the fertilizer from inventory
             InventoryManager.Instance.RemoveItem(itemUsed);
@@ -139,6 +151,8 @@ public class RootItemUsedOn : MonoBehaviour
                 GameManager.Instance.MaxNumOfUprooters = RootStats.NumOfUprooters;
                 Debug.Log("Transition to " + RootStats.Name);
             }
+            */
+            StateManager.NutrientUsedOn(nutrientUsed);
         }
     }
 }

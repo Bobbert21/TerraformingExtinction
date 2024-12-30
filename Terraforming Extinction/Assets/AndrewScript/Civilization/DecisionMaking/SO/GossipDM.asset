@@ -1,0 +1,49 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0f5f4cf94c429d743a844d910b2bd797, type: 3}
+  m_Name: GossipDM
+  m_EditorClassIdentifier: 
+  Name: Gossip
+  Action: 4
+  Context: 0
+  DMType: 1
+  Perspectives:
+  - Name: Protect env from L danger
+    Description: 
+    RewardType: 3
+    Empathy: 
+    Target: L(N)
+    Predictor: N-ModR:L(E(1)) * -0.5 + L(N)
+  - Name: Consume DB from defending env from L danger
+    Description: 
+    RewardType: 0
+    Empathy: 
+    Target: DB(A)
+    Predictor: N-ModR:L(E(1)) * (1.5 - (N-PR:DB(A)/100)) * -1 + DB(A)
+  - Name: Protect env from DB danger
+    Description: 
+    RewardType: 3
+    Empathy: 
+    Target: DB(N)
+    Predictor: N-ModR:DB(E(1)) * -0.5 + DB(N)
+  - Name: Consume DB by providing good info for DB danger
+    Description: 
+    RewardType: 0
+    Empathy: 
+    Target: DB(A)
+    Predictor: N-ModR:DB(E(1)) * (1.5 - (N-PR:DB(A)/100)) * -1 + DB(A)
+  - Name: Eliminate rivals' DB because they are an L danger to you
+    Description: Eliminate rivals' DB because they are an L danger to you
+    RewardType: 4
+    Empathy: 
+    Target: L(A)
+    Predictor: A-ModR:L(E(1)) * -0.5 * (1 - (N-PR:DB(E(1)) - 15)/100) + L(A)

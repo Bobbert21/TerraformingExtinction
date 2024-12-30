@@ -1,0 +1,31 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0f5f4cf94c429d743a844d910b2bd797, type: 3}
+  m_Name: StealDM
+  m_EditorClassIdentifier: 
+  Name: Steal
+  Action: 0
+  Context: 0
+  DMType: 1
+  Perspectives:
+  - Name: Consume L by stealing resources
+    Description: 
+    RewardType: 0
+    Empathy: 
+    Target: L(A)
+    Predictor: 0.1 * L(N) + L(A)
+  - Name: Lose NB if caught
+    Description: Lose NB if caught
+    RewardType: 6
+    Empathy: 
+    Target: NB(A)
+    Predictor: -0.1 * L(N) * 30/N-PR:NB(A) + NB(A)
