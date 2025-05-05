@@ -22,8 +22,9 @@ MonoBehaviour:
     RewardType: 6
     Empathy: 
     Target: L(A)
-    Predictor: 'Mathf.Max(Mathf.Min( L(A) - (L(A) * (1 + A-ModR:L(-Vigilante-)/150)
-      - L(E(-1))*1.2), 0) + L(A), 0) '
+    Predictor: Mathf.Max(Mathf.Min( L(A) * A-ModR:L(-Vigilante-)/150 - L(E(-1))*1.2
+      , 0) + L(A), 0)
+    HabitCounter: 0
   - Name: Eliminate L threats to your friends
     Description: 
     RewardType: 4
@@ -31,6 +32,7 @@ MonoBehaviour:
     Target: L(F)
     Predictor: Mathf.Max((L(F) + F(-1)-ModR:L(E(-1)) * -(1 - Mathf.Max((L(E(-1))
       - L(A) * 1.1 * (1 + A-ModR:L(-Vigilante-) / 150))/ L(E(-1)), 0))), 0)
+    HabitCounter: 0
   - Name: Eliminate DB threats to your friends
     Description: 
     RewardType: 4
@@ -39,6 +41,7 @@ MonoBehaviour:
     Predictor: 'Mathf.Max( DB(F) + F(-1)-ModR:DB(E(-1)) * -(1-((DB(A) + DB(E(-1)))
       / 2 - (L(E(-1)) - L(A) * (1 + A-ModR:L(-Vigilante-) / 150)) / 2) / DB(E(-1))), 
       0 ) '
+    HabitCounter: 0
   - Name: Eliminate L threats to yourself
     Description: 
     RewardType: 4
@@ -46,6 +49,7 @@ MonoBehaviour:
     Target: L(A)
     Predictor: Mathf.Max((L(A) + A-ModR:L(E(-1)) * -(1 - Mathf.Max( (L(E(-1)) - L(A)
       * 1.1 * (1 + A-ModR:L(-Vigilante-) / 150))/ L(E(-1)), 0))),     0)
+    HabitCounter: 3
   - Name: ' Eliminate DB threats to yourself'
     Description: 
     RewardType: 4
@@ -54,7 +58,9 @@ MonoBehaviour:
     Predictor: Mathf.Max(DB(A) + A-ModR:DB(E(-1)) * -(1- Mathf.Max( (( DB(E(-1))
       - ((DB(A) + DB(E(-1))) / 2 - (L(E(-1)) - L(A) * (1 + A-ModR:L(-Vigilante-)
       / 150)) / 2))) / DB(E(-1)), 0)), 0)
+    HabitCounter: 0
   ComplexGoalActions:
   - {fileID: 11400000, guid: 6399c7886e4a4e143ae1a8d590c89761, type: 2}
   - {fileID: 11400000, guid: 2e910ffa94abfe24cb5bb56cbb473607, type: 2}
   - {fileID: 11400000, guid: 525eda4fd0872f243839d6333358de65, type: 2}
+  HabitCounter: 0

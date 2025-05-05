@@ -14,8 +14,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   Name: Character 1
   Stats:
-    L: 30
-    DB: 50
+    L: 10
+    DB: 60
     NB: 80
   RelationshipSheet:
     PR:
@@ -23,8 +23,8 @@ MonoBehaviour:
       Identifiers: {fileID: 11400000, guid: eae63b249c4f6ef498a77b3c835ef9ca, type: 2}
       Stats:
         L: 0
-        DB: 5
-        NB: 100
+        DB: 100
+        NB: 20
     - ActionCharacteristics: 0
       Identifiers: {fileID: 11400000, guid: 4e3850a2a57dc9944b49c1b5561d702a, type: 2}
       Stats:
@@ -35,12 +35,12 @@ MonoBehaviour:
       Identifiers: {fileID: 11400000, guid: f9a1bd29f631d4d42aeab9db43350467, type: 2}
       Stats:
         L: 0
-        DB: 60
-        NB: 60
+        DB: 80
+        NB: 80
     - ActionCharacteristics: 0
       Identifiers: {fileID: 11400000, guid: c990ca82c6686864daa3cf37d1ef0852, type: 2}
       Stats:
-        L: 10
+        L: 0
         DB: 0
         NB: 0
     SR: []
@@ -48,14 +48,26 @@ MonoBehaviour:
     - ActionCharacteristics: 0
       Identifiers: {fileID: 11400000, guid: 4e3850a2a57dc9944b49c1b5561d702a, type: 2}
       Stats:
-        L: -40
+        L: 10
         DB: -20
         NB: 0
     - ActionCharacteristics: 0
       Identifiers: {fileID: 11400000, guid: c990ca82c6686864daa3cf37d1ef0852, type: 2}
       Stats:
-        L: 120
+        L: 70
         DB: 0
+        NB: 0
+    - ActionCharacteristics: 0
+      Identifiers: {fileID: 11400000, guid: f9a1bd29f631d4d42aeab9db43350467, type: 2}
+      Stats:
+        L: 80
+        DB: 0
+        NB: 0
+    - ActionCharacteristics: 0
+      Identifiers: {fileID: 11400000, guid: eae63b249c4f6ef498a77b3c835ef9ca, type: 2}
+      Stats:
+        L: 0
+        DB: 10
         NB: 0
   FriendsTest:
   - {fileID: 11400000, guid: eae63b249c4f6ef498a77b3c835ef9ca, type: 2}
@@ -63,8 +75,13 @@ MonoBehaviour:
   - {fileID: 11400000, guid: 4e3850a2a57dc9944b49c1b5561d702a, type: 2}
   Identifier: 0
   BIdentity: 2
+  MentalOpportunities: 1
   RiskAversion: 1.5
   RewardInclination: 10
-  EmpathyLevel: 10
-  SelfEfficacy: 20
-  ProgressInclination: 10
+  EmpathyLevel: 6
+  SelfEfficacy: 10
+  ProgressInclination: 5
+  MaxHabitCounter: 10
+  HabitualTendencies: 10
+  PerspectiveAbility: 1
+  CognitiveStamina: 2

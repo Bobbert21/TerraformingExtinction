@@ -11,4 +11,5 @@ public class DecisionMakingSO : ScriptableObject
     public DMTypes DMType;
     public List<Perspective> Perspectives;
     public List<DecisionMakingSO> ComplexGoalActions;
+    public int HabitCounter;
 }

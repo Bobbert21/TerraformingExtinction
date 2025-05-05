@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   Name: Friend
   Stats:
-    L: 30
+    L: 10
     DB: 70
     NB: 40
   RelationshipSheet:
@@ -30,7 +30,7 @@ MonoBehaviour:
     - ActionCharacteristics: 0
       Identifiers: {fileID: 11400000, guid: 4e3850a2a57dc9944b49c1b5561d702a, type: 2}
       Stats:
-        L: -60
+        L: -100
         DB: -80
         NB: 0
   FriendsTest: []
@@ -42,3 +42,5 @@ MonoBehaviour:
   EmpathyLevel: 0
   SelfEfficacy: 0
   ProgressInclination: 0
+  MaxHabitCounter: 10
+  HabitualTendencies: 0

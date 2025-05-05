@@ -23,23 +23,29 @@ MonoBehaviour:
     Empathy: 
     Target: DB(A)
     Predictor: (DB(A) + DB(N))/2 + (L(A) - L(N))/2
+    HabitCounter: 0
   - Name: Eliminate threats to friends' DB by attacking threat's DB
     Description: 
     RewardType: 4
     Empathy: 
     Target: DB(F)
-    Predictor: DB(F) + F-ModR:DB(N) * -(1 - Mathf.Max(((DB(A) + DB(N)) / 2 + (L(N)
-      - L(A)) / 2), 0) / DB(N))
+    Predictor: DB(F) + F(-1)-ModR:DB(N) * -(1 - Mathf.Max(((DB(A) + DB(N)) / 2 +
+      (L(N) - L(A)) / 2), 0) / DB(N))
+    HabitCounter: 5
   - Name: Eliminate threats to friends' L by attacking threat's L
     Description: 
     RewardType: 4
     Empathy: 
     Target: L(F)
-    Predictor: L(F) + F-ModR:L(N) * -(1 - Mathf.Max((L(N) - L(A) * 1.5), 0) / L(N))
+    Predictor: L(F) + F(-1)-ModR:L(N) * -(1 - Mathf.Max((L(N) - L(A) * 1.5), 0) /
+      L(N))
+    HabitCounter: 0
   - Name: Lose L
     Description: Hurt while fighting
     RewardType: 6
     Empathy: 
     Target: L(A)
     Predictor: 'Mathf.Max(L(A) -  L(N) * 1.1, 0) '
+    HabitCounter: 3
   ComplexGoalActions: []
+  HabitCounter: 0

@@ -10,7 +10,7 @@ public class CivTest : MonoBehaviour
 {
     
 
-    public DecisionMakingSO DMTesting;
+    public List<DecisionMakingSO> DMTestings;
     public CharactersTestSO Character1;
     public CharactersTestSO Character2;
     public int ComplexGoalStep;
@@ -28,80 +28,121 @@ public class CivTest : MonoBehaviour
     //2. Selecting the right action based on characters stats and prediction
     public void ActionSelection()
     {
-        List<Perspective> perspectives = DMTesting.Perspectives;
-        // Find which stat is most concerning
-        (EnumPersonalityStats targetStatType, double targetStatInitialValue) = FindStatOfInterest(Character1, Character2);
-        string targetStatString = TranslateEnumToString(targetStatType);
+        double ultimateLargestPositivePredictorChange = double.MinValue;
+        string ultimatePerspective = string.Empty;
+        int actionIndexToCommit = -1;
 
-        bool commitAction = false;
-        bool isComplexGoal = DMTesting.DMType == DMTypes.Complex;
-        // Variables to store the results of predictor calculations
-        double largestPositivePredictorValue = double.MinValue;
-        double largestNegativePredictorValue = double.MaxValue;
-        double largestPositivePredictorChange = 0;
-        double largestNegativePredictorChange = 0;
-        string positivePerspective = string.Empty;
-        string negativePerspective = string.Empty;
+        List<DecisionMakingSO> sortedDMTestings = DMTestings.OrderByDescending(d => d.HabitCounter).ToList();
 
-        // Get the stat value
-        if (isComplexGoal)
+        for (int i = 0;  i < sortedDMTestings.Count && i < Character1.CognitiveStamina; i++)
         {
-            (largestPositivePredictorValue, largestNegativePredictorValue, largestPositivePredictorChange,
-                largestNegativePredictorChange, positivePerspective, negativePerspective)
-                = CalculateComplexPositiveAndNegativePredictorChange(DMTesting, targetStatString);
-        }
-        else
-        {
-            (largestPositivePredictorValue, largestNegativePredictorValue, largestPositivePredictorChange,
-                largestNegativePredictorChange, positivePerspective, negativePerspective)
-                = CalculateSimplePositiveAndNegativePredictorChange(DMTesting.Perspectives, targetStatString);
-        }
+            List<Perspective> perspectives = DMTestings[i].Perspectives;
+            // Find which stat is most concerning
+            (EnumPersonalityStats targetStatType, double targetStatInitialValue) = FindStatOfInterest(Character1, Character2);
+            string targetStatString = TranslateEnumToString(targetStatType);
+            bool isInternalOpportunity = Character1.MentalOpportunities == EnumMentalOpportunities.Internal;
+            bool isComplexGoal = DMTestings[i].DMType == DMTypes.Complex;
+            // Variables to store the results of predictor calculations
+            double largestPositivePredictorValue = double.MinValue;
+            double largestNegativePredictorValue = double.MaxValue;
+            double largestPositivePredictorChange = 0;
+            double largestNegativePredictorChange = 0;
 
-        // Scale the changed value according to the starting stat of the player
-        double adjustedLargestPositivePredictorChange = ScaleSurvivalStatChange(largestPositivePredictorChange, targetStatInitialValue);
-        double adjustedLargestNegativePredictorChange = ScaleSurvivalStatChange(largestNegativePredictorChange, targetStatInitialValue);
+            string positivePerspective = string.Empty;
+            string negativePerspective = string.Empty;
 
-        //multiply because if i do same with reward inclination and have cut off, i still need to determine what to prioritize
-        //brain will see which has bigger signal anyways
-        adjustedLargestNegativePredictorChange *= Character1.RiskAversion;
-
-        // Determine whether to commit the action
-        //check is the positive is better than negative
-        if (adjustedLargestPositivePredictorChange > -adjustedLargestNegativePredictorChange)
-        {
-            if (adjustedLargestPositivePredictorChange > Character1.RewardInclination)
+            // Get the stat value
+            if (isComplexGoal)
             {
-                commitAction = true;
-                Debug.Log("Will commit action: " + DMTesting.name + " because of " + positivePerspective);
-                Debug.Log("Predictor CHANGE: " + largestPositivePredictorChange +
-                          " Adjusted predictor CHANGE: " + adjustedLargestPositivePredictorChange +
-                          " Predictor VALUE: " + largestPositivePredictorValue +
-                          " Initial value: " + targetStatInitialValue);
+                (largestPositivePredictorValue, largestNegativePredictorValue, largestPositivePredictorChange,
+                    largestNegativePredictorChange, positivePerspective, negativePerspective)
+                    = CalculateComplexPositiveAndNegativePredictorChange(DMTestings[i], targetStatString, Character1.PerspectiveAbility, isInternalOpportunity);
+
             }
             else
             {
-                commitAction = false;
-                Debug.Log("Will not commit action: " + DMTesting.name + " because " + positivePerspective + " not worth it for the reward inclination of " + Character1.RewardInclination);
-                Debug.Log("Predictor CHANGE: " + largestPositivePredictorChange +
-                          " Adjusted predictor CHANGE: " + adjustedLargestPositivePredictorChange +
-                          " Predictor VALUE: " + largestPositivePredictorValue +
+                (largestPositivePredictorValue, largestNegativePredictorValue, largestPositivePredictorChange,
+                    largestNegativePredictorChange, positivePerspective, negativePerspective)
+                    = CalculateSimplePositiveAndNegativePredictorChange(DMTestings[i].Perspectives, targetStatString, Character1.PerspectiveAbility, isInternalOpportunity);
+            }
+
+            //HABIT TENDENCIES
+            // Add the habit tendencies
+            double habitContribution = HabitContribution(DMTestings[i].HabitCounter, Character1.MaxHabitCounter, Character1.HabitualTendencies);
+            largestPositivePredictorChange += habitContribution;
+            largestNegativePredictorChange -= habitContribution;
+            largestPositivePredictorValue += habitContribution;
+            largestNegativePredictorValue -= habitContribution;
+
+            Debug.Log("Habit contribution: " + habitContribution + " Habit counter: " + DMTestings[i].HabitCounter + " Habit tendencies: " + Character1.HabitualTendencies + " Max habit counter: " + Character1.MaxHabitCounter);
+            // Scale the changed value according to the starting stat of the player
+            double adjustedLargestPositivePredictorChange = ScaleSurvivalStatChange(largestPositivePredictorChange, targetStatInitialValue);
+            double adjustedLargestNegativePredictorChange = ScaleSurvivalStatChange(largestNegativePredictorChange, targetStatInitialValue);
+
+
+
+
+
+            //multiply because if i do same with reward inclination and have cut off, i still need to determine what to prioritize
+            //brain will see which has bigger signal anyways
+            adjustedLargestNegativePredictorChange *= Character1.RiskAversion;
+
+            // Determine whether to commit the action
+            //check is the positive is better than negative
+            if (adjustedLargestPositivePredictorChange > -adjustedLargestNegativePredictorChange)
+            {
+                if (adjustedLargestPositivePredictorChange > Character1.RewardInclination && adjustedLargestPositivePredictorChange > ultimateLargestPositivePredictorChange)
+                {
+                    ultimateLargestPositivePredictorChange = adjustedLargestPositivePredictorChange;
+                    ultimatePerspective = positivePerspective;
+                    actionIndexToCommit = i;
+                    Debug.Log("Will consider action: " + DMTestings[i].name + " because of " + positivePerspective);
+                    Debug.Log("Predictor CHANGE: " + largestPositivePredictorChange +
+                              " Adjusted predictor CHANGE: " + adjustedLargestPositivePredictorChange +
+                              " Predictor VALUE: " + largestPositivePredictorValue +
+                              " Initial value: " + targetStatInitialValue);
+                }
+                else
+                {
+                    Debug.Log("Will not consider action: " + DMTestings[i].name + " because " + positivePerspective + " not worth it for the reward inclination of " + Character1.RewardInclination);
+                    Debug.Log("Predictor CHANGE: " + largestPositivePredictorChange +
+                              " Adjusted predictor CHANGE: " + adjustedLargestPositivePredictorChange +
+                              " Predictor VALUE: " + largestPositivePredictorValue +
+                              " Initial value: " + targetStatInitialValue);
+                }
+            }
+            //risk too high once adjusted
+            else
+            {
+                Debug.Log("Will not consider action: " + DMTestings[i].name + " because not worth risk of " + negativePerspective + " for the " + positivePerspective);
+                Debug.Log("Largest predictor change: " + largestNegativePredictorChange +
+                          " Adjusted predictor change: " + adjustedLargestNegativePredictorChange +
+                          " Largest predictor value: " + largestNegativePredictorValue +
                           " Initial value: " + targetStatInitialValue);
             }
         }
-        //risk too high once adjusted
+
+        if (actionIndexToCommit == -1) {
+            Debug.Log("No actions to commit to");
+        }
         else
         {
-            commitAction = false;
-            Debug.Log("Will not commit action: " + DMTesting.name + " because not worth risk of " + negativePerspective + " for the " + positivePerspective);
-            Debug.Log("Largest predictor change: " + largestNegativePredictorChange +
-                      " Adjusted predictor change: " + adjustedLargestNegativePredictorChange +
-                      " Largest predictor value: " + largestNegativePredictorValue +
-                      " Initial value: " + targetStatInitialValue);
+            Debug.Log("Will commit action: " + DMTestings[actionIndexToCommit].name + " because of " + ultimatePerspective);
         }
+        
+
     }
 
 
-    private (double, double, double, double, string, string) CalculateSimplePositiveAndNegativePredictorChange(List<Perspective> perspectives, string targetStatString)
+    private double HabitContribution(int habitCounter, int maxHabitCounter, double habitualTendencies)
+    {
+        double habitContribution = (double)habitCounter / (double)maxHabitCounter * habitualTendencies;
+        return habitContribution;
+    }
+
+
+
+    private (double, double, double, double, string, string) CalculateSimplePositiveAndNegativePredictorChange(List<Perspective> perspectives, string targetStatString, int perspectiveAbility, bool isInternalOpportunity)
     {
         double largestPositivePredictorValue = double.MinValue;
         double largestNegativePredictorValue = double.MaxValue;
@@ -110,18 +151,18 @@ public class CivTest : MonoBehaviour
         string positivePerspective = "";
         string negativePerspective = "";
 
+        //sort by perspectives
+        List<Perspective> sortedHabitPerspectives = perspectives.OrderByDescending(p => p.HabitCounter).ToList();
+
         //get the targetStat change that matters
-        for (int i = 0; i < perspectives.Count; i++)
+        for (int i = 0; i < sortedHabitPerspectives.Count && i < perspectiveAbility; i++)
         {
-            string target = perspectives[i].Target;
+            string target = sortedHabitPerspectives[i].Target;
             //check for internal opportunities. See greatest change for what is highest need for agent
-            if (target == targetStatString)
+            if (target == targetStatString || isInternalOpportunity == false)
             {
-
-
-                (double predictorValue, double changeValue) = Translate_String_To_Formula_Calculations(perspectives[i].Predictor, perspectives[i].Target, Character1, Character2);
-                Debug.Log(perspectives[i].Name + " predictor value: " + predictorValue + " Change value: " + changeValue);
-                //adjust value if 
+                (double predictorValue, double changeValue) = Translate_String_To_Formula_Calculations(sortedHabitPerspectives[i].Predictor, sortedHabitPerspectives[i].Target, Character1, Character2);
+                Debug.Log(sortedHabitPerspectives[i].Name + " predictor value: " + predictorValue + " Change value: " + changeValue);
 
 
                 //evaluate the greatest change for perspectives
@@ -129,15 +170,15 @@ public class CivTest : MonoBehaviour
                 {
                     largestPositivePredictorValue = predictorValue;
                     largestPositivePredictorChange = changeValue;
-                    positivePerspective = DMTesting.Perspectives[i].Name;
+                    positivePerspective = sortedHabitPerspectives[i].Name;
                 }
 
                 if (changeValue < largestNegativePredictorChange)
                 {
-                    Debug.Log("Checking negative predictor with: " + DMTesting.Perspectives[i].Name);
+                    Debug.Log("Checking negative predictor with: " + sortedHabitPerspectives[i].Name);
                     largestNegativePredictorValue = predictorValue;
                     largestNegativePredictorChange = changeValue;
-                    negativePerspective = DMTesting.Perspectives[i].Name;
+                    negativePerspective = sortedHabitPerspectives[i].Name;
                 }
             }
 
@@ -146,7 +187,7 @@ public class CivTest : MonoBehaviour
         return (largestPositivePredictorValue, largestNegativePredictorValue, largestPositivePredictorChange, largestNegativePredictorChange, positivePerspective, negativePerspective);
     }
 
-    private (double, double, double, double, string, string) CalculateComplexPositiveAndNegativePredictorChange(DecisionMakingSO decisionMakingSO, string targetStatString)
+    private (double, double, double, double, string, string) CalculateComplexPositiveAndNegativePredictorChange(DecisionMakingSO decisionMakingSO, string targetStatString, int cognitiveStamina, bool isInternalOpportunity)
     {
         double largestPositivePredictorValue = double.MinValue;
         double largestNegativePredictorValue = double.MaxValue;
@@ -155,38 +196,40 @@ public class CivTest : MonoBehaviour
         string positivePerspective = "";
         string negativePerspective = "";
 
-        List<Perspective> goalPerspectives = DMTesting.Perspectives;
-        List<Perspective> actionPerspectives = DMTesting.ComplexGoalActions[ComplexGoalStep].Perspectives;
+        List<Perspective> goalPerspectives = decisionMakingSO.Perspectives;
+        List<Perspective> actionPerspectives = decisionMakingSO.ComplexGoalActions[ComplexGoalStep].Perspectives;
+
+        List<Perspective> sortedHabitGoalPerspectives = goalPerspectives.OrderByDescending(p => p.HabitCounter).ToList();
+        List<Perspective> sortedHabitActionPerspectives = actionPerspectives.OrderByDescending(p => p.HabitCounter).ToList();
 
         //get the targetStat change that matters
-        for (int i = 0; i < goalPerspectives.Count; i++)
+        for (int i = 0; i < sortedHabitGoalPerspectives.Count && i < cognitiveStamina; i++)
         {
-            string target = goalPerspectives[i].Target;
+            string target = sortedHabitGoalPerspectives[i].Target;
             //check for internal opportunities. See greatest change for what is highest need for agent
-            if (target == targetStatString)
+            //will constantly check if looks only for external opportunities (isInternalOpportunity = false)
+            if (target == targetStatString || isInternalOpportunity == false)
             {
 
-
-                (double predictorValue, double changeValue) = Translate_String_To_Formula_Calculations(goalPerspectives[i].Predictor, goalPerspectives[i].Target, Character1, Character2);
+                (double predictorValue, double changeValue) = Translate_String_To_Formula_Calculations(sortedHabitGoalPerspectives[i].Predictor, sortedHabitGoalPerspectives[i].Target, Character1, Character2);
                 //adjust value depending on which step and progress inclination
-
+                
                 //calculate selfefficacy score. This will change the amount of steps it is on
                 //Adjusted so self-efficacy is maxed at 100
                 double selfEfficacyScore = ((100 - Character1.SelfEfficacy * 150 / 100 + 50) / 100);
                 //If high in self-efficacy, feels like there's not a lot of steps to get to goal. Lower self-efficacy score is better 
-                double totalStepsPerceived = DMTesting.ComplexGoalActions.Count * selfEfficacyScore;
+                double totalStepsPerceived = decisionMakingSO.ComplexGoalActions.Count * selfEfficacyScore;
                 //how close are they to goal. Closer they are, the more they are enticed by it
                 double progressPerceived = Math.Min(ComplexGoalStep + 1 / totalStepsPerceived, 1);
 
                 //Adjusted score based on how close they feel they are to goal and how much they care about progress with how much progress they feel they are making
                 //predictorValue - changeValue = starting value.
                 //So calculate the change adjusted and add with the starting value at end
-                double goalAdjustedPredictorValue = changeValue * progressPerceived + Character1.ProgressInclination / totalStepsPerceived + (predictorValue - changeValue); //FINISH REST OF FORMULA
+                double goalAdjustedPredictorValue = changeValue * progressPerceived + Character1.ProgressInclination / totalStepsPerceived + (predictorValue - changeValue); 
 
                 double goalChangeValue = changeValue + goalAdjustedPredictorValue - predictorValue;
 
-                Debug.Log(goalPerspectives[i].Name + " Goal predictor value: " + predictorValue + " Adjusted goal predictor value: "
-                    + goalAdjustedPredictorValue + "  Change value: " + changeValue + " Goal adjusted change value: " + goalChangeValue);
+                Debug.Log("Name of goal perspective: " + sortedHabitGoalPerspectives[i].Name + " Predictor Value: " + predictorValue + " Goal predicted value with progression values: " + goalAdjustedPredictorValue + " Goal adjusted change value: " + goalChangeValue);
 
                 changeValue = goalChangeValue;
 
@@ -195,32 +238,32 @@ public class CivTest : MonoBehaviour
                 {
                     largestPositivePredictorValue = goalAdjustedPredictorValue;
                     largestPositivePredictorChange = changeValue;
-                    positivePerspective = goalPerspectives[i].Name;
+                    positivePerspective = sortedHabitGoalPerspectives[i].Name;
                 }
 
                 if (changeValue < largestNegativePredictorChange)
                 {
                     largestNegativePredictorValue = goalAdjustedPredictorValue;
                     largestNegativePredictorChange = changeValue;
-                    negativePerspective = goalPerspectives[i].Name;
+                    negativePerspective = sortedHabitGoalPerspectives[i].Name;
                 }
             }
 
         }
 
         //get the targetStat change that matters
-        for (int i = 0; i < actionPerspectives.Count; i++)
+        for (int i = 0; i < sortedHabitActionPerspectives.Count && i < cognitiveStamina; i++)
         {
-            string target = actionPerspectives[i].Target;
+            string target = sortedHabitActionPerspectives[i].Target;
             //check for internal opportunities. See greatest change for what is highest need for agent
-            if (target == targetStatString)
+            if (target == targetStatString || isInternalOpportunity == false)
             {
 
 
-                (double predictorValue, double changeValue) = Translate_String_To_Formula_Calculations(actionPerspectives[i].Predictor, actionPerspectives[i].Target, Character1, Character2);
+                (double predictorValue, double changeValue) = Translate_String_To_Formula_Calculations(sortedHabitActionPerspectives[i].Predictor, sortedHabitActionPerspectives[i].Target, Character1, Character2);
                 //adjust value depending on which step and progress inclination
 
-                Debug.Log(actionPerspectives[i].Name + " Step predictor value: " + predictorValue
+                Debug.Log(sortedHabitActionPerspectives[i].Name + " Step predictor value: " + predictorValue
                     + " Step Change value: " + changeValue);
 
 
@@ -230,14 +273,14 @@ public class CivTest : MonoBehaviour
                 {
                     largestPositivePredictorValue = predictorValue;
                     largestPositivePredictorChange = changeValue;
-                    positivePerspective = actionPerspectives[i].Name;
+                    positivePerspective = sortedHabitActionPerspectives[i].Name;
                 }
 
                 if (changeValue < largestNegativePredictorChange)
                 {
                     largestNegativePredictorValue = predictorValue;
                     largestNegativePredictorChange = changeValue;
-                    negativePerspective = actionPerspectives[i].Name;
+                    negativePerspective = sortedHabitActionPerspectives[i].Name;
                 }
             }
 
@@ -463,7 +506,6 @@ public class CivTest : MonoBehaviour
                 string target = match.Groups["target"].Value;
                 //see if it is averaging target. Usually this means this has multiple targets
                 List<CharactersTestSO> entityObjects = new();
-
                 //1. Get entity
                 if (entity == "A")
                 {
@@ -586,63 +628,19 @@ public class CivTest : MonoBehaviour
             }
             throw new ArgumentException($"Unable to parse complex term: {term}");
         }
-                
-
-        double ParseSpecialTerm(string term)
+        
+        double ParseScaleChangeTerm(string term)
         {
-            // Match the pattern "Emp(A-N)" or "Emp(N-A)"
-            var match = System.Text.RegularExpressions.Regex.Match(term, @"(?<special>Emp)\((?<origin>A|N)\-(?<end>A|N)\)");
-
+            // Match the pattern "ScaleChg(10,3)"
+            var match = System.Text.RegularExpressions.Regex.Match(term, @"ScaleChg\((?<initial_value>\d+)\,(?<change_value>\d+)\)");
             if (match.Success)
             {
                 string special = match.Groups["special"].Value;
-                if (special == "Emp")
-                {
-                    string origin = match.Groups["origin"].Value;
-                    string end = match.Groups["end"].Value;
-
-                    // Determine origin empathy level and character
-                    double originEmpathyLevel = 0;
-                    CharactersTestSO originCharacter = null;
-                    CharactersTestSO endCharacter = null;
-
-                    if (origin == "N")
-                    {
-                        originEmpathyLevel = env.EmpathyLevel;
-                        originCharacter = env;
-                    }
-                    else if (origin == "A")
-                    {
-                        originEmpathyLevel = agent.EmpathyLevel;
-                        originCharacter = agent;
-                    }
-
-                    // Determine end character
-                    if (end == "A")
-                        endCharacter = agent;
-                    else if (end == "N")
-                        endCharacter = env;
-
-                    // Calculate the PR scale
-                    double prScale = 0;
-                    bool foundPrScale = false;
-                    foreach (RelationshipValueTest prCharacter in originCharacter.RelationshipSheet.PR)
-                    {
-                        if (prCharacter.Identifiers == endCharacter)
-                        {
-                            prScale = (prCharacter.Stats.NB + prCharacter.Stats.DB) / 2;
-                            prScale /= 100;
-                            foundPrScale = true;
-                            break;
-                        }
-                    }
-
-                    // Handle missing relationship gracefully
-                    if (!foundPrScale)
-                        throw new InvalidOperationException($"No PR scale found between {originCharacter} and {endCharacter}");
-
-                    return CalculateFormulaAdjustedEmpathyPRStat(originEmpathyLevel, prScale);
-                }
+                double initialValue = double.Parse(match.Groups["initial_value"].Value);
+                double changeValue = double.Parse(match.Groups["change_value"].Value);
+                
+                return ScaleSurvivalStatChange(changeValue, initialValue);
+                
 
                 // Handle unsupported special terms
                 throw new ArgumentException($"Unsupported special term: {term}");
@@ -651,6 +649,64 @@ public class CivTest : MonoBehaviour
             // Handle unmatched terms
             throw new ArgumentException($"Unable to parse special term: {term}");
         }
+
+        double ParseEmpTerm(string term)
+        {
+            // Match the pattern "Emp(A-N)" or "Emp(N-A)"
+            var match = System.Text.RegularExpressions.Regex.Match(term, @"Emp\((?<origin>A|N)-(?<end>A|N)\)");
+
+            if (match.Success)
+            {
+                string origin = match.Groups["origin"].Value;
+                string end = match.Groups["end"].Value;
+
+                // Determine origin empathy level and character
+                double originEmpathyLevel = 0;
+                CharactersTestSO originCharacter = null;
+                CharactersTestSO endCharacter = null;
+
+                if (origin == "N")
+                {
+                    originEmpathyLevel = env.EmpathyLevel;
+                    originCharacter = env;
+                }
+                else if (origin == "A")
+                {
+                    originEmpathyLevel = agent.EmpathyLevel;
+                    originCharacter = agent;
+                }
+
+                // Determine end character that empathy is towards
+                if (end == "A")
+                    endCharacter = agent;
+                else if (end == "N")
+                    endCharacter = env;
+
+                // Calculate the PR scale
+                double prScale = 0;
+                bool foundPrScale = false;
+                foreach (RelationshipValueTest prCharacter in originCharacter.RelationshipSheet.PR)
+                {
+                    if (prCharacter.Identifiers == endCharacter)
+                    {
+                        prScale = (prCharacter.Stats.NB + prCharacter.Stats.DB) / 2;
+                        prScale /= 100;
+                        foundPrScale = true;
+                        break;
+                    }
+                }
+
+                // Handle missing relationship gracefully
+                if (!foundPrScale)
+                    throw new InvalidOperationException($"No PR scale found between {originCharacter} and {endCharacter}");
+
+                return CalculateFormulaAdjustedEmpathyPRStat(originEmpathyLevel, prScale);
+            }
+
+            // Handle unmatched terms
+            throw new ArgumentException($"Unable to parse special term: {term}");
+        }
+
 
         double ParseSimpleTerm(string term)
         {
@@ -759,7 +815,7 @@ public class CivTest : MonoBehaviour
         {
             formula = System.Text.RegularExpressions.Regex.Replace(formula,
                 @"Emp\((A|N)\-(A|N)\)",
-                match => ParseSpecialTerm(match.Value).ToString());
+                match => ParseEmpTerm(match.Value).ToString());
         }
 
         // Replace complex terms in the formula
@@ -770,6 +826,8 @@ public class CivTest : MonoBehaviour
                 match => ParseComplexTerm(match.Value).ToString());
         }
 
+       
+
         // Replace simple terms in the formula
         while (System.Text.RegularExpressions.Regex.IsMatch(formula, @"(L|NB|DB)\((A|N|E\(-?\d+\))\)"))
         {
@@ -778,6 +836,13 @@ public class CivTest : MonoBehaviour
                 match => ParseSimpleTerm(match.Value).ToString());
         }
 
+        // Replace scale terms (these scale the change in accordance to the initial values)
+        while (System.Text.RegularExpressions.Regex.IsMatch(formula, @"ScaleChg\((\d+)\,(\d+)\)"))
+        {
+            formula = System.Text.RegularExpressions.Regex.Replace(formula,
+                @"ScaleChg\((\d+)\,(\d+)\)",
+                match => ParseScaleChangeTerm(match.Value).ToString());
+        }
 
         //DELETE THE DICTIONARY EVENTUALLY AND USE THE PARSE FUNCTIONS (WHICH I STILL NEED TO FINISH)
         // Define a mapping for the variables in the formula
@@ -859,7 +924,7 @@ public class CivTest : MonoBehaviour
 
     private double CalculateFormulaAdjustedEmpathyPRStat(double empathyLevel, double individualPRScale)
     {
-        return empathyLevel/10 + individualPRScale;
+        return empathyLevel/10 + individualPRScale * 2/3;
     }
 
     private CharactersTestSO GetEnemyByIndex(CharactersTestSO agent, int index)
