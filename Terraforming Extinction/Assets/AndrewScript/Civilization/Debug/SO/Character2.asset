@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   Name: Character 2
   Stats:
-    L: 40
+    L: 100
     DB: 100
     NB: 80
   RelationshipSheet:
@@ -36,9 +36,9 @@ MonoBehaviour:
     - ActionCharacteristics: 4
       Identifiers: {fileID: 11400000, guid: 4e3850a2a57dc9944b49c1b5561d702a, type: 2}
       Stats:
-        L: -60
-        DB: -20
-        NB: -40
+        L: -100
+        DB: -100
+        NB: -100
   FriendsTest: []
   EnemyTest: []
   Identifier: 0
@@ -48,3 +48,5 @@ MonoBehaviour:
   EmpathyLevel: 0
   SelfEfficacy: 0
   ProgressInclination: 0
+  MaxHabitCounter: 10
+  HabitualTendencies: 0

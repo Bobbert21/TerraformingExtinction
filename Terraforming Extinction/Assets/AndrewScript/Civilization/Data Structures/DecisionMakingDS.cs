@@ -48,5 +48,6 @@ public class Perspective
     public string Empathy;
     public string Target;
     public string Predictor;
+    public int HabitCounter;
 }
 

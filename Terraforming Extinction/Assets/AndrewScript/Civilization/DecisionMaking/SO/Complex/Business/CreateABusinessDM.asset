@@ -1,0 +1,62 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0f5f4cf94c429d743a844d910b2bd797, type: 3}
+  m_Name: CreateABusinessDM
+  m_EditorClassIdentifier: 
+  Name: Create a business
+  Action: 0
+  Context: 0
+  DMType: 2
+  Perspectives:
+  - Name: Deplete L from daily rent
+    Description: 
+    RewardType: 6
+    Empathy: 
+    Target: L(A)
+    Predictor: L(A) - 5
+  - Name: Deplete L from daily employee hiring
+    Description: 
+    RewardType: 6
+    Empathy: 
+    Target: L(A)
+    Predictor: L(A) - 3
+  - Name: Deplete L from all resources
+    Description: 
+    RewardType: 6
+    Empathy: 
+    Target: L(A)
+    Predictor: L(A) - 3
+  - Name: Deplete L from replenshing store resources
+    Description: 
+    RewardType: 6
+    Empathy: 
+    Target: L(A)
+    Predictor: L(A) - 3
+  - Name: Feed L to get L from employees
+    Description: 
+    RewardType: 2
+    Empathy: 
+    Target: L(A)
+    Predictor: Mathf.Min(100, L(A) + A-ModR:L(N) * (Mathf.Min(100, ScaleChg(L(N),3))
+      / L(N)))
+  - Name: Consume L through empathy from employees
+    Description: 
+    RewardType: 0
+    Empathy: 
+    Target: L(N)
+    Predictor: 'Mathf.Max(L(N), Emp(A-N) * (L(N) + 3)) '
+  ComplexGoalActions:
+  - {fileID: 11400000, guid: b8d884ea02ef9ed47ae576d66685ec77, type: 2}
+  - {fileID: 11400000, guid: 9553d1565b68bad4492751b8fa22d05c, type: 2}
+  - {fileID: 11400000, guid: c179eeb6e81bd3f4e861292a28678775, type: 2}
+  - {fileID: 11400000, guid: 7bb2e98448f8bc84cbee9e11e0cac093, type: 2}
+  - {fileID: 11400000, guid: e7c700d17da12524a9de44abf9a44869, type: 2}

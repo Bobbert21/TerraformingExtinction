@@ -37,6 +37,13 @@ public class RelationshipValueTest
     public StatsTest Stats;
 }
 
+[System.Serializable]
+public enum EnumMentalOpportunities
+{
+    Internal,
+    External
+}
+
 [CreateAssetMenu(fileName = "CharacterTestSO", menuName = "ScriptableObject/Civilization/CharacterDebug")]
 
 public class CharactersTestSO : ScriptableObject
@@ -48,9 +55,16 @@ public class CharactersTestSO : ScriptableObject
     public List<CharactersTestSO> EnemyTest;
     public EnumIdentifiers Identifier;
     public EnumPersonalityStats BIdentity;
+    public EnumMentalOpportunities MentalOpportunities;
     public double RiskAversion;
     public double RewardInclination;
     public double EmpathyLevel;
     public double SelfEfficacy;
     public double ProgressInclination;
+    public int MaxHabitCounter = 10;
+    public double HabitualTendencies;
+    //How many perspectives they can consider
+    public int PerspectiveAbility;
+    //how many actions they can decide
+    public int CognitiveStamina;
 }

@@ -471,7 +471,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ed975c6b00e24054487ea997a086b02e, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  DMTesting: {fileID: 11400000, guid: 6901800ca9ece6b4da598b140559d796, type: 2}
+  DMTestings:
+  - {fileID: 11400000, guid: 1c997a3d4c63ec244a60316919df5ed3, type: 2}
   Character1: {fileID: 11400000, guid: 1b4ff76b64b377e40b1c9fee8d05f509, type: 2}
   Character2: {fileID: 11400000, guid: f9a1bd29f631d4d42aeab9db43350467, type: 2}
   ComplexGoalStep: 0

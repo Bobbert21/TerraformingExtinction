@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   Name: Enemy
   Stats:
-    L: 10
+    L: 100
     DB: 90
     NB: 40
   RelationshipSheet:
@@ -30,3 +30,5 @@ MonoBehaviour:
   EmpathyLevel: 0
   SelfEfficacy: 0
   ProgressInclination: 0
+  MaxHabitCounter: 10
+  HabitualTendencies: 0
