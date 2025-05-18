@@ -13,58 +13,38 @@ MonoBehaviour:
   m_Name: RelationshipPersonalTreeSO
   m_EditorClassIdentifier: 
   RootIdentifiers:
-  - Identifier: 4
+  - Identifier: 1
     Tracker: {fileID: 11400000}
-    RelationshipValues:
-    - Name: Test
-      PRValues:
-        DefensiveBelongingValue: 2
-        NurtureBelongingValue: 3
-        LivelihoodValue: 2
-      ModRValues:
-        DefensiveBelongingValue: 0
-        NurtureBelongingValue: 0
-        LivelihoodValue: 0
-      ActionContext: 2
-    - Name: New Relationship
-      PRValues:
-        DefensiveBelongingValue: 0
-        NurtureBelongingValue: 0
-        LivelihoodValue: 0
-      ModRValues:
-        DefensiveBelongingValue: 0
-        NurtureBelongingValue: 0
-        LivelihoodValue: 0
-      ActionContext: 3
+    RelationshipNodes: []
     Children:
     - Identifier: 4
       Tracker: {fileID: 0}
-      RelationshipValues: []
+      RelationshipNodes: []
       Children: []
       SubIdentifiers: []
     SubIdentifiers: []
   - Identifier: 2
     Tracker: {fileID: 0}
-    RelationshipValues: []
+    RelationshipNodes: []
     Children:
     - Identifier: 6
       Tracker: {fileID: 0}
-      RelationshipValues: []
+      RelationshipNodes: []
       Children: []
       SubIdentifiers: []
     - Identifier: 0
       Tracker: {fileID: 0}
-      RelationshipValues: []
+      RelationshipNodes: []
       Children: []
       SubIdentifiers: []
     SubIdentifiers: []
   - Identifier: 3
     Tracker: {fileID: 0}
-    RelationshipValues: []
+    RelationshipNodes: []
     Children:
     - Identifier: 5
       Tracker: {fileID: 0}
-      RelationshipValues: []
+      RelationshipNodes: []
       Children: []
       SubIdentifiers: []
     SubIdentifiers: []

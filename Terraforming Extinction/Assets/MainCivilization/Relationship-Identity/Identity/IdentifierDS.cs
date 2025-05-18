@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEditor;
 using System.Linq;
+using JetBrains.Annotations;
 
 [System.Serializable]
 public enum EnumIdentifiers
@@ -26,6 +27,17 @@ public class IdentifierNode
     public List<RelationshipNode> RelationshipNodes = new();
     public List<IdentifierNode> Children = new();
     public List<SubIdentifierNode> SubIdentifiers = new();
+
+    public IdentifierNode DeepCopy()
+    {
+        return new IdentifierNode
+        {
+            Identifier = this.Identifier,
+            SubIdentifiers = SubIdentifiers != null
+                ? new List<SubIdentifierNode>(SubIdentifiers.ConvertAll(s => s.DeepCopy()))
+                : new List<SubIdentifierNode>()
+        };
+    }
 
     public void AddChild(IdentifierNode child)
     {
@@ -85,13 +97,36 @@ public class SubIdentifierNode
     public List<RelationshipNode> LearningPeriodRelationshipValues = new();
     public bool isZeroPoint = false;
     public bool isAnchor = false;
-    public SubIdentifierNode Heuristic = null;
+    public SubIdentifierNode Heuristic = null; 
     public List<SubIdentifierNode> Specifics = new();
     public IdentifierNode Parent;
+
+    public SubIdentifierNode() { }
+
 
     public SubIdentifierNode(IdentifierNode parent)
     {
         Parent = parent;
+    }
+
+    public SubIdentifierNode DeepCopy()
+    {
+        return new SubIdentifierNode
+        {
+            Parent = Parent,
+            SubIdentifierName = this.SubIdentifierName,
+            Heuristic = this.Heuristic,
+            isAnchor = this.isAnchor,
+            AppearanceCharacteristicsWithValue = AppearanceCharacteristicsWithValue != null
+                ? AppearanceCharacteristicsWithValue.ConvertAll(a => a.DeepCopy())
+                : new List<AppearanceCharacteristicWithValue>(),
+            ActionCharacteristicsWithValue = ActionCharacteristicsWithValue != null
+                ? ActionCharacteristicsWithValue.ConvertAll(a => a.DeepCopy())
+                : new List<ActionCharacteristicWithValue>(),
+            Specifics = Specifics != null
+                ? Specifics.ConvertAll(s => s.DeepCopy())
+                : new List<SubIdentifierNode>(),
+        };
     }
 
     public void AddActionCharacteristic(EnumActionCharacteristics characteristic, float value)
@@ -174,6 +209,15 @@ public class ActionCharacteristicWithValue
     public EnumActionCharacteristics CharacteristicType;
     public float Value;
 
+    public ActionCharacteristicWithValue DeepCopy()
+    {
+        return new ActionCharacteristicWithValue
+        {
+            CharacteristicType = this.CharacteristicType,
+            Value = this.Value
+        };
+    }
+
     public ActionCharacteristicWithValue(EnumActionCharacteristics characteristic, float value)
     {
         CharacteristicType = characteristic;
@@ -193,6 +237,15 @@ public class AppearanceCharacteristicWithValue
 {
     public EnumAppearanceCharacteristics CharacteristicType;
     public float Value;
+
+    public AppearanceCharacteristicWithValue DeepCopy()
+    {
+        return new AppearanceCharacteristicWithValue
+        {
+            CharacteristicType = this.CharacteristicType,
+            Value = this.Value
+        };
+    }
 
     public AppearanceCharacteristicWithValue(EnumAppearanceCharacteristics characteristic, float value)
     {

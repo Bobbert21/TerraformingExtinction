@@ -35,7 +35,7 @@ public class EditCharacteristicsWindow : EditorWindow
                 // Ensure Value is accessed correctly
                 if (characteristic != null)
                 {
-                    characteristic.Value = EditorGUILayout.IntField(characteristic.Value);
+                    characteristic.Value = EditorGUILayout.FloatField(characteristic.Value);
                 }
                 else
                 {
@@ -73,7 +73,7 @@ public class EditCharacteristicsWindow : EditorWindow
                 // Ensure Value is accessed correctly
                 if (characteristic != null)
                 {
-                    characteristic.Value = EditorGUILayout.IntField(characteristic.Value);
+                    characteristic.Value = EditorGUILayout.FloatField(characteristic.Value);
                 }
                 else
                 {

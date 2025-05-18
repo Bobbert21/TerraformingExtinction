@@ -30,19 +30,28 @@ public class IdentityDetector : MonoBehaviour
         SubIdentifierNode foundSubIdentifierNode = null;
         float likenessScore = -1;
         (foundSubIdentifierNode, likenessScore) = AdaptiveIdentifierFunctions.FindSubidentifierNodeWithAppearanceAndActionWithLikenessScore(testRelationshipPersonalTree, testEnumIdentifier, testAppearanceCharacteristics, testActionCharacteristics, testName);
-
+        if (foundSubIdentifierNode != null) 
+        {
+            Debug.Log("Found subidentifier nodes: " + foundSubIdentifierNode.SubIdentifierName + " Likness Score: " + likenessScore);
+        }
+        else
+        {
+            Debug.Log("No subidentifier found");
+        }
         
         if (foundSubIdentifierNode != null) 
         {
             //perfect match or close enough to not distinct and have to be the same name. 
             if (likenessScore > testDistinctiveAbility && foundSubIdentifierNode.SubIdentifierName == testName)
             {
+                Debug.Log("Found subidentifier same as node with name: " + foundSubIdentifierNode.SubIdentifierName);
                 //alters the relationship tree when perfect match (or similar enough) to be that specific thing
                 testRelationshipPersonalTree.AddValuesToSubIdentifier(foundSubIdentifierNode, existingNodesDistinctiveAbility, testJudgementLevel, testExtrapolationLevel, 1);
             }
             //FIT
             else if(likenessScore > testDistinctiveAbility * 0.8)
             {
+                Debug.Log("Fit with " + foundSubIdentifierNode.SubIdentifierName);
                 float maxLikenessScore = AdaptiveIdentifierFunctions.GetMaxLikenessScorePossible(foundSubIdentifierNode);
 
                 //ADOPT in FIT
@@ -50,6 +59,7 @@ public class IdentityDetector : MonoBehaviour
                 //2. Calculate adoptedValue
                 //3. Populate the new LearningPeriodValues for characteristics and relationship nodes
                 SubIdentifierNode newSubIdentifierNode = new SubIdentifierNode(foundSubIdentifierNode.Parent);
+                newSubIdentifierNode.SubIdentifierName = testName;
                 foundSubIdentifierNode.Specifics.Add(newSubIdentifierNode);
                 newSubIdentifierNode.Heuristic = foundSubIdentifierNode;
                 float adoptedValue = likenessScore / maxLikenessScore;
@@ -61,10 +71,14 @@ public class IdentityDetector : MonoBehaviour
                 {
                     //if value is large enough
                     int newValue = (int)System.MathF.Floor(appearanceCharacteristicWithValue.Value * adoptedValue);
+
+                    //default to 1
+                    newValue = Mathf.Max(newValue, 1);
                     if (newValue > 0)
                     {
                         AppearanceCharacteristicWithValue newAppearanceCharacteristicWithValue = new AppearanceCharacteristicWithValue(appearanceCharacteristicWithValue.CharacteristicType, newValue);
                         newSubIdentifierNode.LearningPeriodAppearanceCharacteristicsWithValue.Add(newAppearanceCharacteristicWithValue);
+                        newSubIdentifierNode.AddAppearanceCharacteristic(appearanceCharacteristicWithValue.CharacteristicType, newValue);
                     }
                 }
 
@@ -72,10 +86,13 @@ public class IdentityDetector : MonoBehaviour
                 foreach (ActionCharacteristicWithValue actionCharacteristicWithValue in foundSubIdentifierNode.ActionCharacteristicsWithValue)
                 {
                     int newValue = (int)System.MathF.Floor(actionCharacteristicWithValue.Value * adoptedValue);
+                    //default to 1
+                    newValue = Mathf.Max(newValue, 1);
                     if (newValue > 0)
                     {
                         ActionCharacteristicWithValue newActionCharacteristicWithValue = new ActionCharacteristicWithValue(actionCharacteristicWithValue.CharacteristicType, newValue);
                         newSubIdentifierNode.LearningPeriodActionCharacteristicsWithValue.Add(newActionCharacteristicWithValue);
+                        newSubIdentifierNode.AddActionCharacteristic(actionCharacteristicWithValue.CharacteristicType, newValue);
                     }
                         
                 }
@@ -94,7 +111,6 @@ public class IdentityDetector : MonoBehaviour
         {
 
             bool foundIdentifierNode = false;
-
             foreach (IdentifierNode identifierNode in testRelationshipPersonalTree.RootIdentifiers) { 
                 if(identifierNode.Identifier == testEnumIdentifier)
                 {
@@ -110,8 +126,12 @@ public class IdentityDetector : MonoBehaviour
                         newSubIdentifierNode.AddActionCharacteristic(actionCharacteristic, 1);
                     }
 
+                    newSubIdentifierNode.SubIdentifierName = testName;
                     identifierNode.SubIdentifiers.Add(newSubIdentifierNode);
                     foundIdentifierNode = true;
+
+                    Debug.Log("Added subidentifier node " + newSubIdentifierNode.SubIdentifierName + " in identifier " + identifierNode.Identifier.ToString());
+
                 }
             }
 
