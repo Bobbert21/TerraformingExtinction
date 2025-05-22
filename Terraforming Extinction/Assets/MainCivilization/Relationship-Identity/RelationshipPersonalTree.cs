@@ -10,20 +10,24 @@ public class RelationshipPersonalTree : MonoBehaviour
 
     [Header("Do Not Edit")]
     public List<IdentifierNode> RootIdentifiers;
+    //uhhh what is this?
     public IdentifierMasterTreeSO MasterTree;
     public List<EnumIdentifiers> identifiers;
     public List<SubIdentifierNode> subIdentifiers;
     // Start is called before the first frame update
-    void Start()
+    void Awake()
     {
-        if(RootIdentifiers == null && MasterTree == null && identifiers == null && subIdentifiers == null)
+        if (RootIdentifiers.Count == 0 && MasterTree == null && identifiers.Count == 0 && subIdentifiers.Count == 0)
         {
-            RootIdentifiers = RelationshipPersonalTreeSO.RootIdentifiers;
-            MasterTree = RelationshipPersonalTreeSO.MasterTree;
-            identifiers = RelationshipPersonalTreeSO.identifiers;
-            subIdentifiers = RelationshipPersonalTreeSO.subIdentifiers;
+
+            RelationshipPersonalTreeSO relationshipPersonalTreeSODeepCopy = RelationshipPersonalTreeSO.DeepCopy();
+
+            RootIdentifiers = relationshipPersonalTreeSODeepCopy.RootIdentifiers;
+            MasterTree = relationshipPersonalTreeSODeepCopy.MasterTree;
+            identifiers = relationshipPersonalTreeSODeepCopy.identifiers;
+            subIdentifiers = relationshipPersonalTreeSODeepCopy.subIdentifiers;
         }
-       
+
     }
 
     // Update is called once per frame
@@ -49,6 +53,7 @@ public class RelationshipPersonalTree : MonoBehaviour
         else
         {
             //Relocate - If becomes too different from anchor
+            Relocate(subIdentifierNode, existingNodesDistinctiveAbility);
             //Trickle
             Trickle(subIdentifierNode, judgmentLevel);
             //Transcend
@@ -60,11 +65,15 @@ public class RelationshipPersonalTree : MonoBehaviour
 
     private void Relocate(SubIdentifierNode subIdentifierNode, float existingNodesDistinctiveAbility) 
     {
+        Debug.Log("Processing Relocate");
+        
         //removing
         if(subIdentifierNode.Heuristic != null)
         {
             subIdentifierNode.Heuristic.Specifics.Remove(subIdentifierNode);
         }
+
+        subIdentifierNode.Heuristic = null;
 
         SubIdentifierNode highestLikenessAnchorNode = null;
         float highestLikenessScore = -1;
@@ -79,8 +88,11 @@ public class RelationshipPersonalTree : MonoBehaviour
 
         if(highestLikenessAnchorNode != null)
         {
+            Debug.Log("Run Relocate with new anchor: " +  highestLikenessAnchorNode.SubIdentifierName);
             highestLikenessAnchorNode.Specifics.Add(subIdentifierNode);
+            subIdentifierNode.Heuristic = highestLikenessAnchorNode;
         }
+        //if no found highest likeness anchor node, then it will still have no heuristic
     }
 
     private void RelocateTraverseSubIdentifierNodesRecursive(SubIdentifierNode subIdentifierNodeOfInterest, SubIdentifierNode comparingAnchorNode, float existingNodesDistinctiveAbility, ref SubIdentifierNode highestLikenessAnchorNode, ref float highestLikenessScore)
@@ -97,7 +109,7 @@ public class RelationshipPersonalTree : MonoBehaviour
             }
         }
 
-        foreach (SubIdentifierNode childSubIdentifierNode in subIdentifierNodeOfInterest.Specifics)
+        foreach (SubIdentifierNode childSubIdentifierNode in comparingAnchorNode.Specifics)
         {
             RelocateTraverseSubIdentifierNodesRecursive(subIdentifierNodeOfInterest, childSubIdentifierNode, existingNodesDistinctiveAbility, ref highestLikenessAnchorNode, ref highestLikenessScore);
         }
@@ -105,14 +117,27 @@ public class RelationshipPersonalTree : MonoBehaviour
 
     private void Generalization(SubIdentifierNode subIdentifierNode, float existingNodesDistinctiveAbility)
     {
-        //1. See if any specific node has likeness score greater than existingNodesDistinctiveAbility
+        Debug.Log("Processing Generalization"); 
+        //1. See if any other specific node at same level has likeness score greater than existingNodesDistinctiveAbility
         //2. Make a collective anchor for subIdentifierNode and this specific node if so
         SubIdentifierNode highestLikenessSpecificNode = null;
         float highestLikenessScore = -1;
-        //Need to see if there are other heuristic to compare to
-        foreach (SubIdentifierNode specificNode in subIdentifierNode.Heuristic.Specifics) 
+
+        //Get other specifics
+        List<SubIdentifierNode> otherSpecifics = new();
+        if (subIdentifierNode.Heuristic != null)
+        {
+            otherSpecifics = subIdentifierNode.Heuristic.Specifics;
+        }
+        else
+        {
+            otherSpecifics = subIdentifierNode.Parent.SubIdentifiers;
+        }
+
+        
+        foreach (SubIdentifierNode specificNode in otherSpecifics) 
         { 
-            if(specificNode != subIdentifierNode)
+            if(specificNode != subIdentifierNode && specificNode.isAnchor == false && specificNode.isZeroPoint == true)
             {
                 float likenessScore = AdaptiveIdentifierFunctions.GetExistingNodesLikenessScore(specificNode, subIdentifierNode);
                 if (likenessScore > Mathf.Max(existingNodesDistinctiveAbility, highestLikenessScore))
@@ -121,122 +146,142 @@ public class RelationshipPersonalTree : MonoBehaviour
                     highestLikenessSpecificNode=specificNode;
                 }
             }
+        }
 
-            if (highestLikenessSpecificNode != null) 
-            { 
-                AdaptiveIdentifierFunctions.NewCollectiveAnchor(subIdentifierNode, highestLikenessSpecificNode);
-            }
+        if (highestLikenessSpecificNode != null)
+        {
+            Debug.Log("Running Generalization and create new collective anchor for " + subIdentifierNode.SubIdentifierName + " and " + highestLikenessSpecificNode.SubIdentifierName);
+            AdaptiveIdentifierFunctions.NewCollectiveAnchor(subIdentifierNode, highestLikenessSpecificNode);
         }
 
     }
 
     private void Transcend(SubIdentifierNode specificNode, float extrapolationLevel)
     {
-        SubIdentifierNode heuristicNode = specificNode.Heuristic;
-        float extrapolationPercent = extrapolationLevel / 100;
-        if (heuristicNode != null)
+        
+        if(specificNode.isZeroPoint == true)
         {
-            foreach (AppearanceCharacteristicWithValue appearanceCharacteristicWithValue in specificNode.AppearanceCharacteristicsWithValue)
+            Debug.Log("Processing Transcend");
+            SubIdentifierNode heuristicNode = specificNode.Heuristic;
+            float extrapolationPercent = extrapolationLevel / 100;
+            if (heuristicNode != null)
             {
-                float appearanceValue = appearanceCharacteristicWithValue.Value * extrapolationPercent;
-                heuristicNode.AddAppearanceCharacteristic(appearanceCharacteristicWithValue.CharacteristicType, appearanceValue);
-            }
-
-            foreach (ActionCharacteristicWithValue actionCharacteristicWithValue in specificNode.ActionCharacteristicsWithValue)
-            {
-                float actionValue = actionCharacteristicWithValue.Value * extrapolationPercent;
-                heuristicNode.AddActionCharacteristic(actionCharacteristicWithValue.CharacteristicType, actionValue);
-            }
-
-            //Transcend relationship
-            foreach (RelationshipNode relationshipNode in specificNode.RelationshipNodes)
-            {
-                RelationshipNode newRelationshipNode = new RelationshipNode(relationshipNode);
-
-                //loop through pr and modr values and adjust them
-                //Create new array with PR and ModR and loop through them
-                foreach (RelationshipValues values in new[] { newRelationshipNode.PRValues, newRelationshipNode.ModRValues })
+                foreach (AppearanceCharacteristicWithValue appearanceCharacteristicWithValue in specificNode.AppearanceCharacteristicsWithValue)
                 {
-                    values.LivelihoodValue *= extrapolationPercent;
-                    values.NurtureBelongingValue *= extrapolationPercent;
-                    values.DefensiveBelongingValue = extrapolationPercent;
+                    float appearanceValue = appearanceCharacteristicWithValue.Value * extrapolationPercent;
+                    heuristicNode.AddAppearanceCharacteristic(appearanceCharacteristicWithValue.CharacteristicType, appearanceValue);
+                    Debug.Log("Transcending Appearance " + appearanceCharacteristicWithValue.CharacteristicType.ToString() + " by " + appearanceValue);
                 }
-                heuristicNode.AddRelationshipNode(newRelationshipNode);
+
+                foreach (ActionCharacteristicWithValue actionCharacteristicWithValue in specificNode.ActionCharacteristicsWithValue)
+                {
+                    float actionValue = actionCharacteristicWithValue.Value * extrapolationPercent;
+                    heuristicNode.AddActionCharacteristic(actionCharacteristicWithValue.CharacteristicType, actionValue);
+                    Debug.Log("Transcending Action " + actionCharacteristicWithValue.CharacteristicType.ToString() + " by " + actionValue);
+                }
+
+                //Transcend relationship
+                foreach (RelationshipNode relationshipNode in specificNode.RelationshipNodes)
+                {
+                    RelationshipNode newRelationshipNode = new RelationshipNode(relationshipNode);
+
+                    //loop through pr and modr values and adjust them
+                    //Create new array with PR and ModR and loop through them
+                    foreach (RelationshipValues values in new[] { newRelationshipNode.PRValues, newRelationshipNode.ModRValues })
+                    {
+                        values.LivelihoodValue *= extrapolationPercent;
+                        values.NurtureBelongingValue *= extrapolationPercent;
+                        values.DefensiveBelongingValue = extrapolationPercent;
+                    }
+
+                    Debug.Log("Transcending relationship node" + newRelationshipNode + " to " + heuristicNode.SubIdentifierName);
+                    heuristicNode.AddRelationshipNode(newRelationshipNode);
+                }
+            }
+            else
+            {
+                foreach (RelationshipNode relationshipNode in specificNode.RelationshipNodes)
+                {
+                    RelationshipNode newRelationshipNode = new RelationshipNode(relationshipNode);
+
+                    //loop through pr and modr values and adjust them
+                    //Create new array with PR and ModR and loop through them
+                    foreach (RelationshipValues values in new[] { newRelationshipNode.PRValues, newRelationshipNode.ModRValues })
+                    {
+                        values.LivelihoodValue *= extrapolationPercent;
+                        values.NurtureBelongingValue *= extrapolationPercent;
+                        values.DefensiveBelongingValue = extrapolationPercent;
+                    }
+                    Debug.Log("Transcending relationship node " + newRelationshipNode + " to " + specificNode.Parent.Identifier);
+                    specificNode.Parent.AddRelationshipNode(newRelationshipNode);
+                }
             }
         }
-        else
-        {
-            foreach (RelationshipNode relationshipNode in specificNode.RelationshipNodes)
-            {
-                RelationshipNode newRelationshipNode = new RelationshipNode(relationshipNode);
-
-                //loop through pr and modr values and adjust them
-                //Create new array with PR and ModR and loop through them
-                foreach (RelationshipValues values in new[] { newRelationshipNode.PRValues, newRelationshipNode.ModRValues })
-                {
-                    values.LivelihoodValue *= extrapolationPercent;
-                    values.NurtureBelongingValue *= extrapolationPercent;
-                    values.DefensiveBelongingValue = extrapolationPercent;
-                }
-                specificNode.Parent.AddRelationshipNode(newRelationshipNode);
-            }
-        }
+        
     }
 
     private void Trickle(SubIdentifierNode specificNode, float judgmentLevel)
     {
-        SubIdentifierNode heuristicNode = specificNode.Heuristic;
-        float judgmentPercent = judgmentLevel/100;
-        if(heuristicNode != null)
+        if(specificNode.isZeroPoint == true)
         {
-            //Trickle appearance
-            foreach (AppearanceCharacteristicWithValue appearanceCharacteristicWithValue in heuristicNode.AppearanceCharacteristicsWithValue) 
-            { 
-                float appearanceValue = appearanceCharacteristicWithValue.Value * judgmentPercent;
-                specificNode.AddAppearanceCharacteristic(appearanceCharacteristicWithValue.CharacteristicType, appearanceValue);
-            }
-
-
-            //Trickle action
-            foreach(ActionCharacteristicWithValue actionCharacteristicWithValue in heuristicNode.ActionCharacteristicsWithValue)
+            Debug.Log("Processing Trickle");
+            SubIdentifierNode heuristicNode = specificNode.Heuristic;
+            float judgmentPercent = judgmentLevel / 100;
+            if (heuristicNode != null)
             {
-                float actionValue = actionCharacteristicWithValue.Value * judgmentPercent;
-                specificNode.AddActionCharacteristic(actionCharacteristicWithValue.CharacteristicType, actionValue);
-            }
-
-            //Trickle relationship
-            foreach (RelationshipNode relationshipNode in heuristicNode.RelationshipNodes) 
-            { 
-                RelationshipNode newRelationshipNode = new RelationshipNode(relationshipNode);
-
-                //loop through pr and modr values and adjust them
-                //Create new array with PR and ModR and loop through them
-                foreach(RelationshipValues values in new[] {newRelationshipNode.PRValues, newRelationshipNode.ModRValues })
+                //Trickle appearance
+                foreach (AppearanceCharacteristicWithValue appearanceCharacteristicWithValue in heuristicNode.AppearanceCharacteristicsWithValue)
                 {
-                    values.LivelihoodValue *= judgmentPercent;
-                    values.NurtureBelongingValue *= judgmentPercent;
-                    values.DefensiveBelongingValue = judgmentPercent;
+                    float appearanceValue = appearanceCharacteristicWithValue.Value * judgmentPercent;
+                    specificNode.AddAppearanceCharacteristic(appearanceCharacteristicWithValue.CharacteristicType, appearanceValue);
+                    Debug.Log("Trickling Appearance " + appearanceCharacteristicWithValue.CharacteristicType.ToString() + " by " + appearanceValue);
                 }
-                specificNode.AddRelationshipNode(newRelationshipNode);
+
+
+                //Trickle action
+                foreach (ActionCharacteristicWithValue actionCharacteristicWithValue in heuristicNode.ActionCharacteristicsWithValue)
+                {
+                    float actionValue = actionCharacteristicWithValue.Value * judgmentPercent;
+                    specificNode.AddActionCharacteristic(actionCharacteristicWithValue.CharacteristicType, actionValue);
+                    Debug.Log("Trickling Action " + actionCharacteristicWithValue.CharacteristicType.ToString() + " by " + actionValue);
+                }
+
+                //Trickle relationship
+                foreach (RelationshipNode relationshipNode in heuristicNode.RelationshipNodes)
+                {
+                    RelationshipNode newRelationshipNode = new RelationshipNode(relationshipNode);
+
+                    //loop through pr and modr values and adjust them
+                    //Create new array with PR and ModR and loop through them
+                    foreach (RelationshipValues values in new[] { newRelationshipNode.PRValues, newRelationshipNode.ModRValues })
+                    {
+                        values.LivelihoodValue *= judgmentPercent;
+                        values.NurtureBelongingValue *= judgmentPercent;
+                        values.DefensiveBelongingValue = judgmentPercent;
+                    }
+                    Debug.Log("Trickling relationship node" + newRelationshipNode + " to " + heuristicNode.SubIdentifierName);
+                    specificNode.AddRelationshipNode(newRelationshipNode);
+                }
             }
-        }
-        //if not heuristic subidentifiers, then use identifier to trickle
-        //can only trickle relationship
-        else
-        {
-            foreach (RelationshipNode relationshipNode in specificNode.Parent.RelationshipNodes)
+            //if not heuristic subidentifiers, then use identifier to trickle
+            //can only trickle relationship
+            else
             {
-                RelationshipNode newRelationshipNode = new RelationshipNode(relationshipNode);
-
-                //loop through pr and modr values and adjust them
-                //Create new array with PR and ModR and loop through them
-                foreach (RelationshipValues values in new[] { newRelationshipNode.PRValues, newRelationshipNode.ModRValues })
+                foreach (RelationshipNode relationshipNode in specificNode.Parent.RelationshipNodes)
                 {
-                    values.LivelihoodValue *= judgmentPercent;
-                    values.NurtureBelongingValue *= judgmentPercent;
-                    values.DefensiveBelongingValue = judgmentPercent;
+                    RelationshipNode newRelationshipNode = new RelationshipNode(relationshipNode);
+
+                    //loop through pr and modr values and adjust them
+                    //Create new array with PR and ModR and loop through them
+                    foreach (RelationshipValues values in new[] { newRelationshipNode.PRValues, newRelationshipNode.ModRValues })
+                    {
+                        values.LivelihoodValue *= judgmentPercent;
+                        values.NurtureBelongingValue *= judgmentPercent;
+                        values.DefensiveBelongingValue = judgmentPercent;
+                    }
+                    Debug.Log("Trickling relationship node " + newRelationshipNode + " to " + specificNode.Parent.Identifier);
+                    specificNode.AddRelationshipNode(newRelationshipNode);
                 }
-                specificNode.AddRelationshipNode(newRelationshipNode);
             }
         }
     }
@@ -259,20 +304,28 @@ public class RelationshipPersonalTree : MonoBehaviour
                 //When spread is different
                 //1. the anchorlikeness score is below the cutoff of anchor distinctive ability or if it is not an anchor it can stay at
                 //2. Do distanced post-zero point
-                if (anchorLikenessScore < anchorDistinctiveAbility)
+
+                if(heuristicSubIdentifier.isAnchor == false)
                 {
-                    AdaptiveIdentifierFunctions.DistancedPostZero(subIdentifierNode, anchorDistinctiveAbility);
-                }
-                else
-                {
-                    //When spread is similar 
-                    //Heuristic is not anchor, then do New Close Post-Zero
-                    if(heuristicSubIdentifier.isAnchor == false)
+                    if(anchorLikenessScore >= anchorDistinctiveAbility)
                     {
-                        //Create a New Collective Anchor based on both stats
+                        //Create a New Collective Anchor based on both stats if heuristic is not an anchor
+                        Debug.Log("Processing new close zero point because anchor likeness score " + anchorLikenessScore + " is greater than distinctive ability " + anchorDistinctiveAbility);
                         AdaptiveIdentifierFunctions.NewClosePostZero(subIdentifierNode, heuristicSubIdentifier);
                     }
-                    //Else, then do Maintained Close Post-Zero (Aka, do nothing and keep there)
+                    else
+                    {
+                        Debug.Log("Processing distanced post zero because the heuristic is not an anchor and anchor likeness score " + anchorLikenessScore + " is less than distinctive ability " + anchorDistinctiveAbility);
+                        AdaptiveIdentifierFunctions.DistancedPostZero(subIdentifierNode, anchorDistinctiveAbility);
+                    }
+                }else if(heuristicSubIdentifier.isAnchor == true)
+                {
+                    if(anchorLikenessScore < anchorDistinctiveAbility)
+                    {
+                        Debug.Log("Processing distanced post zero because anchor likeness score " + anchorLikenessScore + " is less than distinctive ability " + anchorDistinctiveAbility);
+                        AdaptiveIdentifierFunctions.DistancedPostZero(subIdentifierNode, anchorDistinctiveAbility);
+                    }
+                    //else do nothing and should stay there. 
                 }
             }
             

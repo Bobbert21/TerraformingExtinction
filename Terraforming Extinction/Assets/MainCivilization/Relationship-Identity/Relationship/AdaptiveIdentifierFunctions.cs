@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.InteropServices.WindowsRuntime;
+using UnityEditor.Callbacks;
 using UnityEditor.Experimental.GraphView;
 using UnityEditor.PackageManager;
 using UnityEngine;
@@ -14,20 +15,26 @@ public static class AdaptiveIdentifierFunctions
 
     public static bool CheckZeroPoint(SubIdentifierNode subIdentifierNode)
     {
-        float totalCount = 0;
+        float maxTallies = -1;
         if (subIdentifierNode.isZeroPoint == false)
         {
             foreach (AppearanceCharacteristicWithValue appearanceCharacteristicWithValue in subIdentifierNode.AppearanceCharacteristicsWithValue)
             {
-                totalCount += appearanceCharacteristicWithValue.Value;
+                if(appearanceCharacteristicWithValue.Value > maxTallies)
+                {
+                    maxTallies = appearanceCharacteristicWithValue.Value;
+                }
             }
 
             foreach (ActionCharacteristicWithValue actionCharacteristicWithValue in subIdentifierNode.ActionCharacteristicsWithValue)
             {
-                totalCount += actionCharacteristicWithValue.Value;
+                if(actionCharacteristicWithValue.Value > maxTallies)
+                {
+                    maxTallies = actionCharacteristicWithValue.Value;
+                }
             }
 
-            if (totalCount >= ZeroPointCutoff)
+            if (maxTallies >= ZeroPointCutoff)
             {
                 return true;
             }
@@ -131,25 +138,46 @@ public static class AdaptiveIdentifierFunctions
         List<EnumAppearanceCharacteristics> appearanceEnums, List<EnumActionCharacteristics> actionEnums, string name, float distinctiveAbility = -1)
     {
         IdentifierNode foundIdentifierNode = FindIdentifierNode(relationshipPersonalTree, identifierEnum);
-
         if (foundIdentifierNode != null)
         {
+            SubIdentifierNode highestFoundSub = null;
+            float highestLikenessScore = -1;
             foreach (SubIdentifierNode subIdentifierNode in foundIdentifierNode.SubIdentifiers)
             {
                 SubIdentifierNode foundSub = null;
                 float likenessScore = -1;
-                (foundSub, likenessScore)= FindSubidentifierNodeWithLikenessRecursive(subIdentifierNode, appearanceEnums, actionEnums, distinctiveAbility, -1, null, name);
+                bool hasFoundExactSub = false;
+                (foundSub, likenessScore, hasFoundExactSub) = FindSubidentifierNodeWithLikenessRecursive(subIdentifierNode, appearanceEnums, actionEnums, distinctiveAbility, -1, null, name);
                 if (foundSub != null)
                 {
-                    return (foundSub, likenessScore);
+                    //if found the exact version in the subidentifiers, then return immediately. Else keep searching
+                    if (hasFoundExactSub)
+                    {
+                        highestFoundSub = foundSub;
+                        highestLikenessScore = likenessScore;
+                        return (highestFoundSub, highestLikenessScore);
+                    }
+
+                    if (likenessScore > highestLikenessScore) 
+                    {
+                        highestFoundSub = foundSub;
+                        highestLikenessScore = likenessScore;
+                    }
                 }
             }
+
+            if(highestFoundSub != null)
+            {
+                return(highestFoundSub, highestLikenessScore);
+            }
+
+
         }
 
         return (null, -1);
     }
 
-    private static (SubIdentifierNode, float) FindSubidentifierNodeWithLikenessRecursive(SubIdentifierNode subIdentifierNode, List<EnumAppearanceCharacteristics> appearanceEnumsInNewVersion, 
+    private static (SubIdentifierNode, float, bool) FindSubidentifierNodeWithLikenessRecursive(SubIdentifierNode subIdentifierNode, List<EnumAppearanceCharacteristics> appearanceEnumsInNewVersion, 
         List<EnumActionCharacteristics> actionEnumsInNewVersion, float distinctiveAbility, float highestLikenessScore, SubIdentifierNode highestLikenessNode, string name)
     {
         //get all the subidentifiers appearance
@@ -167,33 +195,55 @@ public static class AdaptiveIdentifierFunctions
         }
 
         float likenessScore = 0;
-        int unmatchedNewVersionToExistingCharacteristicsCount = 0;
+        int unmatchedAppearanceNewVersionToExistingCharacteristicsCount = 0;
+        int unmatchedActionNewVersionToExistingCharacteristicsCount = 0;
         int matchedNewVersionToExistingCharacteristicsCount = 0;
+
+        HashSet<EnumAppearanceCharacteristics> unmatchedExistingAppearanceToNewVersion = subIdentifierAppearanceCharacteristics;
+        HashSet<EnumActionCharacteristics> unmatchedExistingActionToNewVersion = subIdentifierActionCharacteristics;
+
 
         foreach(EnumAppearanceCharacteristics appearanceCharacteristic in appearanceEnumsInNewVersion)
         {
             if (subIdentifierAppearanceCharacteristics.Contains(appearanceCharacteristic))
             {
+                unmatchedExistingAppearanceToNewVersion.Remove(appearanceCharacteristic);
+                //Get the characteristic with value of existing node that is also in new version
                 AppearanceCharacteristicWithValue matchedAppearanceCharacteristicWithValue = subIdentifierNode.AppearanceCharacteristicsWithValue
                     .FirstOrDefault(a => a.CharacteristicType == appearanceCharacteristic);
 
                 if (matchedAppearanceCharacteristicWithValue != null) 
                 {
+                    
                     matchedNewVersionToExistingCharacteristicsCount++;
                     likenessScore += (float)System.Math.Pow(matchedAppearanceCharacteristicWithValue.Value, 1.5);
+                    //Debug.Log("Matched characteristics: " + matchedAppearanceCharacteristicWithValue.CharacteristicType + " and new likeness score of " + likenessScore);
                 }
             }
             else
             {
-                unmatchedNewVersionToExistingCharacteristicsCount++;
+                unmatchedAppearanceNewVersionToExistingCharacteristicsCount++;
             }
         }
+
+        //subtracting unmatched existing with its tallies
+        foreach (EnumAppearanceCharacteristics appearanceCharacteristic in unmatchedExistingAppearanceToNewVersion) 
+        { 
+            AppearanceCharacteristicWithValue unmatchedAppearanceCharacteristicWithValue = subIdentifierNode.AppearanceCharacteristicsWithValue
+                .FirstOrDefault(a => a.CharacteristicType == appearanceCharacteristic);
+
+            likenessScore -= (float)System.Math.Pow(unmatchedAppearanceCharacteristicWithValue.Value, 1.5);
+        }
+
+        //subtracting unmatched new version 
+        likenessScore -= (float)System.Math.Pow(unmatchedAppearanceNewVersionToExistingCharacteristicsCount, 1.5);
 
 
         foreach (EnumActionCharacteristics actionCharacteristic in actionEnumsInNewVersion)
         {
             if (subIdentifierActionCharacteristics.Contains(actionCharacteristic))
             {
+                unmatchedExistingActionToNewVersion.Remove(actionCharacteristic);
                 ActionCharacteristicWithValue matchedActionCharacteristicWithValue = subIdentifierNode.ActionCharacteristicsWithValue
                     .FirstOrDefault(a => a.CharacteristicType == actionCharacteristic);
 
@@ -201,59 +251,119 @@ public static class AdaptiveIdentifierFunctions
                 {
                     matchedNewVersionToExistingCharacteristicsCount++;
                     likenessScore += (float)System.Math.Pow(matchedActionCharacteristicWithValue.Value, 1.5);
+                    //Debug.Log("Matched action of " + matchedActionCharacteristicWithValue.CharacteristicType + " with new likeness score of " + likenessScore) ;
                 }
             }
             else
             {
-                unmatchedNewVersionToExistingCharacteristicsCount++;
+                unmatchedActionNewVersionToExistingCharacteristicsCount++;
             }
         }
-        //calculated characteristics in this existing node that is not in subidentifier
-        int unmatchedExistingToNewVersionCharacteristicsCount = (appearanceEnumsInNewVersion.Count + actionEnumsInNewVersion.Count - matchedNewVersionToExistingCharacteristicsCount);
 
-        //subtract from mismatches from both ends
-        likenessScore -= (float)System.Math.Pow(unmatchedExistingToNewVersionCharacteristicsCount, 1.5);
-        likenessScore -= (float)System.Math.Pow(unmatchedNewVersionToExistingCharacteristicsCount, 1.5);
-
-        //If everything matches
-        if (unmatchedExistingToNewVersionCharacteristicsCount == 0 && unmatchedNewVersionToExistingCharacteristicsCount == 0 && subIdentifierNode.SubIdentifierName == name)
+        foreach (EnumActionCharacteristics actionCharacteristic in unmatchedExistingActionToNewVersion)
         {
-            return (subIdentifierNode, likenessScore);
+            ActionCharacteristicWithValue unmatchedActionCharacteristicWithValue = subIdentifierNode.ActionCharacteristicsWithValue
+                .FirstOrDefault(a => a.CharacteristicType == actionCharacteristic);
+
+            likenessScore -= (float)System.Math.Pow(unmatchedActionCharacteristicWithValue.Value, 1.5);
         }
 
-        if (likenessScore >= highestLikenessScore && likenessScore >= distinctiveAbility)
-        {
+        likenessScore -= (float)System.Math.Pow(unmatchedActionNewVersionToExistingCharacteristicsCount, 1.5);
 
-            //only replaces the current one if the current one is not possibly the Version/Specific. 
-            if(likenessScore == highestLikenessScore)
+        Debug.Log("New likeness score of " + likenessScore + " with " + subIdentifierNode.SubIdentifierName);
+
+        //calculated characteristics in this existing node that is not in new version
+        int unmatchedExistingToNewVersionCharacteristicsCount = unmatchedExistingActionToNewVersion.Count + unmatchedExistingAppearanceToNewVersion.Count;
+        
+        
+        //Debug.Log("Unmatched exiting to new version is " + unmatchedExistingToNewVersionCharacteristicsCount + " for " + subIdentifierNode.SubIdentifierName);
+
+
+        //If everything matches
+        if (unmatchedExistingToNewVersionCharacteristicsCount == 0 && unmatchedAppearanceNewVersionToExistingCharacteristicsCount == 0
+            && unmatchedActionNewVersionToExistingCharacteristicsCount == 0 && subIdentifierNode.SubIdentifierName == name && subIdentifierNode.isAnchor == false)
+            { 
+                Debug.Log("Found identical node " + subIdentifierNode.SubIdentifierName);
+                return (subIdentifierNode, likenessScore, true);
+            }
+
+        //only replaces the current one if the current one is not possibly the Version/Specific. 
+        if (likenessScore > highestLikenessScore && likenessScore >= distinctiveAbility)
+        { 
+            if(highestLikenessNode != null)
             {
-                if (highestLikenessNode.SubIdentifierName != name || !highestLikenessNode.isAnchor)
+                //Check if it is a specific subidentifier node
+                if (highestLikenessNode.SubIdentifierName != name || highestLikenessNode.isAnchor)
                 {
+                    Debug.Log("Finding subidentifier node to match. New Highest score: " + likenessScore + " with subidentifier name " + subIdentifierNode.SubIdentifierName);
                     highestLikenessScore = likenessScore;
                     highestLikenessNode = subIdentifierNode;
                 }
             }
-            
-           
+            else
+            {
+                Debug.Log("First time setting highest likeness node of " + subIdentifierNode.SubIdentifierName + " with score of " + likenessScore);
+                highestLikenessScore = likenessScore;
+                highestLikenessNode = subIdentifierNode;
+            }
         }
 
 
         //continue to find through 
-        foreach (SubIdentifierNode specificSubIdentifierNode in subIdentifierNode.Specifics)
+        if (subIdentifierNode.Specifics.Count > 0) 
         {
-            SubIdentifierNode foundSubIdentiferNode = null;
-            (foundSubIdentiferNode, highestLikenessScore) = FindSubidentifierNodeWithLikenessRecursive(specificSubIdentifierNode, appearanceEnumsInNewVersion, actionEnumsInNewVersion, distinctiveAbility, highestLikenessScore, highestLikenessNode, name);
-            if (foundSubIdentiferNode != null) { return (foundSubIdentiferNode, highestLikenessScore); }
+            foreach (SubIdentifierNode specificSubIdentifierNode in subIdentifierNode.Specifics)
+            {
+                (SubIdentifierNode candidateNode, float candidateScore, bool hasFoundExactSub) = FindSubidentifierNodeWithLikenessRecursive(
+                        specificSubIdentifierNode,
+                        appearanceEnumsInNewVersion,
+                        actionEnumsInNewVersion,
+                        distinctiveAbility,
+                        highestLikenessScore,
+                        highestLikenessNode,
+                        name
+                    );
+
+                //updates the scores
+                if (candidateNode != null)
+                {
+                    //if already found the specific name and type
+                    if (hasFoundExactSub)
+                    {
+                        return(candidateNode, candidateScore, true);
+                    }
+                    else
+                    {
+                        if (candidateScore > highestLikenessScore)
+                        {
+                            highestLikenessScore = candidateScore;
+                            highestLikenessNode = candidateNode;
+                        }
+                    }
+                    
+                    
+                }
+            }
         }
+        
 
         //if no perfect match, then return the closest if over the distinctive ability
         if (highestLikenessScore >= distinctiveAbility)
-        {
-            return (highestLikenessNode, highestLikenessScore);
+        {   
+            if(highestLikenessNode != null)
+            {
+                Debug.Log("Found node like enough: " + highestLikenessNode.SubIdentifierName + " with likeness score of " + highestLikenessScore);
+            }
+            else
+            {
+                Debug.Log("Did not find node like enough with score of " + highestLikenessScore);
+            }
+            
+            return (highestLikenessNode, highestLikenessScore, false);
         }
 
         //else returns none
-        return (null, -1);
+        return (null, -1, false);
     }
 
     private static SubIdentifierNode FindSubidentifierNodeRecursive(SubIdentifierNode subIdentifierNode, List<EnumAppearanceCharacteristics> appearanceEnums, List<EnumActionCharacteristics> actionEnums)
@@ -466,7 +576,10 @@ public static class AdaptiveIdentifierFunctions
             currentAnchor = currentAnchor.Heuristic;
         }
 
-        SubIdentifierNode newCollectiveAnchor = new(currentAnchor.Parent);
+        //sub1 and 2 have same parent
+        IdentifierNode parentIdentifierNode = subIdentifierNode1.Parent;
+
+        SubIdentifierNode newCollectiveAnchor = new(parentIdentifierNode);
 
         newCollectiveAnchor.Heuristic = currentAnchor;
 
@@ -475,8 +588,42 @@ public static class AdaptiveIdentifierFunctions
         newCollectiveAnchor.isAnchor = true;
         newCollectiveAnchor.isZeroPoint = true;
         newCollectiveAnchor.SubIdentifierName = subIdentifierNode2.SubIdentifierName + " " + subIdentifierNode1.SubIdentifierName;
+        
+        //which child node to add
+        if (currentAnchor == null)
+        {
+            parentIdentifierNode.SubIdentifiers.Add(newCollectiveAnchor);
+        }
+        else
+        {
+            currentAnchor.Specifics.Add(newCollectiveAnchor);
+        }
+
+        //Remove sub 1 and sub 2 from children nodes
+        if(subIdentifierNode1.Heuristic == null)
+        {
+            parentIdentifierNode.SubIdentifiers.Remove(subIdentifierNode1);
+        }
+        else
+        {
+            subIdentifierNode1.Heuristic.Specifics.Remove(subIdentifierNode1);
+        }
+
+        if(subIdentifierNode2.Heuristic == null)
+        {
+            parentIdentifierNode.SubIdentifiers.Remove(subIdentifierNode2);
+        }
+        else
+        {
+            subIdentifierNode2.Heuristic.Specifics.Remove(subIdentifierNode2);
+        }
+
+        //Change heuristic
+        subIdentifierNode1.Heuristic = newCollectiveAnchor;
+        subIdentifierNode2.Heuristic = newCollectiveAnchor;
 
 
+        //Create the characteristics of collective anchor
         foreach (ActionCharacteristicWithValue actionCharacteristicWithValue in subIdentifierNode1.ActionCharacteristicsWithValue)
         {
             newCollectiveAnchor.AddActionCharacteristic(actionCharacteristicWithValue.CharacteristicType, actionCharacteristicWithValue.Value);
@@ -500,8 +647,8 @@ public static class AdaptiveIdentifierFunctions
         //Mixing relationship nodes
         //Deep copy
         newCollectiveAnchor.RelationshipNodes = subIdentifierNode1.RelationshipNodes
-    .Select(rn => new RelationshipNode(rn))
-    .ToList();
+            .Select(rn => new RelationshipNode(rn))
+            .ToList();
 
 
         foreach (RelationshipNode relationshipNode in subIdentifierNode1.RelationshipNodes)
@@ -515,13 +662,17 @@ public static class AdaptiveIdentifierFunctions
     {
         SubIdentifierNode heuristicSubIdentifier = subIdentifierNode.Heuristic;
         //reset to null in case if it doesn't find an anchor
+        if(heuristicSubIdentifier != null)
+        {
+            heuristicSubIdentifier.Specifics.Remove(subIdentifierNode);
+        }
         subIdentifierNode.Heuristic = null;
         float anchorLikenessScore = 0;
 
         //loop through all the parents to see which anchor to fit under based on likeness score
         while (heuristicSubIdentifier != null)
         {
-            heuristicSubIdentifier = heuristicSubIdentifier.Heuristic;
+            
             if (heuristicSubIdentifier.isAnchor)
             {
                 //will set new heuristic as this if works
@@ -529,9 +680,21 @@ public static class AdaptiveIdentifierFunctions
                 if (anchorLikenessScore >= anchorDistinctiveAbility)
                 {
                     subIdentifierNode.Heuristic = heuristicSubIdentifier;
+                    Debug.Log("Distanced Post Zero found with " + heuristicSubIdentifier.SubIdentifierName);
                     break;
                 }
             }
+
+            heuristicSubIdentifier = heuristicSubIdentifier.Heuristic;
+        }
+
+        
+
+        if (heuristicSubIdentifier == null)
+        {
+            IdentifierNode parentIdentifier = subIdentifierNode.Parent;
+            parentIdentifier.SubIdentifiers.Add(subIdentifierNode);
+            Debug.Log("Distanced Post Zero without any anchors found");
         }
     }
 
