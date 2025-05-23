@@ -36,7 +36,7 @@ public class RelationshipPersonalTree : MonoBehaviour
         
     }
 
-    public void AddValuesToSubIdentifier(SubIdentifierNode subIdentifierNode, float existingNodesDistinctiveAbility, float judgmentLevel, float extrapolationLevel, int value = 1)
+    public void AddValuesToSubIdentifier(SubIdentifierNode subIdentifierNode, float existingNodesDistinctiveAbility, float judgmentLevel, float extrapolationLevel, float generalizationAbility, int value = 1)
     {
         //1. Add values to characteristics
         //2. Determine if at zero point or not
@@ -59,7 +59,7 @@ public class RelationshipPersonalTree : MonoBehaviour
             //Transcend
             Transcend(subIdentifierNode, extrapolationLevel);
             //Generalization - Combine versions together (Collective New Anchor)
-            Generalization(subIdentifierNode, existingNodesDistinctiveAbility);
+            Generalization(subIdentifierNode, existingNodesDistinctiveAbility, generalizationAbility);
         }
     }
 
@@ -102,7 +102,8 @@ public class RelationshipPersonalTree : MonoBehaviour
         if(comparingAnchorNode.isAnchor == true)
         {
             float likenessScore = AdaptiveIdentifierFunctions.GetExistingNodesLikenessScore(subIdentifierNodeOfInterest, comparingAnchorNode);
-            if (likenessScore > Mathf.Max(highestLikenessScore, existingNodesDistinctiveAbility))
+            //>= highestLikenessScore because it should find the lowest node if same
+            if (likenessScore > existingNodesDistinctiveAbility && likenessScore >= highestLikenessScore)
             {
                 highestLikenessAnchorNode = comparingAnchorNode;
                 highestLikenessScore = likenessScore;
@@ -115,7 +116,7 @@ public class RelationshipPersonalTree : MonoBehaviour
         }
     }
 
-    private void Generalization(SubIdentifierNode subIdentifierNode, float existingNodesDistinctiveAbility)
+    private void Generalization(SubIdentifierNode subIdentifierNode, float existingNodesDistinctiveAbility, float generalizationAbility)
     {
         Debug.Log("Processing Generalization"); 
         //1. See if any other specific node at same level has likeness score greater than existingNodesDistinctiveAbility
@@ -123,24 +124,32 @@ public class RelationshipPersonalTree : MonoBehaviour
         SubIdentifierNode highestLikenessSpecificNode = null;
         float highestLikenessScore = -1;
 
+        float currentAnchorLikenessScore = -1;
+        float generalizedMultiplier = 10 / generalizationAbility;
+
+
         //Get other specifics
         List<SubIdentifierNode> otherSpecifics = new();
         if (subIdentifierNode.Heuristic != null)
         {
             otherSpecifics = subIdentifierNode.Heuristic.Specifics;
+            currentAnchorLikenessScore = AdaptiveIdentifierFunctions.GetExistingNodesLikenessScore(subIdentifierNode, subIdentifierNode.Heuristic);
         }
         else
         {
             otherSpecifics = subIdentifierNode.Parent.SubIdentifiers;
         }
 
-        
+        Debug.Log("Generalization Multiplier: " + generalizedMultiplier + " current anchor likeness score: " + currentAnchorLikenessScore);
+
+
         foreach (SubIdentifierNode specificNode in otherSpecifics) 
         { 
             if(specificNode != subIdentifierNode && specificNode.isAnchor == false && specificNode.isZeroPoint == true)
             {
                 float likenessScore = AdaptiveIdentifierFunctions.GetExistingNodesLikenessScore(specificNode, subIdentifierNode);
-                if (likenessScore > Mathf.Max(existingNodesDistinctiveAbility, highestLikenessScore))
+                //need to above the distinctive ability and more than the current anchor score with multiplier
+                if (likenessScore > Mathf.Max(existingNodesDistinctiveAbility, highestLikenessScore) && likenessScore > currentAnchorLikenessScore * generalizedMultiplier)
                 {
                     highestLikenessScore = likenessScore;
                     highestLikenessSpecificNode=specificNode;

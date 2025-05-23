@@ -14,6 +14,7 @@ public class IdentityDetector : MonoBehaviour
     public float existingNodesDistinctiveAbility;
     public float testJudgementLevel;
     public float testExtrapolationLevel;
+    public float testGeneralizationLevel;
 
 
     void Start()
@@ -46,7 +47,7 @@ public class IdentityDetector : MonoBehaviour
             {
                 Debug.Log("Found subidentifier same as node with name: " + foundSubIdentifierNode.SubIdentifierName);
                 //alters the relationship tree when perfect match (or similar enough) to be that specific thing
-                testRelationshipPersonalTree.AddValuesToSubIdentifier(foundSubIdentifierNode, existingNodesDistinctiveAbility, testJudgementLevel, testExtrapolationLevel, 1);
+                testRelationshipPersonalTree.AddValuesToSubIdentifier(foundSubIdentifierNode, existingNodesDistinctiveAbility, testJudgementLevel, testExtrapolationLevel, testGeneralizationLevel, 1);
             }
             //FIT
             else if(likenessScore > testDistinctiveAbility * 0.8)
