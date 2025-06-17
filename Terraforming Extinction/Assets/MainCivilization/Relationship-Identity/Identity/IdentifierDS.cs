@@ -5,6 +5,8 @@ using UnityEditor;
 using System.Linq;
 using JetBrains.Annotations;
 
+
+
 [System.Serializable]
 public enum EnumIdentifiers
 {
@@ -47,7 +49,9 @@ public class IdentifierNode
         // Mark Tracker (ScriptableObject) as dirty
         if (Tracker != null)
         {
-            EditorUtility.SetDirty(Tracker);
+            #if UNITY_EDITOR
+                EditorUtility.SetDirty(Tracker);
+            #endif
         }
     }
 
@@ -59,7 +63,9 @@ public class IdentifierNode
         // Mark Tracker (ScriptableObject) as dirty
         if (Tracker != null)
         {
-            EditorUtility.SetDirty(Tracker);
+            #if UNITY_EDITOR
+                EditorUtility.SetDirty(Tracker);
+            #endif
         }
     }
 
@@ -148,7 +154,9 @@ public class SubIdentifierNode
         // Mark Tracker (ScriptableObject) as dirty
         if (Parent != null && Parent.Tracker != null)
         {
-            EditorUtility.SetDirty(Parent.Tracker);
+            #if UNITY_EDITOR
+                EditorUtility.SetDirty(Parent.Tracker);
+            #endif
         }
     }
 
@@ -176,7 +184,9 @@ public class SubIdentifierNode
         // Mark Tracker (ScriptableObject) as dirty
         if (Parent != null && Parent.Tracker != null)
         {
-            EditorUtility.SetDirty(Parent.Tracker);
+            #if UNITY_EDITOR
+                EditorUtility.SetDirty(Parent.Tracker);
+            #endif
         }
     }
 

@@ -5,6 +5,10 @@ using UnityEngine;
 
 
 
+
+
+[CreateAssetMenu(fileName = "CharacterTestSO", menuName = "ScriptableObject/Civilization/CharacterDebug")]
+
 [System.Serializable]
 public class StatsTest
 {
@@ -36,15 +40,6 @@ public class RelationshipValueTest
     public CharactersTestSO Identifiers;
     public StatsTest Stats;
 }
-
-[System.Serializable]
-public enum EnumMentalOpportunities
-{
-    Internal,
-    External
-}
-
-[CreateAssetMenu(fileName = "CharacterTestSO", menuName = "ScriptableObject/Civilization/CharacterDebug")]
 
 public class CharactersTestSO : ScriptableObject
 {

@@ -1,4 +1,4 @@
-using System;
+    using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Data; // For expression evaluation
@@ -208,6 +208,7 @@ public class CivTest : MonoBehaviour
             string target = sortedHabitGoalPerspectives[i].Target;
             //check for internal opportunities. See greatest change for what is highest need for agent
             //will constantly check if looks only for external opportunities (isInternalOpportunity = false)
+            //External opportunities check for all regardless of whether it matches what it needs internally (targetStatString). May need to change this
             if (target == targetStatString || isInternalOpportunity == false)
             {
 

@@ -2,9 +2,9 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.InteropServices.WindowsRuntime;
-using UnityEditor.Callbacks;
-using UnityEditor.Experimental.GraphView;
-using UnityEditor.PackageManager;
+//using UnityEditor.Callbacks;
+//using UnityEditor.Experimental.GraphView;
+//using UnityEditor.PackageManager;
 using UnityEngine;
 
 //The functions that manipulates identifiers
@@ -21,7 +21,7 @@ public static class AdaptiveIdentifierFunctions
             foreach (AppearanceCharacteristicWithValue appearanceCharacteristicWithValue in subIdentifierNode.AppearanceCharacteristicsWithValue)
             {
                 if(appearanceCharacteristicWithValue.Value > maxTallies)
-                {
+                {  
                     maxTallies = appearanceCharacteristicWithValue.Value;
                 }
             }
@@ -69,7 +69,7 @@ public static class AdaptiveIdentifierFunctions
         }
     }
 
-    //
+    
     public static void AddValueToAllCharacteristicsInSubidentity(SubIdentifierNode subIdentifierNode, int value = 1)
     {
         foreach (AppearanceCharacteristicWithValue appearanceCharacteristicWithValue in subIdentifierNode.AppearanceCharacteristicsWithValue)

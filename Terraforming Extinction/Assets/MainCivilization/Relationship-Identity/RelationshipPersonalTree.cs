@@ -7,7 +7,12 @@ using UnityEngine;
 public class RelationshipPersonalTree : MonoBehaviour
 {
     public RelationshipPersonalTreeSO RelationshipPersonalTreeSO;
-
+    //DELETE THESE TESTS (FOR REPERCUSSION)
+    public float lValueTest;
+    public float dbValueTest;
+    public float nbValueTest;
+    public float learningRateTest;
+    public EnumActionCharacteristics actionEnumTest;
     [Header("Do Not Edit")]
     public List<IdentifierNode> RootIdentifiers;
     //uhhh what is this?
@@ -61,6 +66,10 @@ public class RelationshipPersonalTree : MonoBehaviour
             //Generalization - Combine versions together (Collective New Anchor)
             Generalization(subIdentifierNode, existingNodesDistinctiveAbility, generalizationAbility);
         }
+
+        //DELETE LATER. Debug the repercussion system
+        RepercussionFunctions.ImplementRepercussion(subIdentifierNode, actionEnumTest, lValueTest, dbValueTest, nbValueTest, learningRateTest);
+
     }
 
     private void Relocate(SubIdentifierNode subIdentifierNode, float existingNodesDistinctiveAbility) 
