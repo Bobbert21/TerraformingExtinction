@@ -16,17 +16,19 @@ public enum EnumMentalOpportunities
 //TO-DO: Make CharacterPsyche, not SO. So I can adjust the values 
 public class CharacterPsycheSO : ScriptableObject, ICharacterPsyche
 {
+    [Header("Decision Making Variables")]
     public RelationshipPersonalTree RelationshipPersonalTree;
     public SubIdentifierNode SelfIdentifier;
     public List<CharacterMainCPort> Friends;
     public List<CharacterMainCPort> Enemy;
     public List<SubIdentifierNode> FriendsNodes;
     public List<SubIdentifierNode> EnemyNodes;
-    public EnumIdentifiers Identifier;
     public EnumPersonalityStats BIdentity;
-    public EnumMentalOpportunities MentalOpportunities;
+    //How much to consider stats not the lowest for Action Selection
+    public double OpportunismLevel;
     public double RiskAversion;
-    public double RewardInclination;
+    public double RiskCutoff;
+    public double RewardCutoff;
     public double EmpathyLevel;
     public double SelfEfficacy;
     public double ProgressInclination;
@@ -37,4 +39,19 @@ public class CharacterPsycheSO : ScriptableObject, ICharacterPsyche
     public int PerspectiveAbility;
     //how many actions they can decide
     public int CognitiveStamina;
+    public List<RelationshipDecisionNode> L_LearnedResponseDecisions;
+    public List<RelationshipDecisionNode> NB_LearnedResponseDecisions;
+    public List<RelationshipDecisionNode> DB_LearnedResponseDecisions;
+    public List<RelationshipNode> L_LearnedEnvironment;
+    public List<RelationshipNode> NB_LearnedEnvironment;
+    public List<RelationshipNode> DB_LearnedEnvironment;
+
+    [Header("Identifier Script Variables")]
+    public double ProcessingSpeed;
+    public float AwarenessLevel;
+    public float DistinctiveAbility;
+    public float ExistingNodesDistinctiveAbility;
+    public float JudgementLevel;
+    public float ExtrapolationLevel;
+    public float GeneralizationLevel;
 }

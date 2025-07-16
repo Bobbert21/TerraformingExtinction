@@ -1,30 +1,141 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Data;
 using System.Linq;
 using System.Text.RegularExpressions;
 using UnityEngine;
+using UnityEngine.TextCore.Text;
+
+public class ReturnDecision
+{
+    public double LargestPositivePredictorValue;
+    public double LargestNegativePredictorValue;
+    public double LargestPositivePredictorChange;
+    public double LargestNegativePredictorChange;
+    public EnumPersonalityStats TargetPositiveStatOfInterest;
+    public EnumPersonalityStats TargetNegativeStatOfInterest;
+    public RelationshipNode NePositiveDecision;
+    public RelationshipNode NeNegativeDecision;
+    public Perspective PositivePerspective;
+    public Perspective NegativePerspective;
+    public RelationshipDecisionNode NiPositiveDecision;
+    public RelationshipDecisionNode NiNegativeDecision;
+    public bool IsNiDecision = false;
+    public bool IsNeDecision = false;
+    public bool WillCommitAction = false;
+    public bool IsSafeEnough = true;
+    public bool IsRewardingEnough = true;
+    //Only for Ne Actions (can have both risky action and positive committed action)
+    public bool HasRiskyAction = false;
+
+    public void SetNeValuesWithCommit(double largestPositivePredictorValue, double largestPositivePredictorChange, EnumPersonalityStats targetStatOfInterest, RelationshipNode nePositiveDecision)
+    {
+        IsNeDecision = true;
+        IsNiDecision = false;
+        LargestPositivePredictorValue = largestPositivePredictorValue;
+        LargestPositivePredictorChange = largestPositivePredictorChange;
+        TargetPositiveStatOfInterest = targetStatOfInterest;
+        IsRewardingEnough = true;
+        IsSafeEnough = true;
+        WillCommitAction = DecideCommitAction(IsRewardingEnough, IsSafeEnough);
+    }
+
+    public void SetNeValuesWithoutCommitDueToNotRewarding(double largestPositivePredictorValue, double largestPositivePredictorChange, EnumPersonalityStats targetStatOfInterest, RelationshipNode nePositiveDecision)
+    {
+        IsNeDecision = true;
+        IsNiDecision = false;
+        LargestPositivePredictorValue = largestPositivePredictorValue;
+        LargestPositivePredictorChange = largestPositivePredictorChange;
+        TargetPositiveStatOfInterest = targetStatOfInterest;
+        NePositiveDecision = nePositiveDecision;
+        IsSafeEnough = true;
+        IsRewardingEnough = false;
+        WillCommitAction = DecideCommitAction(IsRewardingEnough, IsSafeEnough);
+    }
+
+    //Ne can return with risky action along with committed positive action
+    public void SetNeValuesWithRisk(double largestNegativePredictorValue, double largestNegativePredictorChange, EnumPersonalityStats targetNegativeStatOfInterest,
+        RelationshipNode neNegativeDecision)
+    {
+        HasRiskyAction = true;
+        LargestNegativePredictorValue = largestNegativePredictorValue;
+        LargestNegativePredictorChange = largestNegativePredictorChange;
+        TargetNegativeStatOfInterest = targetNegativeStatOfInterest;
+        NeNegativeDecision = neNegativeDecision;
+    }
+
+    public void SetNiValuesWithCommit(double largestPositivePredictorValue, double largestPositivePredictorChange, EnumPersonalityStats targetStatOfInterest, RelationshipDecisionNode niDecision)
+    {
+        IsNeDecision = false;
+        IsNiDecision = true;
+        LargestPositivePredictorValue = largestPositivePredictorValue;
+        LargestPositivePredictorChange = largestPositivePredictorChange;
+        TargetPositiveStatOfInterest = targetStatOfInterest;
+        NiPositiveDecision = niDecision;
+        IsSafeEnough = true;
+        IsRewardingEnough = true;
+        WillCommitAction = DecideCommitAction(IsRewardingEnough, IsSafeEnough);
+    }
+
+    public void SetNiValuesWithoutCommitDueToNotRewarding(double largestPositivePredictorValue, double largestPositivePredictorChange, EnumPersonalityStats targetStatOfInterest, Perspective positivePerspective, RelationshipDecisionNode niPositiveDecision)
+    {
+        IsNeDecision = false;
+        IsNiDecision = true;
+        LargestPositivePredictorValue = largestPositivePredictorValue;
+        LargestPositivePredictorChange = largestPositivePredictorChange;
+        TargetPositiveStatOfInterest = targetStatOfInterest;
+        NiPositiveDecision = niPositiveDecision;
+        PositivePerspective = positivePerspective;
+        IsSafeEnough = true;
+        IsRewardingEnough = false;
+        WillCommitAction = DecideCommitAction(IsRewardingEnough, IsSafeEnough);
+    }
+
+    //Unlike Ni, Risky won't prevent an action. It will however consider a risky action
+    public void SetNiValuesWithRisk(double largestPositivePredictorValue, double largestPositivePredictorChange, double largestNegativePredictorValue, 
+        double largestNegativePredictorChange, EnumPersonalityStats targetPositiveStatOfInterest, EnumPersonalityStats targetNegativeStatOfInterest, 
+        Perspective positivePerspective, Perspective negativePerspective, 
+        RelationshipDecisionNode niPositiveDecision, RelationshipDecisionNode niNegativeDecision)
+    {
+        LargestPositivePredictorValue = largestPositivePredictorValue;
+        LargestPositivePredictorChange = largestPositivePredictorChange;
+        LargestNegativePredictorValue = largestNegativePredictorValue;
+        LargestNegativePredictorChange = largestNegativePredictorChange;
+        TargetPositiveStatOfInterest = targetPositiveStatOfInterest;
+        TargetNegativeStatOfInterest = targetNegativeStatOfInterest;
+        PositivePerspective = positivePerspective;
+        NegativePerspective = negativePerspective;
+        NiPositiveDecision = niPositiveDecision;
+        NiNegativeDecision = niNegativeDecision;
+        IsSafeEnough = false;
+        WillCommitAction = DecideCommitAction(IsRewardingEnough, IsSafeEnough);
+    }
+
+    private bool DecideCommitAction(bool IsRewarding, bool IsSafe)
+    {
+        if (IsRewarding && IsSafe) 
+        {
+            return true;
+        }
+        else
+        {
+            return false;
+        }
+    }
+
+}
 
 public static class DecisionMakingFunctions 
 {
 
     private static double FulcrumStatScale = 30;
-    public static bool IsInternalMotivation(double internalMotivationLevel, double currentLowestStat, double envChange, double cutOff)
-    {
-        double adjustedCutoff = cutOff * (100 - internalMotivationLevel) / 50 * currentLowestStat / 50;
-
-        //If environment isn't concerning enough, then will be internal motive
-        if (Math.Abs(envChange) < adjustedCutoff)
-        {
-            return true;
-        }
-        return false;
-    }
 
     private static readonly Regex ComplexTermRegex = new(
-    @"(?<entity>F\((?<entity_index>-?\d+)\)|A|N)-(?<relation>ModR|PR|SR):(?<stat>L|DB|NB|B)\((?<target>E\((?<target_index>-?\d+)\)|N|A|-(?<specific>\w+)-)\)",
-    RegexOptions.Compiled);
+       @"(?<entity>F\((?<entity_index>-?\d+)\)|A|N)-(?<relation>ModR|PR|SR):(?<stat>L|DB|NB|B)\((?<target>E\((?<target_index>-?\d+)\)|N|A|-(?<specific>\w+)-)\)",
+       RegexOptions.Compiled);
+    //A-ModR:DB(N)
 
     private static readonly Regex SimpleTermRegex = new(
     @"^(?:(?<stat>L|DB|NB)\((?<target>A|N|F\((?<fIndex>-?\d+)\))\)|E\((?<eIndex>-?\d+)\))$",
@@ -38,647 +149,397 @@ public static class DecisionMakingFunctions
         @"ScaleChg\((?<initial_value>\d+)\,(?<change_value>\d+)\)",
         RegexOptions.Compiled);
 
+    
 
-    public static (double predictor, double change) Translate_String_To_Formula_Calculations(string formula, string target, CharacterMainCPort agent, CharacterMainCPort env, RelationshipNode envInAgentRPTNode, EnumActionCharacteristics actionContext)
+
+    public static bool IsInternalCrave(double internalMotivationLevel, double currentLowestStat, double envChange, double cutOff)
     {
+        double adjustedCutoff = cutOff * (100 - internalMotivationLevel) / 50 * currentLowestStat / 50;
 
-        // Replace special terms in the formula
-        while (EmpTermRegex.IsMatch(formula))
+        //If environment isn't concerning enough, then will be internal motive
+        if (Math.Abs(envChange) < adjustedCutoff)
         {
-            formula = EmpTermRegex.Replace(formula,
-                match => ParseEmpTerm(match, agent, env, envInAgentRPTNode).ToString());
+            return true;
         }
-
-        // Replace complex terms in the formula
-        while (ComplexTermRegex.IsMatch(formula))
-        {
-            formula = ComplexTermRegex.Replace(formula,
-                match => ParseComplexTerm(match, agent, env, envInAgentRPTNode, actionContext).ToString());
-        }
-
-        // Replace simple terms in the formula
-        while (SimpleTermRegex.IsMatch(formula))
-        {
-            formula = SimpleTermRegex.Replace(formula,
-                match => ParseSimpleTerm(match, agent, env).ToString());
-        }
-
-        // Replace scale terms (these scale the change in accordance to the initial values)
-        while (EmpTermRegex.IsMatch(formula))
-        {
-            formula = EmpTermRegex.Replace(formula,
-                match => ParseScaleChangeTerm(match).ToString());
-        }
-
-        // Evaluate custom functions
-        formula = EvaluateCustomFunctionsUntilDone(formula);
-
-        double predictorValue = EvaluateBasicExpression(formula);
-
-
-        //Parse through the target
-        while (SimpleTermRegex.IsMatch(target))
-        {
-            target = SimpleTermRegex.Replace(target,
-                match => ParseSimpleTerm(match, agent, env).ToString());
-        }
-
-        while (ComplexTermRegex.IsMatch(target))
-        {
-            target = ComplexTermRegex.Replace(target,
-                match => ParseComplexTerm(match, agent, env, envInAgentRPTNode, actionContext).ToString());
-        }
-
-        double targetValue = double.Parse(target);
-
-        // Evaluate the final expression (without functions)
-        return (predictor: predictorValue, change: predictorValue - targetValue);
+        return false;
     }
 
+    
 
-
-    // Function to parse dynamic terms like N-ModR:L(E(1))
-    //Could add F- or friend into this later on. Friend as target too
-    private static double ParseComplexTerm(Match match, CharacterMainCPort agent, CharacterMainCPort env, RelationshipNode envInAgentRPTNode, EnumActionCharacteristics actionContext)
+    //Predictor value, predictor change, stat of interest, and relationship node
+    public static ReturnDecision CalculateSiNeDecisions(List<RelationshipNode> neRelationshipNodes, EnumPersonalityStats statOfInterest, AllStats allInitialStats, CharacterPsyche characterPsyche)
     {
+        // Order by habits
+        neRelationshipNodes = neRelationshipNodes.OrderByDescending(rn => rn.HabitCounter).ToList();
+        double largestPositivePredictorValue = double.MinValue;
+        double largestPositivePredictorChange = double.MinValue;
+        double largestNegativePredictorValue = double.MaxValue;
+        double largestNegativePredictorChange = double.MaxValue;
+        RelationshipNode largestNegativePredictorNode = null;
+        RelationshipNode largestPositivePredictorNode = null;
+        EnumPersonalityStats largestPositivePredictorStat = statOfInterest; // Default to the stat of interest
+        EnumPersonalityStats largestNegativePredictorStat = statOfInterest; // Default to the stat of interest
+        int perspectivesExplored = 0;
 
-        if (!match.Success)
+        for(int i = 0; i < neRelationshipNodes.Count && i < characterPsyche.CognitiveStamina; i++)
         {
-            throw new ArgumentException("Invalid match passed to ParseComplexTerm");
-        }
-        //1. Find Entity
-        //2. Find Target
-        //3. Find Target in Relationship (from Entity)
-        //4. Find average if needed
-        string entity = match.Groups["entity"].Value;
-        string relationType = match.Groups["relation"].Value;
-        string stat = match.Groups["stat"].Value;
-        string target = match.Groups["target"].Value;
-        //see if it is averaging target. Usually this means this has multiple targets
-        List<CharacterMainCPort> entityObjects = new();
-        //1. Get entity
-        if (entity == "A")
-        {
-            entityObjects.Add(agent);
-        }
-        else if (entity == "N")
-        {
-            entityObjects.Add(env);
-        }
-        else if (entity.StartsWith("F("))
-        {
-            int entityIndex = int.Parse(match.Groups["entity_index"].Value);
-            if (entityIndex == -1)
+            RelationshipNode neRelationshipNode = neRelationshipNodes[i];
+            double predictorValueOfInterest = double.MinValue;
+            // Get the ModR values
+            RelationshipValues modRValues = neRelationshipNode.ModRValues;
+            Dictionary<EnumPersonalityStats, double> alternativeStatPerspectivesValues = new Dictionary<EnumPersonalityStats, double>();
+            // TO-DO: Would having env (i.e. NL instead of L) affect how these are calculated? Should the results be scaled less?
+            if (statOfInterest == EnumPersonalityStats.L || statOfInterest == EnumPersonalityStats.NL)
             {
-                entityObjects = agent.characterPsyche.Friends.ToList();
+                predictorValueOfInterest = modRValues.LivelihoodValue;
+                if(perspectivesExplored < characterPsyche.PerspectiveAbility)
+                {
+                    if(statOfInterest == EnumPersonalityStats.L)
+                    {
+                        alternativeStatPerspectivesValues.Add(EnumPersonalityStats.DB, modRValues.DefensiveBelongingValue);
+                        alternativeStatPerspectivesValues.Add(EnumPersonalityStats.NB, modRValues.NurtureBelongingValue);
+                        perspectivesExplored++;
+                    }
+                    else
+                    {
+                        alternativeStatPerspectivesValues.Add(EnumPersonalityStats.NNB, modRValues.NurtureBelongingValue);
+                        alternativeStatPerspectivesValues.Add(EnumPersonalityStats.NDB, modRValues.DefensiveBelongingValue);
+                        perspectivesExplored++;
+                    }
+                    
+                }
+            }
+            else if(statOfInterest == EnumPersonalityStats.DB || statOfInterest == EnumPersonalityStats.NDB)
+            {
+                predictorValueOfInterest = modRValues.DefensiveBelongingValue;
+                if (perspectivesExplored < characterPsyche.PerspectiveAbility)
+                {
+                    if (statOfInterest == EnumPersonalityStats.DB)
+                    {
+                        alternativeStatPerspectivesValues.Add(EnumPersonalityStats.L, modRValues.LivelihoodValue);
+                        alternativeStatPerspectivesValues.Add(EnumPersonalityStats.NB, modRValues.NurtureBelongingValue);
+                        perspectivesExplored++;
+                    }
+                    else
+                    {
+                        alternativeStatPerspectivesValues.Add(EnumPersonalityStats.NL, modRValues.LivelihoodValue);
+                        alternativeStatPerspectivesValues.Add(EnumPersonalityStats.NNB, modRValues.NurtureBelongingValue);
+                        perspectivesExplored++;
+                    }
+
+                }
+            }
+            else if(statOfInterest == EnumPersonalityStats.NB || statOfInterest == EnumPersonalityStats.NNB)
+            {
+                predictorValueOfInterest = modRValues.NurtureBelongingValue;
+                if (perspectivesExplored < characterPsyche.PerspectiveAbility)
+                {
+                    if (statOfInterest == EnumPersonalityStats.NB)
+                    {
+                        alternativeStatPerspectivesValues.Add(EnumPersonalityStats.DB, modRValues.DefensiveBelongingValue);
+                        alternativeStatPerspectivesValues.Add(EnumPersonalityStats.L, modRValues.LivelihoodValue);
+                        perspectivesExplored++;
+                    }
+                    else
+                    {
+                        alternativeStatPerspectivesValues.Add(EnumPersonalityStats.NDB, modRValues.DefensiveBelongingValue);
+                        alternativeStatPerspectivesValues.Add(EnumPersonalityStats.NL, modRValues.LivelihoodValue);
+                        perspectivesExplored++;
+                    }
+
+                }
             }
             else
             {
-                entityObjects.Add(agent.characterPsyche.Friends[entityIndex]);
+                Debug.LogError("Unknown stat of interest: " + statOfInterest);
+                continue; // Skip to the next iteration if the stat is unknown
             }
+
+            //Adjust based on initial stats
+            double changeValueOfInterest = predictorValueOfInterest - allInitialStats.StatOfInterest(statOfInterest.ToString());
+            double adjustedChangeValueOfInterest = DMCalculationFunctions.ScaleSurvivalStatChange(changeValueOfInterest, allInitialStats.StatOfInterest(statOfInterest.ToString()));
+
+            //Add the habit contribution
+            double habitContribution = DMCalculationFunctions.HabitContribution(neRelationshipNode.HabitCounter, characterPsyche.MaxHabitCounter, characterPsyche.HabitualTendencies);
+
+            //habit contribution makes positive and negative perspectives more likely
+            double adjustedPositiveChangeValueOfInterest = adjustedChangeValueOfInterest + habitContribution;
+            double adjustedNegativeChangeValueOfInterest = adjustedChangeValueOfInterest - habitContribution;
+
+            // Check if this is the largest positive predictor value for stat of interest or more than the reward cutoff for character
+            if (adjustedPositiveChangeValueOfInterest > largestPositivePredictorChange)
+            {
+                //add hbit to make it better than it is
+                largestPositivePredictorValue = predictorValueOfInterest + habitContribution;
+                largestPositivePredictorNode = neRelationshipNode;
+                largestPositivePredictorChange = adjustedPositiveChangeValueOfInterest;
+                largestPositivePredictorStat = statOfInterest;
+            }
+
+            //for negative predictor value for stat of interest
+
+            if (adjustedNegativeChangeValueOfInterest < largestNegativePredictorChange) 
+            { 
+                //Subtracting to make it worse than it is
+                largestNegativePredictorValue = predictorValueOfInterest - habitContribution;
+                largestNegativePredictorNode = neRelationshipNode;
+                largestNegativePredictorChange = adjustedNegativeChangeValueOfInterest;
+                largestNegativePredictorStat = statOfInterest;
+            }
+
+            //Check other values to see
+            foreach (KeyValuePair<EnumPersonalityStats, double> alternateStatPerspectiveValue in alternativeStatPerspectivesValues)
+            {
+                double predictorValue = alternateStatPerspectiveValue.Value;
+                double changeValue = predictorValue - allInitialStats.StatOfInterest(alternateStatPerspectiveValue.Key.ToString());
+
+                //Adjust values based on initial and opportunism level
+                double adjustedChangeValue = DMCalculationFunctions.ScaleSurvivalStatChange(changeValue, allInitialStats.StatOfInterest(alternateStatPerspectiveValue.Key.ToString()));
+                //Opportunism Adjustment debuffs because it's not target of interest
+                adjustedChangeValue = DMCalculationFunctions.OpportunismAdjustment(adjustedChangeValue, characterPsyche.OpportunismLevel);
+
+                //Add habit contribution to m
+                double adjustedPositiveChangeValue = adjustedChangeValue + habitContribution;
+                double adjustedNegativeChangeValue = adjustedChangeValue - habitContribution;
+
+                if (adjustedPositiveChangeValue > largestPositivePredictorChange)
+                {
+                    largestPositivePredictorValue = predictorValue + habitContribution;
+                    largestPositivePredictorChange = adjustedPositiveChangeValue;
+                    largestPositivePredictorNode = neRelationshipNode;
+                    largestPositivePredictorStat = alternateStatPerspectiveValue.Key;
+                }
+
+                if(adjustedNegativeChangeValue < largestNegativePredictorChange)
+                {
+                    largestNegativePredictorValue = predictorValueOfInterest - habitContribution;
+                    largestNegativePredictorNode = neRelationshipNode;
+                    largestNegativePredictorChange = adjustedNegativeChangeValue;
+                    largestNegativePredictorStat = alternateStatPerspectiveValue.Key;
+                }
+            }
+
+            
+            
         }
 
-        //2. Obtain Target
-        //Agent or env need to be found through tree  and enemies and friends need to be found through the list of enemies and friends
-        //Agent or Env: Character Main CPort to include the character physical and psyche to find in the relationship trees
-        //Enemies
-        List<CharacterMainCPort> targetAgentOrEnv = new();
-        List<SubIdentifierNode> targetEnemiesOrFriends = new();
-        if (target == "A")
+        //Check if goes above the reward inclination
+        //Check if risk is above risk cutoff
+
+        double largestNegativePredictorAdjustedChangeWithRisk = largestNegativePredictorChange * characterPsyche.RiskAversion;
+        ReturnDecision returnDecision = new ReturnDecision();
+
+        //Input risking decision (can have both risky and commited decision)
+        if (Math.Abs(largestNegativePredictorAdjustedChangeWithRisk) > characterPsyche.RiskCutoff)
         {
-            targetAgentOrEnv.Add(agent);
+            returnDecision.SetNeValuesWithRisk(largestNegativePredictorValue, largestNegativePredictorAdjustedChangeWithRisk, largestNegativePredictorStat, largestNegativePredictorNode);
         }
-        else if (target == "N")
+
+        //Not rewarding enough
+        if(largestPositivePredictorChange < characterPsyche.RewardCutoff)
         {
-            targetAgentOrEnv.Add(env);
-            //enemy. Default is agent's enemies. If want to do env enemies, could do N-env and would have to implement
+            returnDecision.SetNeValuesWithoutCommitDueToNotRewarding(largestPositivePredictorValue, largestPositivePredictorChange, largestPositivePredictorStat, largestPositivePredictorNode);
+            return returnDecision;
         }
-        else if (target.StartsWith("E("))
+
+
+        
+
+        returnDecision.SetNeValuesWithCommit(largestPositivePredictorValue, largestPositivePredictorChange, largestPositivePredictorStat, largestPositivePredictorNode);
+
+        return returnDecision;
+
+    }
+
+    //Goes through all the decisions and perspectives for each decision
+    //return predictor value, changebalue, personality stats of interest, and decision node
+    public static ReturnDecision CalculateSeNiDecisions(List<RelationshipDecisionNode> niResponseNodes, EnumPersonalityStats statOfInterest, AllStats allInitialStats, CharacterMainCPort agent, CharacterMainCPort env, RelationshipNode envInAgentRPTNode, EnumActionCharacteristics actionContext)
+    {
+        // Order by habit counter
+        niResponseNodes = niResponseNodes.OrderByDescending(rn => rn.HabitCounter).ToList();
+
+        double ultimateLargestPositivePredictorValue = double.MinValue;
+        double ultimateLargestPositivePredictorAdjustedChange = double.MinValue;
+        double ultimateLargestNegativePredictorValue = double.MaxValue;
+        double ultimateLargestNegativePredictorAdjustedChange = double.MaxValue;
+        RelationshipDecisionNode ultimateLargestPositivePredictorNode = null;
+        RelationshipDecisionNode ultimateLargestNegativePredictorNode = null;
+        EnumPersonalityStats ultimateLargestPositivePredictorStat = statOfInterest; // Default to the stat of interest
+        EnumPersonalityStats ultimateLargestNegativePredictorStat = statOfInterest; // Default to the stat of interest
+        Perspective ultimateLargestPositivePredictorPerspective = null;
+        Perspective ultimateLargestNegativePredictorPerspective = null;
+        bool isSafeEnough = true;
+        bool isRewardingEnough = true;
+        bool hasCommitedAction = false;
+
+        for (int i = 0; i < niResponseNodes.Count && i < agent.characterPsyche.CognitiveStamina; i++)
         {
-            int targetIndex = int.Parse(match.Groups["target_index"].Value);
-            //this is when E(-1). So want to see all of the average of the enemy
-            //in future if needed not average but culmulative sum, then can use E(-2)
-            if (targetIndex == -1)
+            double largestPositivePredictorValue = double.MinValue;
+            double largestPositivePredictorAdjustedChange = double.MinValue;
+            double largestNegativePredictorValue = double.MaxValue;
+            double largestNegativePredictorAdjustedChange = double.MaxValue;
+            EnumPersonalityStats largestPositivePredictorStat = statOfInterest; // Default to the stat of interest
+            EnumPersonalityStats largestNegativePredictorStat = statOfInterest; // Default to the stat of interest
+            Perspective largestPositivePredictorPerspective = null;
+            Perspective largestNegativePredictorPerspective = null;
+
+
+            RelationshipDecisionNode niResponseNode = niResponseNodes[i];
+            bool isComplexGoal = niResponseNode.Decision.DMType == DMTypes.Complex;
+
+            //Goes through all the perspectives and picks the worst and best perspectives
+            //Already does habit contribution with these calculations
+            if (isComplexGoal)
             {
-                //shallow copy so not by reference
-                targetEnemiesOrFriends = agent.characterPsyche.EnemyNodes.ToList();
+                (largestPositivePredictorValue, largestNegativePredictorValue, largestPositivePredictorAdjustedChange, largestNegativePredictorAdjustedChange,
+                    largestPositivePredictorStat, largestNegativePredictorStat, largestPositivePredictorPerspective, largestNegativePredictorPerspective) =
+                    DMCalculationFunctions.CalculateComplexPositiveAndNegativePredictorChange(niResponseNode.Decision, statOfInterest, allInitialStats, 
+                    niResponseNode.Decision.HabitCounter, agent, env, envInAgentRPTNode, actionContext);
             }
-            //normal. Like E(0) or E(1)
             else
             {
-                targetEnemiesOrFriends.Add(GetEnemyByIndex(agent, targetIndex));
+                (largestPositivePredictorValue, largestNegativePredictorValue, largestPositivePredictorAdjustedChange, largestNegativePredictorAdjustedChange, 
+                    largestPositivePredictorStat, largestNegativePredictorStat, largestPositivePredictorPerspective, largestNegativePredictorPerspective) =
+                    DMCalculationFunctions.CalculateSimplePositiveAndNegativePredictorChange(niResponseNode.Decision.Perspectives, statOfInterest, allInitialStats, 
+                    niResponseNode.Decision.HabitCounter, agent, env, envInAgentRPTNode, actionContext);
             }
-        }else if (target.StartsWith("-"))
-        {
-            //CharactersDictionary is the list of all characters. NEED TO DO THIS
-            foreach (CharacterMainCPort character in CharactersDictionary)
+
+            //Calculate reward and risk cutoffs for all these decision's perspectives to see if worth 
+            //Pick best safe and rewarding actions
+            double largestNegativePredictorAdjustedChangeWithRisk = largestNegativePredictorAdjustedChange * agent.characterPsyche.RiskAversion;
+
+            if(largestPositivePredictorAdjustedChange > Math.Abs(largestNegativePredictorAdjustedChangeWithRisk))
             {
-                string specific = match.Groups["specific"].Value;
-                if (character.Name == specific)
+                if(largestPositivePredictorAdjustedChange > agent.characterPsyche.RewardCutoff)
                 {
-                    targetAgentOrEnv.Add(character);
-                    break;
-                }
-            }
-        }
-
-        if (targetAgentOrEnv != null && targetEnemiesOrFriends != null)
-        {
-            // 1. Get total of all stats of interest for target
-            // 2. Divide by totalCount to get average
-            double statOfInterest = 0;
-            int totalCount = 0;
-            //loop through all entities
-            foreach (CharacterMainCPort entityObject in entityObjects)
-            {
-                // Select the appropriate relationship sheet based on the relation type
-
-                //Get Target from Entity
-                if (targetAgentOrEnv.Count == 0 && targetEnemiesOrFriends.Count == 0)
-                {
-                    Debug.Log("No targetSO found when calculating average. Returning 0.");
-                    return 0;
-                }
-                else if (entityObjects.Count == 0)
-                {
-                    Debug.Log("No entitySO found when calculating average. Returning 0.");
-                    return 0;
-                }
-                else
-                {
-                    //If entity is agent and target is env, then will use parameter
-                    //If entity is agent and target is not env, then will have to find it either in enemy or friend
-                    //If entity is not agent, then will have to find identity in the entity's RPT. If doesn't exist, then cannot calculate
-
-                    //Find Target values in agent
-                    List<RelationshipValues> targetInAgentRelationshipValues = null;
-                    if (entity == "A" && target == "N")
+                    //Will replace automatically if currently no safe nor rewarding actions
+                    if(!hasCommitedAction)
                     {
-                        //Only ModR right now because it is same as PR. Need to implement SR
-                        targetInAgentRelationshipValues.Add(
-                            relationType switch
-                            {
-                                "ModR" => envInAgentRPTNode.ModRValues,
-                                _ => throw new ArgumentException($"Unknown relationship type: {relationType}")
-                            }
-                        );
-                        //perception of self
+                        ultimateLargestPositivePredictorValue = largestPositivePredictorValue;
+                        ultimateLargestPositivePredictorAdjustedChange = largestPositivePredictorAdjustedChange;
+                        ultimateLargestPositivePredictorNode = niResponseNode;
+                        ultimateLargestPositivePredictorStat = largestPositivePredictorStat;
+                        ultimateLargestPositivePredictorPerspective = largestPositivePredictorPerspective;
+                        isSafeEnough = true;
+                        isRewardingEnough = true;
+                        hasCommitedAction = true;
                     }
-                    else if (entity == "A" && target == "A")
+                    else
                     {
-                        //Find the main relationship node which is context = none
-                        RelationshipNode mainRelationshipNode = agent.characterPsyche.SelfIdentifier.RelationshipNodes.FirstOrDefault(r => r.ActionContext == EnumActionCharacteristics.None);
-
-                        targetInAgentRelationshipValues.Add(
-                                relationType switch
-                                {
-                                    "ModR" => mainRelationshipNode.ModRValues,
-                                    _ => throw new ArgumentException($"Unknown relationship type: {relationType}")
-                                }
-                            );
-                    }
-                    else if (entity == "N" && target == "A")
-                    {
-                        List<EnumAppearanceCharacteristics> agentAppearances = agent.characterPhysical.appearanceCharacteristics;
-                        List<EnumActionCharacteristics> agentActions = agent.characterPhysical.actionCharacteristics;
-                        SubIdentifierNode foundAgentInEnvRPT = AdaptiveIdentifierFunctions.FindSubidentifierNodeWithAppearanceAndAction(env.characterPsyche.RelationshipPersonalTree, env.characterPsyche.SelfIdentifier.Parent.Identifier, agentAppearances, agentActions);
-
-                        RelationshipNode mainRelationshipNode = foundAgentInEnvRPT.RelationshipNodes.FirstOrDefault(r => r.ActionContext == EnumActionCharacteristics.None);
-
-                        targetInAgentRelationshipValues.Add(
-                                relationType switch
-                                {
-                                    "ModR" => mainRelationshipNode.ModRValues,
-                                    _ => throw new ArgumentException($"Unknown relationship type: {relationType}")
-                                }
-                            );
-                    }
-                    else if(entity == "N" && target == "N")
-                    {
-                        RelationshipNode mainRelationshipNode = env.characterPsyche.SelfIdentifier.RelationshipNodes.FirstOrDefault(r => r.ActionContext == EnumActionCharacteristics.None);
-                        targetInAgentRelationshipValues.Add(
-                                relationType switch
-                                {
-                                    "ModR" => mainRelationshipNode.ModRValues,
-                                    _ => throw new ArgumentException($"Unknown relationship type: {relationType}")
-                                }
-                            );
-
-                        //goes through all the enemy sheet
-                    }
-                    else if (target.StartsWith("E("))
-                    {
-                        foreach(SubIdentifierNode enemyNode in targetEnemiesOrFriends)
+                        //Already safe and rewarding action so have to see if worth it
+                        if(largestPositivePredictorAdjustedChange > ultimateLargestPositivePredictorAdjustedChange)
                         {
-                            //Get main RN (action context = none)
-                            RelationshipNode mainRelationshipNode = enemyNode.RelationshipNodes.FirstOrDefault(n => n.ActionContext == EnumActionCharacteristics.None);
-                            if (mainRelationshipNode != null) {
-                                targetInAgentRelationshipValues.Add(
-                                    relationType switch
-                                    {
-                                        "ModR" => mainRelationshipNode.ModRValues,
-                                        _ => throw new ArgumentException($"Unknown relationship type: {relationType}")
-                                    }
-                                );
-                            }
-                            else
-                            {
-                                Debug.LogWarning("No main relationship node found for enemy node when parsing complex terms");
-                            }
-                                
+                            ultimateLargestPositivePredictorValue = largestPositivePredictorValue;
+                            ultimateLargestPositivePredictorAdjustedChange = largestPositivePredictorAdjustedChange;
+                            ultimateLargestPositivePredictorNode = niResponseNode;
+                            ultimateLargestPositivePredictorStat = largestPositivePredictorStat;
+                            ultimateLargestPositivePredictorPerspective = largestPositivePredictorPerspective;
+                            isSafeEnough = true;
+                            isRewardingEnough = true;
+                            hasCommitedAction = true;
                         }
+
                     }
 
-
-                    foreach(var targetInAgentRelationshipValue in targetInAgentRelationshipValues)
+                }
+                //Not rewarding enough
+                else
+                {
+                    //If there aren't good options, then will just document not reward enough
+                    //If risky action exist already, then not worth document (risky actions matter more than not rewarding)
+                    if (isSafeEnough)
                     {
-                        statOfInterest += stat switch
+                        if (!hasCommitedAction)
                         {
-                            "L" => targetInAgentRelationshipValue.LivelihoodValue,
-                            "DB" => targetInAgentRelationshipValue.DefensiveBelongingValue,
-                            "NB" => targetInAgentRelationshipValue.NurtureBelongingValue,
-                            "B" => (targetInAgentRelationshipValue.DefensiveBelongingValue + targetInAgentRelationshipValue.NurtureBelongingValue) / 2,
-                            _ => throw new ArgumentException($"Unknown stat: {stat}")
-                        };
-
-                        //Found a stat and record an increase in the count
-                        totalCount += 1;
-
+                            if (largestPositivePredictorAdjustedChange > ultimateLargestPositivePredictorAdjustedChange)
+                            {
+                                ultimateLargestPositivePredictorValue = largestPositivePredictorValue;
+                                ultimateLargestPositivePredictorAdjustedChange = largestPositivePredictorAdjustedChange;
+                                ultimateLargestPositivePredictorNode = niResponseNode;
+                                ultimateLargestPositivePredictorStat = largestPositivePredictorStat;
+                                ultimateLargestPositivePredictorPerspective = largestPositivePredictorPerspective;
+                                isRewardingEnough = false;
+                            }
+                        }
+                        
                     }
                 }
             }
-            //return average
-            Debug.Log("Average Target of " + target + " is " + statOfInterest / totalCount + " Total count: " + totalCount + " stat of interest value: " + statOfInterest);
-            return statOfInterest / totalCount;
+            //If too risky
+            else
+            {
+                //If there's already a decision to consider then ignore
+                if(!hasCommitedAction)
+                {
+                    if (largestNegativePredictorAdjustedChange < ultimateLargestNegativePredictorAdjustedChange)
+                    {
+                        ultimateLargestNegativePredictorValue = largestNegativePredictorValue;
+                        ultimateLargestNegativePredictorAdjustedChange = largestNegativePredictorAdjustedChange;
+                        ultimateLargestNegativePredictorNode = niResponseNode;
+                        ultimateLargestNegativePredictorStat = largestNegativePredictorStat;
+                        ultimateLargestNegativePredictorPerspective = largestNegativePredictorPerspective;
+                        isSafeEnough = false;
+                    }
+                }
+                
+                    
+                
+            }
+
         }
+
+
         
-        throw new ArgumentException($"Unable to parse complex term: {match}");
-    }
 
-    private static SubIdentifierNode GetEnemyByIndex(CharacterMainCPort agent, int index)
-    {
-        if (index <= 0 || index > agent.characterPsyche.EnemyNodes.Count)
-        {
-            return null;
-        }
+        ReturnDecision returnDecision = new ReturnDecision();
 
-        return agent.characterPsyche.EnemyNodes[index - 1];
-    }
-
-    private static double ScaleSurvivalStatChange(double survivalChange, double initialStat)
-    {
-        if (initialStat < 1)
-        {
-            initialStat = 1;
-        }
-
-        double scalingFactor = FulcrumStatScale / initialStat;
-
-        return survivalChange * scalingFactor;
-    }
-
-    private static double ParseScaleChangeTerm(Match match)
-    {
-        // Match the pattern "ScaleChg(10,3)"
-        if (!match.Success)
-        {
-            throw new ArgumentException("Invalid match passed to ParseScaleChange");
-        }
-
-
+        // Determine whether to commit the action
+        //check is the positive is better than negative
        
-        string special = match.Groups["special"].Value;
-        double initialValue = double.Parse(match.Groups["initial_value"].Value);
-        double changeValue = double.Parse(match.Groups["change_value"].Value);
-
-        return ScaleSurvivalStatChange(changeValue, initialValue);
-        
-
-        // Handle unmatched terms
-        throw new ArgumentException($"Unable to parse special term: {match}");
-    }
-
-    private static double ParseSimpleTerm(Match match, CharacterMainCPort agent, CharacterMainCPort env)
-    {
-        // Simple terms such as L(E), DB(N), etc.
-        if (!match.Success)
+        if (hasCommitedAction)
         {
-            throw new ArgumentException("Invalid match passed to ParseSimpleTerm");
+            Debug.Log("Will consider action: " + ultimateLargestPositivePredictorNode.Decision.name + " because of " + ultimateLargestPositivePredictorPerspective.Name);
+            Debug.Log("Predictor adjusted CHANGE: " + ultimateLargestPositivePredictorAdjustedChange +
+                        " Predictor VALUE: " + ultimateLargestPositivePredictorValue +
+                        " Initial value: " + allInitialStats.StatOfInterest(ultimateLargestPositivePredictorStat.ToString()));
+
+            returnDecision.SetNiValuesWithCommit(ultimateLargestPositivePredictorValue, ultimateLargestPositivePredictorAdjustedChange, ultimateLargestPositivePredictorStat, ultimateLargestPositivePredictorNode);
+
+            return returnDecision;
         }
-
-        // Extract the stat and target from the matched term
-        string stat = match.Groups["stat"].Value;
-        string target = match.Groups["target"].Value;
-
-        // Select the correct stat based on the target
-        if (target == "A")
+        //Not rewarding enough
+        else if(!isRewardingEnough)
         {
-            // Return the value from the agent's stats based on the stat
-            return stat switch
-            {
-                "L" => agent.characterPhysical.Stats.L,
-                "DB" => agent.characterPhysical.Stats.DB,
-                "NB" => agent.characterPhysical.Stats.NB,
-                _ => throw new ArgumentException($"Unknown stat: {stat}")
-            };
-        }
-        else if (target == "N")
-        {
-            // Return the value from the env's stats based on the stat
-            return stat switch
-            {
-                "L" => env.characterPhysical.Stats.L,
-                "DB" => env.characterPhysical.Stats.DB,
-                "NB" => env.characterPhysical.Stats.NB,
-                _ => throw new ArgumentException($"Unknown stat: {stat}")
-            };
-        }
-        else if (target.StartsWith("E(") || target.StartsWith("F("))
-        {
-            // Handle case when target is "E" or "F"
-            int index = -2;
+            Debug.Log("Will not consider action: " + ultimateLargestPositivePredictorNode.Decision.name + " because " + ultimateLargestPositivePredictorPerspective.Name + " not worth it for the reward inclination of " + agent.characterPsyche.RewardCutoff);
+            Debug.Log(" Adjusted predictor CHANGE: " + ultimateLargestPositivePredictorAdjustedChange +
+                        " Predictor VALUE: " + ultimateLargestPositivePredictorValue +
+                        " Initial value: " + allInitialStats.StatOfInterest(ultimateLargestPositivePredictorStat.ToString()));
 
-            List<CharacterMainCPort> targetEOrF = new List<CharacterMainCPort>();
-            if (target.StartsWith("E("))
-            {
-                targetEOrF = agent.characterPsyche.Enemy;
-                index = int.Parse(match.Groups["eIndex"].Value);
-            }else if (target.StartsWith("F("))
-            {
-                targetEOrF = agent.characterPsyche.Friends;
-                index = int.Parse(match.Groups["fIndex"].Value);
-            }
-
-            if (index == -1)
-            {
-                // Collect the stats from all enemies in the EnemyTest list
-                List<double> targetStats = new List<double>();
-
-                foreach (var eOrFCPort in targetEOrF)
-                {
-
-                    double targetStat = stat switch
-                    {
-                        "L" => eOrFCPort.characterPhysical.Stats.L,
-                        "DB" => eOrFCPort.characterPhysical.Stats.DB,
-                        "NB" => eOrFCPort.characterPhysical.Stats.NB,
-                        _ => throw new ArgumentException($"Unknown stat: {stat}")
-                    };
-
-                    // Add the stat value to the list
-                    targetStats.Add(targetStat);
-                }
-
-                // Calculate the average of the collected stats
-                if (targetStats.Count > 0)
-                {
-                    return targetStats.Average();
-                }
-                else
-                {
-                    throw new ArgumentException("No friends or enemies found in character.");
-                }
-            }
-            else
-            {
-                // If index is not -1, handle the individual enemy
-                var eOrFCPort = targetEOrF.ElementAtOrDefault(index);
-                if (eOrFCPort != null)
-                {
-
-                    return stat switch
-                    {
-                        "L" => eOrFCPort.characterPhysical.Stats.L,
-                        "DB" => eOrFCPort.characterPhysical.Stats.DB,
-                        "NB" => eOrFCPort.characterPhysical.Stats.NB,
-                        _ => throw new ArgumentException($"Unknown stat: {stat}")
-                    };
-                }
-                else
-                {
-                    throw new ArgumentException($"Invalid enemy or friend index: {index}");
-                }
-            }
-        }
-        else
-        {
-            // Handle unmatched targets
-            throw new ArgumentException($"Unsupported target: {target}");
+            returnDecision.SetNiValuesWithoutCommitDueToNotRewarding(ultimateLargestPositivePredictorValue, ultimateLargestPositivePredictorAdjustedChange, ultimateLargestPositivePredictorStat, ultimateLargestPositivePredictorPerspective, ultimateLargestPositivePredictorNode);
+            
+            return returnDecision;
         }
         
-
-        // Handle unmatched terms
-        throw new ArgumentException($"Unable to parse simple term: {match}");
-    }
-
-    private static double ParseEmpTerm(Match match, CharacterMainCPort agent, CharacterMainCPort env, RelationshipNode envInAgentRPTRelationshipNode)
-    {
-        // Match the pattern "Emp(A-N)" or "Emp(N-A)"
-        //NOTE: Could get rid of Emp(N-A). When is this ever going to be used??
-        if (!match.Success)
+        //Too risky
+        else if(!isSafeEnough)
         {
-            throw new ArgumentException("Invalid match passed to ParseEmpTerm");
+            Debug.Log("Will not consider action: " + ultimateLargestPositivePredictorNode.Decision.name + " because not worth risk of " + ultimateLargestNegativePredictorPerspective.Name + " for the negative action " + ultimateLargestNegativePredictorNode.Decision.name);
+            Debug.Log(" Adjusted negative predictor change: " + ultimateLargestNegativePredictorNode +
+                      " Largest predictor value: " + ultimateLargestNegativePredictorValue +
+                      " Initial value: " + allInitialStats.StatOfInterest(ultimateLargestNegativePredictorStat.ToString()));
+
+            returnDecision.SetNiValuesWithRisk(ultimateLargestPositivePredictorValue, ultimateLargestPositivePredictorAdjustedChange, ultimateLargestNegativePredictorValue, 
+                ultimateLargestNegativePredictorAdjustedChange, ultimateLargestPositivePredictorStat, ultimateLargestNegativePredictorStat, 
+                ultimateLargestPositivePredictorPerspective, ultimateLargestNegativePredictorPerspective, 
+                ultimateLargestPositivePredictorNode, ultimateLargestNegativePredictorNode);
+
+            return returnDecision;
         }
 
-        
-        string origin = match.Groups["origin"].Value;
-        string end = match.Groups["end"].Value;
+        Debug.LogWarning("No valid Ni-Se Decisions met the conditions. Returning default null.");
 
-        // Determine origin empathy level and character
-        double originEmpathyLevel = 0;
-        CharacterPsyche originCharacter = null;
-        CharacterPsyche endCharacter = null;
-
-        if (origin == "N")
-        {
-            originEmpathyLevel = env.characterPsyche.EmpathyLevel;
-            originCharacter = env.characterPsyche;
-        }
-        else if (origin == "A")
-        {
-            originEmpathyLevel = agent.characterPsyche.EmpathyLevel;
-            originCharacter = agent.characterPsyche;
-        }
-
-        // Determine end character that empathy is towards
-        //NOTE: Will not use for now since I don't see how Emp(N-A) will be used so assume it is always Emp(A-N). If so, can simplify the regex just to detect Emp not Emp(N-A) or Emp(A-N)
-        if (end == "A")
-            endCharacter = agent.characterPsyche;
-        else if (end == "N")
-            endCharacter = env.characterPsyche;
-
-        // Calculate the PR scale
-        //TO-DO: Change PR to MODR since thinking about getting rid of PR
-        RelationshipValues envInAgentRelationshipValues = envInAgentRPTRelationshipNode.ModRValues;
-        double modRScale = envInAgentRelationshipValues.NurtureBelongingValue + envInAgentRelationshipValues.DefensiveBelongingValue;
-        modRScale /= 100;
-
-        return CalculateFormulaAdjustedEmpathyPRStat(originEmpathyLevel, modRScale);
-
-        // Handle unmatched terms
-        throw new ArgumentException($"Unable to parse special term: {match}");
-    }
-
-    private static double CalculateFormulaAdjustedEmpathyPRStat(double empathyLevel, double individualPRScale)
-    {
-        return empathyLevel / 10 + individualPRScale * 2 / 3;
-    }
-
-    //get all the mod values for calculating formula/predictor adjusted with relationship value
-    //Will use the relationship node of the env from the character's view
-    private static (double l, double db, double nb) ReturnModValuesWithCharacter(RelationshipNode envInCharacterRelationshipNode, double relationshipValueWithCharacter = 1)
-    {
-        RelationshipValues modRRelationshipValues = envInCharacterRelationshipNode.ModRValues;
-        double l = modRRelationshipValues.LivelihoodValue * relationshipValueWithCharacter;
-        double db = modRRelationshipValues.DefensiveBelongingValue * relationshipValueWithCharacter;
-        double nb = modRRelationshipValues.NurtureBelongingValue * relationshipValueWithCharacter;  
-
-        return (l: l, db: db, nb: nb);
-    }
-
-
-    private static string EvaluateCustomFunctionsUntilDone(string formula)
-    {
-        bool containsCustomFunctions = true;
-
-        // Keep evaluating custom functions until no custom functions remain
-        while (containsCustomFunctions)
-        {
-            string previousFormula = formula;
-
-            // Resolve custom functions (Mathf.Max, Mathf.Min) in the formula
-            formula = EvaluateCustomFunctions(formula);
-
-            // If the formula has changed after evaluation, continue processing
-            containsCustomFunctions = !formula.Equals(previousFormula);
-        }
-
-        // Once all custom functions are resolved, evaluate the basic expression
-        return EvaluateBasicExpression(formula).ToString();
-    }
-
-    private static string EvaluateCustomFunctions(string formula)
-    {
-        bool hasCustomFunction = false;
-
-        // Keep looping until no more Mathf.Max or Mathf.Min are present
-        while (formula.Contains("Mathf.Max") || formula.Contains("Mathf.Min"))
-        {
-            Debug.Log("Formula while looping for custom functions: " + formula);
-            // Look for the next occurrence of Mathf.Max or Mathf.Min
-            int startIndex = formula.LastIndexOf("Mathf.Max");
-
-            bool isMaxFunction = true;
-            if (startIndex < formula.LastIndexOf("Mathf.Min"))
-            {
-                startIndex = formula.LastIndexOf("Mathf.Min");
-                isMaxFunction = false;
-            }
-
-            if (startIndex == -1) break;
-
-            string functionName = isMaxFunction ? "Mathf.Max" : "Mathf.Min";
-            int openParen = formula.IndexOf('(', startIndex);
-            int closeParen = FindMatchingParenthesis(formula, openParen);
-
-            // Extract the arguments between parentheses
-            string args = formula.Substring(openParen + 1, closeParen - openParen - 1).Trim();
-
-            // Split the arguments properly
-            string[] splitArgs = SplitArguments(args);
-
-            if (splitArgs.Length != 2)
-            {
-                Debug.LogError("Error: Expected exactly 2 arguments for " + functionName + " but found " + splitArgs.Length);
-                return formula; // Or handle the error appropriately
-            }
-
-            // Now resolve the arguments by evaluating them fully before computing the result
-            double arg1 = EvaluateBasicExpression(splitArgs[0].Trim());
-            double arg2 = EvaluateBasicExpression(splitArgs[1].Trim());
-
-            // Compute result using Mathf.Max or Mathf.Min
-            double result = isMaxFunction
-                ? Mathf.Max((float)arg1, (float)arg2)
-                : Mathf.Min((float)arg1, (float)arg2);
-
-            // Replace the function call with its result
-            formula = formula.Substring(0, startIndex) + result.ToString() + formula.Substring(closeParen + 1);
-
-            hasCustomFunction = true;  // We found and processed a custom function
-        }
-
-        // If no custom functions were found, return the formula as is
-        if (!hasCustomFunction)
-        {
-            return formula;
-        }
-
-        return formula;
-    }
-
-    // Helper method to split arguments while handling nested parentheses
-    private static string[] SplitArguments(string args)
-    {
-        var parts = new List<string>();
-        int depth = 0;
-        string currentPart = "";
-
-        for (int i = 0; i < args.Length; i++)
-        {
-            char c = args[i];
-
-            if (c == ',' && depth == 0)
-            {
-                parts.Add(currentPart.Trim());
-                currentPart = "";
-            }
-            else
-            {
-                currentPart += c;
-
-                if (c == '(') depth++;
-                if (c == ')') depth--;
-            }
-        }
-
-        if (currentPart.Length > 0)
-            parts.Add(currentPart.Trim());
-
-        return parts.ToArray();
+        return null; 
 
     }
-    /// <summary>
-    /// Finds the matching closing parenthesis for a given opening parenthesis.
-    /// </summary>
-    private static int FindMatchingParenthesis(string formula, int openParenIndex)
-    {
-        int balance = 1;
-        for (int i = openParenIndex + 1; i < formula.Length; i++)
-        {
-            if (formula[i] == '(') balance++;
-            if (formula[i] == ')') balance--;
-            if (balance == 0) return i;
-        }
-        throw new Exception("Unmatched parenthesis in formula.");
-    }
-
-
-    /// Evaluates a mathematical expression as a double.
-    private static double EvaluateBasicExpression(string expression)
-    {
-        try
-        {
-            DataTable table = new DataTable();
-            object result = table.Compute(expression, string.Empty);
-            return Convert.ToDouble(result);
-        }
-        catch (Exception ex)
-        {
-            Debug.LogError($"Error evaluating expression: {expression}. Exception: {ex.Message}");
-            return 0;
-        }
-    }
-
 
 }

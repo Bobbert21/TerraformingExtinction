@@ -10,13 +10,13 @@ public static class RepercussionFunctions
 
 
     public static void ImplementRepercussion(
-     SubIdentifierNode sourceNode,
-     EnumActionCharacteristics actionContext,
-     float lValue = 0,
-     float dbValue = 0,
-     float nbValue = 0,
-     //0 - 1
-     float learningRate = 0.01f)
+         SubIdentifierNode sourceNode,
+         EnumActionCharacteristics actionContext,
+         float lValue = 0,
+         float dbValue = 0,
+         float nbValue = 0,
+         //0 - 1
+         float learningRate = 0.01f)
     {
         float lDelta = lValue * learningRate;
         float dbDelta = dbValue * learningRate;
@@ -53,7 +53,7 @@ public static class RepercussionFunctions
             relationships.Add(new RelationshipNode(
                 actionContext.ToString(), null,
                 new RelationshipValues(lDelta, dbDelta, nbDelta),
-                actionContext));
+                actionContext, null));
         }
 
         //Update or create Main (None) node
@@ -70,7 +70,7 @@ public static class RepercussionFunctions
             relationships.Add(new RelationshipNode(
                 "Main Node", null,
                 new RelationshipValues(lDelta, dbDelta, nbDelta),
-                EnumActionCharacteristics.None));
+                EnumActionCharacteristics.None, null));
         }
         
     }

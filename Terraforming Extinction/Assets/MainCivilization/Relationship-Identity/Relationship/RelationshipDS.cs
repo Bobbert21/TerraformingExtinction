@@ -62,6 +62,8 @@ public class RelationshipNode
     public RelationshipValues PRValues;
     public RelationshipValues ModRValues;
     public EnumActionCharacteristics ActionContext;
+    public List<RelationshipDecisionNode> ResponseNodes;
+    public int HabitCounter;
 
     public RelationshipNode() { }
 
@@ -72,17 +74,39 @@ public class RelationshipNode
         PRValues = new RelationshipValues(other.PRValues);  
         ModRValues = new RelationshipValues(other.ModRValues);
         ActionContext = other.ActionContext; // enums are value types, so direct copy is fine
+        ResponseNodes = new List<RelationshipDecisionNode>();
+        foreach (var node in other.ResponseNodes)
+        {
+            ResponseNodes.Add(new RelationshipDecisionNode(node));
+        }
     }
 
-    public RelationshipNode(string name, RelationshipValues pRValues, RelationshipValues modRValues, EnumActionCharacteristics actionContext)
+    public RelationshipNode(string name, RelationshipValues pRValues, RelationshipValues modRValues, EnumActionCharacteristics actionContext, List<RelationshipDecisionNode> responseNodes)
     {
         Name = name;
         PRValues = pRValues;
         ModRValues = modRValues;
         ActionContext = actionContext;
+        ResponseNodes = responseNodes;
     }
 }
 
+[System.Serializable]
+public class RelationshipDecisionNode
+{
+    public DecisionSO Decision;
+    public RelationshipValues ModRValues;
+    public int HabitCounter;
+
+    public RelationshipDecisionNode(RelationshipDecisionNode other) 
+    { 
+        Decision = other.Decision;
+        ModRValues = other.ModRValues;
+        HabitCounter = other.HabitCounter;
+    }
+}
+
+//Could delete
 [System.Serializable]
 public class ActionNode
 {

@@ -10,7 +10,7 @@ public class CivTest : MonoBehaviour
 {
     
 
-    public List<DecisionMakingSO> DMTestings;
+    public List<DecisionTestSO> DMTestings;
     public CharactersTestSO Character1;
     public CharactersTestSO Character2;
     public int ComplexGoalStep;
@@ -32,7 +32,7 @@ public class CivTest : MonoBehaviour
         string ultimatePerspective = string.Empty;
         int actionIndexToCommit = -1;
 
-        List<DecisionMakingSO> sortedDMTestings = DMTestings.OrderByDescending(d => d.HabitCounter).ToList();
+        List<DecisionTestSO> sortedDMTestings = DMTestings.OrderByDescending(d => d.HabitCounter).ToList();
 
         for (int i = 0;  i < sortedDMTestings.Count && i < Character1.CognitiveStamina; i++)
         {
@@ -187,7 +187,7 @@ public class CivTest : MonoBehaviour
         return (largestPositivePredictorValue, largestNegativePredictorValue, largestPositivePredictorChange, largestNegativePredictorChange, positivePerspective, negativePerspective);
     }
 
-    private (double, double, double, double, string, string) CalculateComplexPositiveAndNegativePredictorChange(DecisionMakingSO decisionMakingSO, string targetStatString, int cognitiveStamina, bool isInternalOpportunity)
+    private (double, double, double, double, string, string) CalculateComplexPositiveAndNegativePredictorChange(DecisionTestSO decisionMakingSO, string targetStatString, int cognitiveStamina, bool isInternalOpportunity)
     {
         double largestPositivePredictorValue = double.MinValue;
         double largestNegativePredictorValue = double.MaxValue;

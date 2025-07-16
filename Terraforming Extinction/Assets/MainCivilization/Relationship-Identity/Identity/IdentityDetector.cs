@@ -2,6 +2,18 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
+public class SubIdentifierRelationshipNodeInfo
+{
+    public RelationshipNode RelationshipNode;
+    public SubIdentifierNode SubIdentifierNode;
+
+    public SubIdentifierRelationshipNodeInfo(SubIdentifierNode subIdentifierNode, RelationshipNode relationshipNode)
+    {
+        RelationshipNode = relationshipNode;
+        SubIdentifierNode = subIdentifierNode;
+    }
+}
+
 public class IdentityDetector : MonoBehaviour
 {
     //will be passed by stat container in future
@@ -11,26 +23,132 @@ public class IdentityDetector : MonoBehaviour
     public EnumIdentifiers testEnumIdentifier;
     public RelationshipPersonalTree testRelationshipPersonalTree;
     public float testDistinctiveAbility;
-    public float existingNodesDistinctiveAbility;
+    public float testExistingNodesDistinctiveAbility;
     public float testJudgementLevel;
     public float testExtrapolationLevel;
     public float testGeneralizationLevel;
+    public bool IsDebugging;
 
+    private CharacterMainCPort selfMainCPort;
+    private List<CharacterMainCPort> envMainCPorts;
+    private double timePassed = 0;
 
-    void Start()
+    //Get all the surrounding env then process all the identifiers and pass it to DM
+    private void Start()
     {
-        
+        selfMainCPort = GetComponent<CharacterMainCPort>();
+    }
+
+
+    private void Update()
+    {
+        timePassed += Time.deltaTime;
+
+        double processingSpeed = selfMainCPort.characterPsyche.ProcessingSpeed;
+        float awarenessLevel = selfMainCPort.characterPsyche.AwarenessLevel;
+        if (timePassed > processingSpeed)
+        {
+            envMainCPorts = new List<CharacterMainCPort>();
+            //Number can be adjusted like 
+            var foundColliders = Physics.OverlapSphere(Vector3.zero, awarenessLevel);
+
+            foreach (Collider collider in foundColliders)
+            {
+                if (collider.TryGetComponent(out CharacterMainCPort envMainCPort))
+                {
+                    envMainCPorts.Add(envMainCPort);
+                }
+            }
+        }
+
+
     }
 
     //main function to run
     public void Run()
+    {
+        if (IsDebugging)
+        {
+            RunSingle(
+                testName,
+                testAppearanceCharacteristics,
+                testActionCharacteristics,
+                testEnumIdentifier,
+                testRelationshipPersonalTree,
+                testDistinctiveAbility,
+                testExistingNodesDistinctiveAbility,
+                testJudgementLevel,
+                testExtrapolationLevel,
+                testGeneralizationLevel
+            );
+        }
+        else
+        {
+            Dictionary<CharacterMainCPort, SubIdentifierRelationshipNodeInfo> cPortToSubIdMap = new Dictionary<CharacterMainCPort, SubIdentifierRelationshipNodeInfo>();
+            foreach (CharacterMainCPort envMainCPort in envMainCPorts)
+            {
+                SubIdentifierNode foundSubIdentifier = RunSingle(
+                    envMainCPort.Name,
+                    envMainCPort.characterPhysical.appearanceCharacteristics,
+                    envMainCPort.characterPhysical.actionCharacteristics,
+                    envMainCPort.characterPhysical.Identifier,
+                    selfMainCPort.characterPsyche.RelationshipPersonalTree,
+                    selfMainCPort.characterPsyche.DistinctiveAbility,
+                    selfMainCPort.characterPsyche.ExistingNodesDistinctiveAbility,
+                    selfMainCPort.characterPsyche.JudgementLevel,
+                    selfMainCPort.characterPsyche.ExtrapolationLevel,
+                    selfMainCPort.characterPsyche.GeneralizationLevel
+                );
+
+                RelationshipNode foundRelationshipNode = findRelationshipNode(foundSubIdentifier, envMainCPort.characterPhysical.ActionCommitting);
+
+                cPortToSubIdMap[envMainCPort] = new SubIdentifierRelationshipNodeInfo(foundSubIdentifier, foundRelationshipNode);
+
+                //Passes the map to DM action selection
+            }
+        }
+
+    }
+
+    private RelationshipNode findRelationshipNode(SubIdentifierNode foundSubIdentifierNode, EnumActionCharacteristics actionCommitting)
+    {
+        List<RelationshipNode> relationshipNodes = foundSubIdentifierNode.RelationshipNodes;
+
+        foreach (RelationshipNode relationshipNode in relationshipNodes) 
+        { 
+            if(relationshipNode.ActionContext == actionCommitting)
+            {
+                return relationshipNode;
+            }
+        }
+
+        //If hasn't found any nodes, then create a new one
+
+        RelationshipNode newRelationshipNode = new RelationshipNode(actionCommitting.ToString(), null, new RelationshipValues(0, 0, 0), actionCommitting, null);
+        foundSubIdentifierNode.AddRelationshipNode(newRelationshipNode);
+
+        return newRelationshipNode;
+    }
+
+
+    private SubIdentifierNode RunSingle(
+    string envName,
+    List<EnumAppearanceCharacteristics> envAppearanceCharacteristics,
+    List<EnumActionCharacteristics> envActionCharacteristics,
+    EnumIdentifiers envEnumIdentifier,
+    RelationshipPersonalTree selfRelationshipPersonalTree,
+    float selfDistinctiveAbility,
+    float selfExistingNodesDistinctiveAbility,
+    float selfJudgementLevel,
+    float selfExtrapolationLevel,
+    float selfGeneralizationLevel)
     {
         //1. Find with likeness
         //2. If perfect match or fit, then add underneath
         //3. If not, then Fit anchor right below the identifier node
         SubIdentifierNode foundSubIdentifierNode = null;
         float likenessScore = -1;
-        (foundSubIdentifierNode, likenessScore) = AdaptiveIdentifierFunctions.FindSubidentifierNodeWithAppearanceAndActionWithLikenessScore(testRelationshipPersonalTree, testEnumIdentifier, testAppearanceCharacteristics, testActionCharacteristics, testName);
+        (foundSubIdentifierNode, likenessScore) = AdaptiveIdentifierFunctions.FindSubidentifierNodeWithAppearanceAndActionWithLikenessScore(selfRelationshipPersonalTree, envEnumIdentifier, envAppearanceCharacteristics, envActionCharacteristics, envName);
         if (foundSubIdentifierNode != null) 
         {
             Debug.Log("Found subidentifier nodes: " + foundSubIdentifierNode.SubIdentifierName + " Likness Score: " + likenessScore);
@@ -47,7 +165,8 @@ public class IdentityDetector : MonoBehaviour
             {
                 Debug.Log("Found subidentifier same as node with name: " + foundSubIdentifierNode.SubIdentifierName);
                 //alters the relationship tree when perfect match (or similar enough) to be that specific thing
-                testRelationshipPersonalTree.AddValuesToSubIdentifier(foundSubIdentifierNode, existingNodesDistinctiveAbility, testJudgementLevel, testExtrapolationLevel, testGeneralizationLevel, 1);
+                testRelationshipPersonalTree.AddValuesToSubIdentifier(foundSubIdentifierNode, testExistingNodesDistinctiveAbility, testJudgementLevel, testExtrapolationLevel, testGeneralizationLevel, 1);
+                return foundSubIdentifierNode;
             }
             //FIT
             else if(likenessScore > testDistinctiveAbility * 0.8)
@@ -103,8 +222,10 @@ public class IdentityDetector : MonoBehaviour
                 {
                     RelationshipValues newPRValues = new(relationshipNode.PRValues.LivelihoodValue * adoptedValue, relationshipNode.PRValues.DefensiveBelongingValue * adoptedValue, relationshipNode.PRValues.NurtureBelongingValue * adoptedValue);
                     RelationshipValues newModRValues = new(relationshipNode.ModRValues.LivelihoodValue * adoptedValue, relationshipNode.ModRValues.DefensiveBelongingValue * adoptedValue, relationshipNode.ModRValues.NurtureBelongingValue * adoptedValue);
-                    RelationshipNode newRelationshipNode = new RelationshipNode(relationshipNode.Name, newPRValues, newModRValues, relationshipNode.ActionContext);
+                    RelationshipNode newRelationshipNode = new RelationshipNode(relationshipNode.Name, newPRValues, newModRValues, relationshipNode.ActionContext, relationshipNode.ResponseNodes);
                 }
+
+                return newSubIdentifierNode;
             }
         }
         //when there are no nodes with any similarity then just put it in the similar identifier
@@ -132,14 +253,17 @@ public class IdentityDetector : MonoBehaviour
                     foundIdentifierNode = true;
 
                     Debug.Log("Added subidentifier node " + newSubIdentifierNode.SubIdentifierName + " in identifier " + identifierNode.Identifier.ToString());
-
+                    return newSubIdentifierNode;
                 }
             }
 
             if (!foundIdentifierNode)
             {
                 Debug.LogError("Could not find Identifier node for this subidentifier node");
+                return null;
             }
         }
+
+        return null;
     }
 }

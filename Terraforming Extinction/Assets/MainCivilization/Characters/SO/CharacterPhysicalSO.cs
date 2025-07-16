@@ -16,4 +16,6 @@ public class CharacterPhysicalSO : ScriptableObject
     public Stats Stats;
     public List<EnumActionCharacteristics> actionCharacteristics;
     public List<EnumAppearanceCharacteristics> appearanceCharacteristics;
+    public EnumIdentifiers Identifier;
+    public EnumActionCharacteristics ActionCommitting;
 }

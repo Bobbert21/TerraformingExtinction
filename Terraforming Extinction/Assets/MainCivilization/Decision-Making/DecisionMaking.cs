@@ -1,234 +1,233 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
+//using UnityEditor.Experimental.GraphView;
 using UnityEngine;
 using UnityEngine.TextCore.Text;
 
-public class DecisionMaking : MonoBehaviour
+public class AllStats
 {
-    //Placeholders
-    public CharacterPsycheSO CharacterPsycheSO1Test;
-    public CharacterPsycheSO CharacterPsycheSO2Test;
+    public double L;
+    public double DB;
+    public double NB;
+    public double NL;
+    public double NDB;
+    public double NNB;
 
-    private ICharacterPsyche CharacterPsyche1Test;
-    private ICharacterPsyche CharacterPsyche2Test;
-    private double externalMotivationCutoff = 30;
-
-    //Will normally character pass parameters to this with the psyche. Implement later. Have this in the inspector because of testing
-    public void ActionSelection()
+    public AllStats(double l, double db, double nb, double nl, double ndb, double nnb)
     {
-        //Interface will only be used if there are subset of characters. Will need to implement interface
-        //CharacterPsyche1Test = CharacterPsycheSO1Test as ICharacterPsyche;
-        //CharacterPsyche2Test = CharacterPsycheSO2Test as ICharacterPsyche;
-
-        //Decide whether it is I/E motivated
-        (EnumPersonalityStats targetStatType, double targetStatInitialValue) = FindStatOfInterest(CharacterPsyche1Test, CharacterPsyche2Test);
-
-        //Need to implement. Be able to read the surroundings. 
-        double envChange = 0;
-
-
-        bool isInternalMotivation = DecisionMakingFunctions.IsInternalMotivation(CharacterPsycheSO1Test.InternalMotivationLevel, targetStatInitialValue, envChange, externalMotivationCutoff);
-
-        double ultimateLargestPositivePredictorChange = double.MinValue;
-        string ultimatePerspective = string.Empty;
-        int actionIndexToCommit = -1;
-
-        List<DecisionMakingSO> sortedDMTestings = DMTestings.OrderByDescending(d => d.HabitCounter).ToList();
-
-        for (int i = 0; i < sortedDMTestings.Count && i < Character1.CognitiveStamina; i++)
-        {
-            List<Perspective> perspectives = DMTestings[i].Perspectives;
-            // Find which stat is most concerning
-            
-            string targetStatString = TranslateEnumToString(targetStatType);
-            bool isInternalOpportunity = Character1.MentalOpportunities == EnumMentalOpportunities.Internal;
-            bool isComplexGoal = DMTestings[i].DMType == DMTypes.Complex;
-            // Variables to store the results of predictor calculations
-            double largestPositivePredictorValue = double.MinValue;
-            double largestNegativePredictorValue = double.MaxValue;
-            double largestPositivePredictorChange = 0;
-            double largestNegativePredictorChange = 0;
-
-            string positivePerspective = string.Empty;
-            string negativePerspective = string.Empty;
-
-            // Get the stat value
-            if (isComplexGoal)
-            {
-                (largestPositivePredictorValue, largestNegativePredictorValue, largestPositivePredictorChange,
-                    largestNegativePredictorChange, positivePerspective, negativePerspective)
-                    = CalculateComplexPositiveAndNegativePredictorChange(DMTestings[i], targetStatString, Character1.PerspectiveAbility, isInternalOpportunity);
-
-            }
-            else
-            {
-                (largestPositivePredictorValue, largestNegativePredictorValue, largestPositivePredictorChange,
-                    largestNegativePredictorChange, positivePerspective, negativePerspective)
-                    = CalculateSimplePositiveAndNegativePredictorChange(DMTestings[i].Perspectives, targetStatString, Character1.PerspectiveAbility, isInternalOpportunity);
-            }
-
-            //HABIT TENDENCIES
-            // Add the habit tendencies
-            double habitContribution = HabitContribution(DMTestings[i].HabitCounter, Character1.MaxHabitCounter, Character1.HabitualTendencies);
-            largestPositivePredictorChange += habitContribution;
-            largestNegativePredictorChange -= habitContribution;
-            largestPositivePredictorValue += habitContribution;
-            largestNegativePredictorValue -= habitContribution;
-
-            Debug.Log("Habit contribution: " + habitContribution + " Habit counter: " + DMTestings[i].HabitCounter + " Habit tendencies: " + Character1.HabitualTendencies + " Max habit counter: " + Character1.MaxHabitCounter);
-            // Scale the changed value according to the starting stat of the player
-            double adjustedLargestPositivePredictorChange = ScaleSurvivalStatChange(largestPositivePredictorChange, targetStatInitialValue);
-            double adjustedLargestNegativePredictorChange = ScaleSurvivalStatChange(largestNegativePredictorChange, targetStatInitialValue);
-
-
-
-
-
-            //multiply because if i do same with reward inclination and have cut off, i still need to determine what to prioritize
-            //brain will see which has bigger signal anyways
-            adjustedLargestNegativePredictorChange *= Character1.RiskAversion;
-
-            // Determine whether to commit the action
-            //check is the positive is better than negative
-            if (adjustedLargestPositivePredictorChange > -adjustedLargestNegativePredictorChange)
-            {
-                if (adjustedLargestPositivePredictorChange > Character1.RewardInclination && adjustedLargestPositivePredictorChange > ultimateLargestPositivePredictorChange)
-                {
-                    ultimateLargestPositivePredictorChange = adjustedLargestPositivePredictorChange;
-                    ultimatePerspective = positivePerspective;
-                    actionIndexToCommit = i;
-                    Debug.Log("Will consider action: " + DMTestings[i].name + " because of " + positivePerspective);
-                    Debug.Log("Predictor CHANGE: " + largestPositivePredictorChange +
-                              " Adjusted predictor CHANGE: " + adjustedLargestPositivePredictorChange +
-                              " Predictor VALUE: " + largestPositivePredictorValue +
-                              " Initial value: " + targetStatInitialValue);
-                }
-                else
-                {
-                    Debug.Log("Will not consider action: " + DMTestings[i].name + " because " + positivePerspective + " not worth it for the reward inclination of " + Character1.RewardInclination);
-                    Debug.Log("Predictor CHANGE: " + largestPositivePredictorChange +
-                              " Adjusted predictor CHANGE: " + adjustedLargestPositivePredictorChange +
-                              " Predictor VALUE: " + largestPositivePredictorValue +
-                              " Initial value: " + targetStatInitialValue);
-                }
-            }
-            //risk too high once adjusted
-            else
-            {
-                Debug.Log("Will not consider action: " + DMTestings[i].name + " because not worth risk of " + negativePerspective + " for the " + positivePerspective);
-                Debug.Log("Largest predictor change: " + largestNegativePredictorChange +
-                          " Adjusted predictor change: " + adjustedLargestNegativePredictorChange +
-                          " Largest predictor value: " + largestNegativePredictorValue +
-                          " Initial value: " + targetStatInitialValue);
-            }
-        }
-
-        if (actionIndexToCommit == -1)
-        {
-            Debug.Log("No actions to commit to");
-        }
-        else
-        {
-            Debug.Log("Will commit action: " + DMTestings[actionIndexToCommit].name + " because of " + ultimatePerspective);
-        }
-
+        L = l;
+        DB = db;
+        NB = nb;
+        NL = nl;
+        NDB = ndb;
+        NNB = nnb;
     }
 
-    //Can move to DM Functions
-    //Env should be changed. This is for testing of character relationship with environment
-    private (EnumPersonalityStats, double) FindStatOfInterest(CharacterPsycheSO character, CharacterPsycheSO env)
+    public double StatOfInterest(string stat)
     {
-        double L = character.Stats.L;
-        double B = 0;
-
-        // Determine the B value based on BIdentity
-        if (character.BIdentity == EnumPersonalityStats.NB)
+        if(stat == "L(A)")
         {
-            B = character.Stats.NB;
-        }
-        else
+            return L;
+        }else if(stat == "DB(A)")
         {
-            B = character.Stats.DB;
-        }
-
-        double FL = 0;
-        double FDB = 0;
-        double FNB = 0;
-        double agentFriendPRScale = 0;
-        double agentEnvPRScale = 0;
-        int friendCount = character.Friends.Count;
-
-        // Accumulate friends' stats and env
-        foreach (CharacterPsycheSO friend in character.Friends)
+            return DB;
+        }else if(stat == "NB(A)")
         {
-            //find the friend in PR to see how much they care overall
-            foreach (RelationshipValueTest prCharacter in character.RelationshipSheet.PR)
-            {
-
-                if (prCharacter.Identifiers == env)
-                {
-                    agentEnvPRScale = (prCharacter.Stats.NB + prCharacter.Stats.DB) / 2;
-                    agentEnvPRScale /= 100;
-                }
-                if (prCharacter.Identifiers == friend)
-                {
-                    agentFriendPRScale = (prCharacter.Stats.NB + prCharacter.Stats.DB) / 2;
-                    agentFriendPRScale /= 100;
-                }
-            }
-            //it ups the stats when calculating the stats to find the lowest stat to focus on. i.e. if bad relationship with friend, then will inflate stats of friend so wouldn't care too much
-            //11 is arbitrary. Just sets limit to 10 for highest empathy level
-            double adjustedEmpathyFriendPRScale = CalculateTargetAdjustedEmpathyPRStat(character.EmpathyLevel, agentFriendPRScale);
-
-            FL += friend.Stats.L * adjustedEmpathyFriendPRScale;
-            FDB += friend.Stats.DB * adjustedEmpathyFriendPRScale;
-            FNB += friend.Stats.NB * adjustedEmpathyFriendPRScale;
-
-
+            return NB;
+        }else if(stat == "L(N)")
+        {
+            return NL;
+        }else if(stat == "DB(N)")
+        {
+            return NDB;
+        }else if(stat == "NB(N)")
+        {
+            return NNB;
         }
 
-        // Calculate averages if there are friends
-        if (friendCount > 0)
-        {
-            FL /= friendCount;
-            FDB /= friendCount;
-            FNB /= friendCount;
-        }
-
-        double adjustedEmpathyEnvPRScale = CalculateTargetAdjustedEmpathyPRStat(character.EmpathyLevel, agentEnvPRScale);
-
-        //calculate N(Stats) values
-        double envL = env.Stats.L * adjustedEmpathyEnvPRScale;
-        double envNB = env.Stats.NB * adjustedEmpathyEnvPRScale;
-        double envDB = env.Stats.DB * adjustedEmpathyEnvPRScale;
-
-        // Create a dictionary mapping enum values to their corresponding scores
-        Dictionary<EnumPersonalityStats, double> statValues = new()
-        {
-            { EnumPersonalityStats.L, L },
-            { EnumPersonalityStats.DB, character.BIdentity == EnumPersonalityStats.DB ? B : double.MaxValue },
-            { EnumPersonalityStats.NB, character.BIdentity == EnumPersonalityStats.NB ? B : double.MaxValue },
-            { EnumPersonalityStats.FL, FL },
-            { EnumPersonalityStats.FDB, FDB },
-            { EnumPersonalityStats.FNB, FNB },
-            { EnumPersonalityStats.NL, envL },
-            { EnumPersonalityStats.NDB, envDB },
-            { EnumPersonalityStats.NNB, envNB }
-        };
-
-        // Find the enum with the smallest value
-        EnumPersonalityStats minStat = EnumPersonalityStats.L;
-        double minValue = double.MaxValue;
-
-        foreach (var stat in statValues)
-        {
-            if (stat.Value < minValue)
-            {
-                minValue = stat.Value;
-                minStat = stat.Key;
-            }
-        }
-        Debug.Log("minimum value: " + minValue + " minStat: " + minStat);
-        return (minStat, minValue);
+        throw new ArgumentException($"Invalid stat input: {stat}", nameof(stat));
     }
 }
+
+public class DecisionMaking : MonoBehaviour
+{
+    private CharacterMainCPort selfMainCPort;
+
+    private double externalMotivationCutoff = 30;
+    private double timePassed = 0;
+
+
+    private void Start()
+    {
+        selfMainCPort = GetComponent<CharacterMainCPort>();
+    }
+
+    //Will normally character pass parameters to this with the psyche. Implement later. Have this in the inspector because of testing
+    public void ActionSelection(Dictionary<CharacterMainCPort, SubIdentifierRelationshipNodeInfo> cPortToSubIdMap)
+    {
+        double ultimateLargestPositivePredictorValue = double.MinValue;
+        double ultimateLargestPositivePredictorChange = double.MinValue;
+        double ultimateLargestNegativePredictorValue = double.MaxValue;
+        double ultimateLargestNegativePredictorChange = double.MaxValue;
+        EnumPersonalityStats ultimatePositiveTargetStatType = EnumPersonalityStats.None;
+        EnumPersonalityStats ultimateNegativeTargetStatType = EnumPersonalityStats.None;
+        bool isUltimateActionNe = false;
+        RelationshipNode ultimateNePositiveDecisionNode = null;
+        RelationshipNode ultimateNeNegativeDecisionNode = null;
+        RelationshipDecisionNode ultimateNiPositiveDecisionNode = null;
+        //Go through all the env
+        foreach (CharacterMainCPort envMainCPort in cPortToSubIdMap.Keys)
+        {
+            //1. Cohesive Planning
+            //2. Blurred Planning
+            //3. Incohesive Planning
+            SubIdentifierNode envSubIdentifier = cPortToSubIdMap[envMainCPort].SubIdentifierNode;
+            RelationshipNode envRelationshipNode = cPortToSubIdMap[envMainCPort].RelationshipNode;
+            //COHESIVE PLANNING
+            //Si - Ne, Se - Ni
+            //i.e. I am hungry, lets go to the kitchen (Si - Ne)
+            //i.e. There is a threat, I will fight it (Se - Ni)
+
+            //1. Find whether crave is internal or external (Si or Se)
+            //2. Find the appropriate response (Ne or Ni)
+            //a. Utilize Planning Flexibility Stat to determine whether stick with appropriate S - N pairings or not
+            //3. Pick the best decision
+
+            //1.
+
+            //Internal
+            (EnumPersonalityStats targetStatType, double targetStatInitialValue) = DecisionMakingFunctions.FindStatOfInterest(selfMainCPort, envMainCPort);
+
+            //External: Largest env change
+            double[] allEnvModRValues =
+            {
+                envRelationshipNode.ModRValues.LivelihoodValue,
+                envRelationshipNode.ModRValues.DefensiveBelongingValue,
+                envRelationshipNode.ModRValues.NurtureBelongingValue
+            };
+
+            //Get largest change (whether positive or negative)
+            double envChange = allEnvModRValues.OrderByDescending(v => System.Math.Abs(v)).First();
+
+            //Note: Even if considering env stats, will be considered internal
+            //i.e. Friend's hunger is internal and Friend yelling at you is external
+            //If internal, you are more worried about your friend being hungry rather than them yelling at you right now
+            //Whether your hunger or friend's hunger focus should be based on empathy
+
+            bool isInternalCrave = DecisionMakingFunctions.IsInternalCrave(selfMainCPort.characterPsyche.InternalMotivationLevel, targetStatInitialValue, envChange, externalMotivationCutoff);
+
+            //2. Find the appropriate response (Ne or Ni)
+
+            //Get all the Decisions (done before) based on the env Relationship Node
+            List<RelationshipDecisionNode> niResponseNodes = null;
+            List<RelationshipNode> neRelationshipNodes = null;
+
+            //Getting the crave
+            if (isInternalCrave)
+            {
+                //Ne
+
+                //To-Do: Incorporate Planning Flexibility Stat to not always be Ne (or Ni if external crave)
+                //To-Do: Figure out what to do if internal crave is Env's stats (i.e. my friend has low DB)
+                
+                if (targetStatType == EnumPersonalityStats.L || targetStatType == EnumPersonalityStats.NL)
+                {
+                    neRelationshipNodes = selfMainCPort.characterPsyche.L_LearnedEnvironment;
+                }
+                else if (targetStatType == EnumPersonalityStats.DB || targetStatType == EnumPersonalityStats.NDB)
+                {
+                    neRelationshipNodes = selfMainCPort.characterPsyche.DB_LearnedEnvironment;
+                }
+                else if (targetStatType == EnumPersonalityStats.NB || targetStatType == EnumPersonalityStats.NNB)
+                {
+                    neRelationshipNodes = selfMainCPort.characterPsyche.NB_LearnedEnvironment;
+                }
+                
+            }
+            //External crave
+            else
+            {
+                //Ni
+                niResponseNodes = envRelationshipNode.ResponseNodes;
+            }
+
+            //Action Selection Logic 
+
+            //Si - Ne
+            if (isInternalCrave)
+            {
+                //TO-DO: Will start to pass incoherent and blurry planning which will require changes in implementation (since not all of the time it is Si)
+
+                Stats selfStats = selfMainCPort.characterPhysical.Stats;
+                Stats envStats = envMainCPort.characterPhysical.Stats;
+                AllStats allInitialStats = new AllStats(selfStats.L, selfStats.DB, selfStats.NB, envStats.L, envStats.DB, envStats.NB);
+
+                //Original return: (largestPositivePredictorValue, largestPositivePredictorChange, targetStatType, neDecisionNode)
+                //Accounts for habits, opportunism, risk aversion, and reward cutoff
+                ReturnDecision returnSiNeDecision = DecisionMakingFunctions.CalculateSiNeDecisions(neRelationshipNodes, targetStatType, allInitialStats, selfMainCPort.characterPsyche);
+
+                //Commit action
+                if (returnSiNeDecision.WillCommitAction)
+                {
+                    if(returnSiNeDecision.LargestPositivePredictorChange > ultimateLargestPositivePredictorChange){
+                        ultimateLargestPositivePredictorChange = returnSiNeDecision.LargestPositivePredictorChange;
+                        ultimateLargestPositivePredictorValue = returnSiNeDecision.LargestPositivePredictorValue;
+                        ultimatePositiveTargetStatType = returnSiNeDecision.TargetPositiveStatOfInterest;
+                        ultimateNePositiveDecisionNode = returnSiNeDecision.NePositiveDecision;
+                        isUltimateActionNe = true;
+                    }
+                }
+
+
+                //Risky action
+                if (!returnSiNeDecision.IsSafeEnough)
+                { 
+                    if(returnSiNeDecision.LargestNegativePredictorChange < ultimateLargestNegativePredictorChange)
+                    {
+                        ultimateLargestNegativePredictorChange = returnSiNeDecision.LargestNegativePredictorChange;
+                        ultimateLargestNegativePredictorValue = returnSiNeDecision.LargestNegativePredictorValue;
+                        ultimateNegativeTargetStatType = returnSiNeDecision.TargetNegativeStatOfInterest;
+                        ultimateNeNegativeDecisionNode = returnSiNeDecision.NeNegativeDecision;
+                    }
+                }
+
+                //Not rewarding action
+                if(!returnSiNeDecision.IsRewardingEnough)
+                {
+                    //Could add more descriptors
+                    Debug.Log("No rewarding decisions found for Si - Ne action selection.");
+                }
+            }
+            //Se - Ni
+            else
+            {
+                //1. Pass through the action nodes and crave stat
+                //2. Get the largest change from the crave stat with function
+                //3. Update the ultimate values if larger than current
+                //TODO: Will start to pass incoherent and blurry planning which will require changes in implementation (since not all of the time it is Ni)
+                double largestPositivePredictorValue = double.MinValue;
+                double largestPositivePredictorChange = 0;
+                RelationshipDecisionNode niDecisionNode = null;
+                Stats selfStats = selfMainCPort.characterPhysical.Stats;
+                Stats envStats = envMainCPort.characterPhysical.Stats;
+
+            }
+
+        }
+         
+        //Final output
+         Debug.Log("Ultimate largest positive predictor value: " + ultimateLargestPositivePredictorValue +
+            " Ultimate largest positive predictor change: " + ultimateLargestPositivePredictorChange +
+            " Ultimate target stat type: " + ultimatePositiveTargetStatType +
+            " Is ultimate action Ne: " + isUltimateActionNe +
+            " Ultimate Ne decision node: " + (ultimateNePositiveDecisionNode != null ? ultimateNePositiveDecisionNode.Name : "null") +
+            " Ultimate Ni decision node: " + (ultimateNiPositiveDecisionNode != null ? ultimateNiPositiveDecisionNode.Decision.name : "null"));
+
+    }
+
+
+    }
+
+    

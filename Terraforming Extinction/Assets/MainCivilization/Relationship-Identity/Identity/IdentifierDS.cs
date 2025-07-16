@@ -6,7 +6,6 @@ using System.Linq;
 using JetBrains.Annotations;
 
 
-
 [System.Serializable]
 public enum EnumIdentifiers
 {

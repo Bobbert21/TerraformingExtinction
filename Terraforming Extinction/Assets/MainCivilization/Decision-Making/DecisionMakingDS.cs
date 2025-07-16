@@ -14,7 +14,8 @@ public enum EnumPersonalityStats
     FDB,
     NL,
     NNB,
-    NDB
+    NDB,
+    None,
 }
 
 [System.Serializable]
