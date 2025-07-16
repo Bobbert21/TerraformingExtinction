@@ -66,7 +66,8 @@ public class ReturnDecision
         NeNegativeDecision = neNegativeDecision;
     }
 
-    public void SetNiValuesWithCommit(double largestPositivePredictorValue, double largestPositivePredictorChange, EnumPersonalityStats targetStatOfInterest, RelationshipDecisionNode niDecision)
+    public void SetNiValuesWithCommit(double largestPositivePredictorValue, double largestPositivePredictorChange, 
+        EnumPersonalityStats targetStatOfInterest, RelationshipDecisionNode niDecision)
     {
         IsNeDecision = false;
         IsNiDecision = true;
@@ -93,7 +94,7 @@ public class ReturnDecision
         WillCommitAction = DecideCommitAction(IsRewardingEnough, IsSafeEnough);
     }
 
-    //Unlike Ni, Risky won't prevent an action. It will however consider a risky action
+    //Unlike Ne, risky action means it will not commit to an action. Ne can commit to an action and also have a risk
     public void SetNiValuesWithRisk(double largestPositivePredictorValue, double largestPositivePredictorChange, double largestNegativePredictorValue, 
         double largestNegativePredictorChange, EnumPersonalityStats targetPositiveStatOfInterest, EnumPersonalityStats targetNegativeStatOfInterest, 
         Perspective positivePerspective, Perspective negativePerspective, 
@@ -132,22 +133,7 @@ public static class DecisionMakingFunctions
 
     private static double FulcrumStatScale = 30;
 
-    private static readonly Regex ComplexTermRegex = new(
-       @"(?<entity>F\((?<entity_index>-?\d+)\)|A|N)-(?<relation>ModR|PR|SR):(?<stat>L|DB|NB|B)\((?<target>E\((?<target_index>-?\d+)\)|N|A|-(?<specific>\w+)-)\)",
-       RegexOptions.Compiled);
-    //A-ModR:DB(N)
 
-    private static readonly Regex SimpleTermRegex = new(
-    @"^(?:(?<stat>L|DB|NB)\((?<target>A|N|F\((?<fIndex>-?\d+)\))\)|E\((?<eIndex>-?\d+)\))$",
-    RegexOptions.Compiled);
-
-    private static readonly Regex EmpTermRegex = new(
-        @"ScaleChg\((?<initial_value>\d+)\,(?<change_value>\d+)\)",
-        RegexOptions.Compiled);
-
-    private static readonly Regex ScaleChgRegex = new(
-        @"ScaleChg\((?<initial_value>\d+)\,(?<change_value>\d+)\)",
-        RegexOptions.Compiled);
 
     
 
@@ -353,7 +339,7 @@ public static class DecisionMakingFunctions
 
     //Goes through all the decisions and perspectives for each decision
     //return predictor value, changebalue, personality stats of interest, and decision node
-    public static ReturnDecision CalculateSeNiDecisions(List<RelationshipDecisionNode> niResponseNodes, EnumPersonalityStats statOfInterest, AllStats allInitialStats, CharacterMainCPort agent, CharacterMainCPort env, RelationshipNode envInAgentRPTNode, EnumActionCharacteristics actionContext)
+    public static ReturnDecision CalculateSeNiDecisions(List<RelationshipDecisionNode> niResponseNodes, EnumPersonalityStats statOfInterest, AllStats allInitialStats, CharacterMainCPort agent, CharacterMainCPort env, RelationshipNode envInAgentRPTNode)
     {
         // Order by habit counter
         niResponseNodes = niResponseNodes.OrderByDescending(rn => rn.HabitCounter).ToList();
@@ -394,14 +380,14 @@ public static class DecisionMakingFunctions
                 (largestPositivePredictorValue, largestNegativePredictorValue, largestPositivePredictorAdjustedChange, largestNegativePredictorAdjustedChange,
                     largestPositivePredictorStat, largestNegativePredictorStat, largestPositivePredictorPerspective, largestNegativePredictorPerspective) =
                     DMCalculationFunctions.CalculateComplexPositiveAndNegativePredictorChange(niResponseNode.Decision, statOfInterest, allInitialStats, 
-                    niResponseNode.Decision.HabitCounter, agent, env, envInAgentRPTNode, actionContext);
+                    niResponseNode.Decision.HabitCounter, agent, env, envInAgentRPTNode);
             }
             else
             {
                 (largestPositivePredictorValue, largestNegativePredictorValue, largestPositivePredictorAdjustedChange, largestNegativePredictorAdjustedChange, 
                     largestPositivePredictorStat, largestNegativePredictorStat, largestPositivePredictorPerspective, largestNegativePredictorPerspective) =
                     DMCalculationFunctions.CalculateSimplePositiveAndNegativePredictorChange(niResponseNode.Decision.Perspectives, statOfInterest, allInitialStats, 
-                    niResponseNode.Decision.HabitCounter, agent, env, envInAgentRPTNode, actionContext);
+                    niResponseNode.Decision.HabitCounter, agent, env, envInAgentRPTNode);
             }
 
             //Calculate reward and risk cutoffs for all these decision's perspectives to see if worth 

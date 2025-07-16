@@ -87,7 +87,9 @@ public class IdentityDetector : MonoBehaviour
             Dictionary<CharacterMainCPort, SubIdentifierRelationshipNodeInfo> cPortToSubIdMap = new Dictionary<CharacterMainCPort, SubIdentifierRelationshipNodeInfo>();
             foreach (CharacterMainCPort envMainCPort in envMainCPorts)
             {
-                SubIdentifierNode foundSubIdentifier = RunSingle(
+                //This is the subidentifier node found from the environment
+                //To-do: Convert this to a class to pass to
+                SubIdentifierNode foundEnvSubIdentifierInRPT = RunSingle(
                     envMainCPort.Name,
                     envMainCPort.characterPhysical.appearanceCharacteristics,
                     envMainCPort.characterPhysical.actionCharacteristics,
@@ -100,12 +102,15 @@ public class IdentityDetector : MonoBehaviour
                     selfMainCPort.characterPsyche.GeneralizationLevel
                 );
 
-                RelationshipNode foundRelationshipNode = findRelationshipNode(foundSubIdentifier, envMainCPort.characterPhysical.ActionCommitting);
+                //This is the relationship node from the identifier node
+                RelationshipNode foundRelationshipNodeFromEnv = findRelationshipNode(foundEnvSubIdentifierInRPT, envMainCPort.characterPhysical.ActionCommitting);
 
-                cPortToSubIdMap[envMainCPort] = new SubIdentifierRelationshipNodeInfo(foundSubIdentifier, foundRelationshipNode);
+                cPortToSubIdMap[envMainCPort] = new SubIdentifierRelationshipNodeInfo(foundEnvSubIdentifierInRPT, foundRelationshipNodeFromEnv);
 
-                //Passes the map to DM action selection
+                
             }
+
+            //To-Do: Passes the map to DM action selection
         }
 
     }

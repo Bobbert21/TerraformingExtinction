@@ -65,7 +65,8 @@ public class DecisionMaking : MonoBehaviour
     }
 
     //Will normally character pass parameters to this with the psyche. Implement later. Have this in the inspector because of testing
-    public void ActionSelection(Dictionary<CharacterMainCPort, SubIdentifierRelationshipNodeInfo> cPortToSubIdMap)
+    //This dictionary is passing the env MainCPort and the RelationshipNode with its action
+    public void ActionSelection(Dictionary<CharacterMainCPort, SubIdentifierRelationshipNodeInfo> envCPortToSubIdMap)
     {
         double ultimateLargestPositivePredictorValue = double.MinValue;
         double ultimateLargestPositivePredictorChange = double.MinValue;
@@ -74,17 +75,23 @@ public class DecisionMaking : MonoBehaviour
         EnumPersonalityStats ultimatePositiveTargetStatType = EnumPersonalityStats.None;
         EnumPersonalityStats ultimateNegativeTargetStatType = EnumPersonalityStats.None;
         bool isUltimateActionNe = false;
+        bool isUltimateActionNi = false;
+        bool isSafeEnough = false;
+        bool isRewardingEnough = false;
         RelationshipNode ultimateNePositiveDecisionNode = null;
         RelationshipNode ultimateNeNegativeDecisionNode = null;
         RelationshipDecisionNode ultimateNiPositiveDecisionNode = null;
+        RelationshipDecisionNode ultimateNiNegativeDecisionNode = null;
         //Go through all the env
-        foreach (CharacterMainCPort envMainCPort in cPortToSubIdMap.Keys)
+        foreach (CharacterMainCPort envMainCPort in envCPortToSubIdMap.Keys)
         {
             //1. Cohesive Planning
             //2. Blurred Planning
             //3. Incohesive Planning
-            SubIdentifierNode envSubIdentifier = cPortToSubIdMap[envMainCPort].SubIdentifierNode;
-            RelationshipNode envRelationshipNode = cPortToSubIdMap[envMainCPort].RelationshipNode;
+
+            //Do I not use the env Subidentifier node?? It doesn't seem like it...
+            SubIdentifierNode envSubIdentifier = envCPortToSubIdMap[envMainCPort].SubIdentifierNode;
+            RelationshipNode envRelationshipNode = envCPortToSubIdMap[envMainCPort].RelationshipNode;
             //COHESIVE PLANNING
             //Si - Ne, Se - Ni
             //i.e. I am hungry, lets go to the kitchen (Si - Ne)
@@ -169,6 +176,7 @@ public class DecisionMaking : MonoBehaviour
                 ReturnDecision returnSiNeDecision = DecisionMakingFunctions.CalculateSiNeDecisions(neRelationshipNodes, targetStatType, allInitialStats, selfMainCPort.characterPsyche);
 
                 //Commit action
+                //To-Do: Make this more abstracted so i'm not setting this manually (instead it will just be a function)
                 if (returnSiNeDecision.WillCommitAction)
                 {
                     if(returnSiNeDecision.LargestPositivePredictorChange > ultimateLargestPositivePredictorChange){
@@ -177,6 +185,7 @@ public class DecisionMaking : MonoBehaviour
                         ultimatePositiveTargetStatType = returnSiNeDecision.TargetPositiveStatOfInterest;
                         ultimateNePositiveDecisionNode = returnSiNeDecision.NePositiveDecision;
                         isUltimateActionNe = true;
+                        isSafeEnough = returnSiNeDecision.IsSafeEnough;
                     }
                 }
 
@@ -190,6 +199,7 @@ public class DecisionMaking : MonoBehaviour
                         ultimateLargestNegativePredictorValue = returnSiNeDecision.LargestNegativePredictorValue;
                         ultimateNegativeTargetStatType = returnSiNeDecision.TargetNegativeStatOfInterest;
                         ultimateNeNegativeDecisionNode = returnSiNeDecision.NeNegativeDecision;
+                        isSafeEnough = false;
                     }
                 }
 
@@ -197,6 +207,11 @@ public class DecisionMaking : MonoBehaviour
                 if(!returnSiNeDecision.IsRewardingEnough)
                 {
                     //Could add more descriptors
+                    ultimateLargestPositivePredictorChange = returnSiNeDecision.LargestPositivePredictorChange;
+                    ultimateLargestPositivePredictorValue = returnSiNeDecision.LargestPositivePredictorValue;
+                    ultimatePositiveTargetStatType = returnSiNeDecision.TargetPositiveStatOfInterest;
+                    ultimateNePositiveDecisionNode = returnSiNeDecision.NePositiveDecision;
+                    isRewardingEnough = false;
                     Debug.Log("No rewarding decisions found for Si - Ne action selection.");
                 }
             }
@@ -207,16 +222,70 @@ public class DecisionMaking : MonoBehaviour
                 //2. Get the largest change from the crave stat with function
                 //3. Update the ultimate values if larger than current
                 //TODO: Will start to pass incoherent and blurry planning which will require changes in implementation (since not all of the time it is Ni)
-                double largestPositivePredictorValue = double.MinValue;
-                double largestPositivePredictorChange = 0;
-                RelationshipDecisionNode niDecisionNode = null;
                 Stats selfStats = selfMainCPort.characterPhysical.Stats;
                 Stats envStats = envMainCPort.characterPhysical.Stats;
 
+                AllStats allInitialStats = new AllStats(selfStats.L, selfStats.DB, selfStats.NB, envStats.L, envStats.DB, envStats.NB);
+                ReturnDecision returnSeNiDecision = DecisionMakingFunctions.CalculateSeNiDecisions(niResponseNodes, targetStatType, allInitialStats, selfMainCPort, envMainCPort, envRelationshipNode);
+
+                if (returnSeNiDecision.IsNiDecision)
+                {
+                    //Commit action
+                    if (returnSeNiDecision.WillCommitAction)
+                    {
+                        if (returnSeNiDecision.LargestPositivePredictorChange > ultimateLargestPositivePredictorChange)
+                        {
+                            ultimateLargestPositivePredictorChange = returnSeNiDecision.LargestPositivePredictorChange;
+                            ultimateLargestPositivePredictorValue = returnSeNiDecision.LargestPositivePredictorValue;
+                            ultimatePositiveTargetStatType = returnSeNiDecision.TargetPositiveStatOfInterest;
+                            ultimateNiPositiveDecisionNode = returnSeNiDecision.NiPositiveDecision;
+                            isUltimateActionNi = true;
+                            isSafeEnough = returnSeNiDecision.IsSafeEnough;
+                            isRewardingEnough = returnSeNiDecision.IsRewardingEnough;
+                        }
+                    }
+
+
+                    //Risky action
+                    if (!returnSeNiDecision.IsSafeEnough)
+                    {
+                        if (returnSeNiDecision.LargestNegativePredictorChange < ultimateLargestNegativePredictorChange)
+                        {
+                            ultimateLargestPositivePredictorChange = returnSeNiDecision.LargestPositivePredictorChange;
+                            ultimateLargestPositivePredictorValue = returnSeNiDecision.LargestPositivePredictorValue;
+                            ultimateLargestNegativePredictorChange = returnSeNiDecision.LargestNegativePredictorChange;
+                            ultimateLargestNegativePredictorValue = returnSeNiDecision.LargestNegativePredictorValue;
+                            ultimatePositiveTargetStatType = returnSeNiDecision.TargetPositiveStatOfInterest;
+                            ultimateNegativeTargetStatType = returnSeNiDecision.TargetNegativeStatOfInterest;
+                            ultimateNiPositiveDecisionNode = returnSeNiDecision.NiPositiveDecision;
+                            ultimateNiNegativeDecisionNode = returnSeNiDecision.NiNegativeDecision;
+                            isSafeEnough = false;
+                        }
+                    }
+
+                    //Not rewarding action
+                    if (!returnSeNiDecision.IsRewardingEnough)
+                    {
+                        //Could add more descriptors
+                        ultimateLargestPositivePredictorChange = returnSeNiDecision.LargestPositivePredictorChange;
+                        ultimateLargestPositivePredictorValue = returnSeNiDecision.LargestPositivePredictorValue;
+                        ultimatePositiveTargetStatType = returnSeNiDecision.TargetPositiveStatOfInterest;
+                        ultimateNiPositiveDecisionNode = returnSeNiDecision.NiPositiveDecision;
+                        isRewardingEnough = false;
+                        Debug.Log("No rewarding decisions found for Si - Ne action selection.");
+                    }
+                }
+                else
+                {
+                    Debug.LogWarning("Se - Ni decision node is not a Ni decision. This should not happen in the current implementation.");
+                }
+              
             }
 
         }
-         
+        
+
+        //Can test final output
         //Final output
          Debug.Log("Ultimate largest positive predictor value: " + ultimateLargestPositivePredictorValue +
             " Ultimate largest positive predictor change: " + ultimateLargestPositivePredictorChange +

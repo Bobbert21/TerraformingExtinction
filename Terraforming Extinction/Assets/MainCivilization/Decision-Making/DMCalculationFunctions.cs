@@ -10,10 +10,27 @@ using UnityEngine.TextCore.Text;
 
 //Utility functions for DM Functions
 public static class DMCalculationFunctions
-{ 
+{
+
+    private static readonly Regex ComplexTermRegex = new(
+       @"(?<entity>F\((?<entity_index>-?\d+)\)|A|N)-(?<relation>ModR|PR|SR):(?<stat>L|DB|NB|B)\((?<target>E\((?<target_index>-?\d+)\)|N|A|-(?<specific>\w+)-)\)",
+       RegexOptions.Compiled);
+        //A-ModR:DB(N)
+
+    private static readonly Regex SimpleTermRegex = new(
+        @"^(?:(?<stat>L|DB|NB)\((?<target>A|N|F\((?<fIndex>-?\d+)\))\)|E\((?<eIndex>-?\d+)\))$",
+        RegexOptions.Compiled);
+
+    private static readonly Regex EmpTermRegex = new(
+        @"ScaleChg\((?<initial_value>\d+)\,(?<change_value>\d+)\)",
+        RegexOptions.Compiled);
+
+    private static readonly Regex ScaleChgRegex = new(
+        @"ScaleChg\((?<initial_value>\d+)\,(?<change_value>\d+)\)",
+        RegexOptions.Compiled);
     // Function to parse dynamic terms like N-ModR:L(E(1))
     //Could add F- or friend into this later on. Friend as target too
-    public static double ParseComplexTerm(Match match, CharacterMainCPort agent, CharacterMainCPort env, RelationshipNode envInAgentRPTNode, EnumActionCharacteristics actionContext)
+    public static double ParseComplexTerm(Match match, CharacterMainCPort agent, CharacterMainCPort env, RelationshipNode envInAgentRPTNode)
     {
 
         if (!match.Success)
@@ -592,7 +609,7 @@ public static class DMCalculationFunctions
     }
 
     public static (double, double, double, double, EnumPersonalityStats, EnumPersonalityStats, Perspective, Perspective) CalculateSimplePositiveAndNegativePredictorChange(List<Perspective> perspectives, 
-        EnumPersonalityStats targetStat, AllStats allInitialStats, int habitCountDecision, CharacterMainCPort agent, CharacterMainCPort env, RelationshipNode envInAgentRPTNode, EnumActionCharacteristics actionContext)
+        EnumPersonalityStats targetStat, AllStats allInitialStats, int habitCountDecision, CharacterMainCPort agent, CharacterMainCPort env, RelationshipNode envInAgentRPTNode)
     {
         double largestPositivePredictorValue = double.MinValue;
         double largestNegativePredictorValue = double.MaxValue;
@@ -618,7 +635,7 @@ public static class DMCalculationFunctions
             string target = sortedHabitPerspectives[i].Target;
 
             (double predictorValue, double changeValue) = Translate_String_To_Formula_Calculations(sortedHabitPerspectives[i].Predictor, 
-                sortedHabitPerspectives[i].Target, agent, env, envInAgentRPTNode, actionContext);
+                sortedHabitPerspectives[i].Target, agent, env, envInAgentRPTNode);
 
             //all stat calculations will be adjusted based on initial stats
             double adjustedChangeValue = ScaleSurvivalStatChange(changeValue, allInitialStats.StatOfInterest(target));
@@ -667,8 +684,7 @@ public static class DMCalculationFunctions
 
     public static (double, double, double, double, EnumPersonalityStats, EnumPersonalityStats, Perspective, Perspective) CalculateComplexPositiveAndNegativePredictorChange(
         DecisionSO decisionSO, EnumPersonalityStats targetStat, AllStats allInitialStats, int habitCountDecision, 
-        CharacterMainCPort agent, CharacterMainCPort env, RelationshipNode envInAgentRPTNode, 
-        EnumActionCharacteristics actionContext)
+        CharacterMainCPort agent, CharacterMainCPort env, RelationshipNode envInAgentRPTNode)
     {
         double largestPositivePredictorValue = double.MinValue;
         double largestNegativePredictorValue = double.MaxValue;
@@ -707,7 +723,7 @@ public static class DMCalculationFunctions
             string target = sortedHabitGoalPerspectives[i].Target;
 
             (double predictorValue, double changeValue) = Translate_String_To_Formula_Calculations(sortedHabitGoalPerspectives[i].Predictor, 
-                sortedHabitGoalPerspectives[i].Target, agent, env, envInAgentRPTNode, actionContext);
+                sortedHabitGoalPerspectives[i].Target, agent, env, envInAgentRPTNode);
 
             double adjustedChangeValue = ScaleSurvivalStatChange(changeValue, allInitialStats.StatOfInterest(target));
 
@@ -773,7 +789,7 @@ public static class DMCalculationFunctions
             //check for internal opportunities. See greatest change for what is highest need for 
 
             (double predictorValue, double changeValue) = Translate_String_To_Formula_Calculations(sortedHabitGoalPerspectives[i].Predictor,
-                sortedHabitGoalPerspectives[i].Target, agent, env, envInAgentRPTNode, actionContext);
+                sortedHabitGoalPerspectives[i].Target, agent, env, envInAgentRPTNode);
             
             double adjustedChangeValue = ScaleSurvivalStatChange(changeValue, allInitialStats.StatOfInterest(target));
 
@@ -826,7 +842,8 @@ public static class DMCalculationFunctions
         return habitContribution;
     }
 
-    public static (double predictor, double change) Translate_String_To_Formula_Calculations(string formula, string target, CharacterMainCPort agent, CharacterMainCPort env, RelationshipNode envInAgentRPTNode, EnumActionCharacteristics actionContext)
+    public static (double predictor, double change) Translate_String_To_Formula_Calculations(string formula, string target, CharacterMainCPort agent, 
+        CharacterMainCPort env, RelationshipNode envInAgentRPTNode)
     {
 
         // Replace special terms in the formula
@@ -840,7 +857,7 @@ public static class DMCalculationFunctions
         while (ComplexTermRegex.IsMatch(formula))
         {
             formula = ComplexTermRegex.Replace(formula,
-                match => DMCalculationFunctions.ParseComplexTerm(match, agent, env, envInAgentRPTNode, actionContext).ToString());
+                match => DMCalculationFunctions.ParseComplexTerm(match, agent, env, envInAgentRPTNode).ToString());
         }
 
         // Replace simple terms in the formula
@@ -873,7 +890,7 @@ public static class DMCalculationFunctions
         while (ComplexTermRegex.IsMatch(target))
         {
             target = ComplexTermRegex.Replace(target,
-                match => DMCalculationFunctions.ParseComplexTerm(match, agent, env, envInAgentRPTNode, actionContext).ToString());
+                match => DMCalculationFunctions.ParseComplexTerm(match, agent, env, envInAgentRPTNode).ToString());
         }
 
         double targetValue = double.Parse(target);
