@@ -105,7 +105,7 @@ public class DecisionMaking : MonoBehaviour
             //1.
 
             //Internal
-            (EnumPersonalityStats targetStatType, double targetStatInitialValue) = DecisionMakingFunctions.FindStatOfInterest(selfMainCPort, envMainCPort);
+            (EnumPersonalityStats targetStatType, double targetStatInitialValue) = DecisionMakingFunctions.FindStatOfInterest(selfMainCPort, envMainCPort, envRelationshipNode);
 
             //External: Largest env change
             double[] allEnvModRValues =
@@ -260,6 +260,7 @@ public class DecisionMaking : MonoBehaviour
                             ultimateNiPositiveDecisionNode = returnSeNiDecision.NiPositiveDecision;
                             ultimateNiNegativeDecisionNode = returnSeNiDecision.NiNegativeDecision;
                             isSafeEnough = false;
+                            isUltimateActionNi = true;
                         }
                     }
 
@@ -283,16 +284,34 @@ public class DecisionMaking : MonoBehaviour
             }
 
         }
-        
+
 
         //Can test final output
         //Final output
-         Debug.Log("Ultimate largest positive predictor value: " + ultimateLargestPositivePredictorValue +
+
+        //Ni
+        if (isUltimateActionNi)
+        {
+                Debug.Log("Ultimate largest positive predictor value: " + ultimateLargestPositivePredictorValue +
+                " Ultimate largest positive predictor change: " + ultimateLargestPositivePredictorChange +
+                " Ultimate target stat type: " + ultimatePositiveTargetStatType +
+                " Is ultimate action Ni: " + isUltimateActionNi +
+                " Is safe enough: " + isSafeEnough +
+                " Is rewarding enough: " + isRewardingEnough +
+                " Ultimate Ni decision node: " + (ultimateNiPositiveDecisionNode != null ? ultimateNiPositiveDecisionNode.Decision.name : "null"));
+        }
+
+        if (isUltimateActionNe)
+        {
+            Debug.Log("Ultimate largest positive predictor value: " + ultimateLargestPositivePredictorValue +
             " Ultimate largest positive predictor change: " + ultimateLargestPositivePredictorChange +
             " Ultimate target stat type: " + ultimatePositiveTargetStatType +
             " Is ultimate action Ne: " + isUltimateActionNe +
-            " Ultimate Ne decision node: " + (ultimateNePositiveDecisionNode != null ? ultimateNePositiveDecisionNode.Name : "null") +
-            " Ultimate Ni decision node: " + (ultimateNiPositiveDecisionNode != null ? ultimateNiPositiveDecisionNode.Decision.name : "null"));
+            " Is safe enough: " + isSafeEnough +
+            " Is rewarding enough: " + isRewardingEnough +
+            " Ultimate Ne decision node: " + (ultimateNePositiveDecisionNode != null ? ultimateNePositiveDecisionNode.Name : "null"));
+        }
+            
 
     }
 

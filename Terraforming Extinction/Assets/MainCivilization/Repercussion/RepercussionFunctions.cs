@@ -30,7 +30,7 @@ public static class RepercussionFunctions
         // Single pass: identify nodes that are main nodes (no actions) or the action node of interest
         foreach (RelationshipNode node in relationships)
         {
-            if (node.ActionContext == EnumActionCharacteristics.None)
+            if (node.ActionContext == EnumActionCharacteristics.Main)
                 mainNode = node;
             //The else here prevents the actionNode to also be the main node (which would duplicate the values)
             else if (node.ActionContext == actionContext)
@@ -47,7 +47,7 @@ public static class RepercussionFunctions
             actionNode.ModRValues.NurtureBelongingValue += nbDelta;
         }
         //Make sure that if no nodes are found, doesn't create new node same as main node
-        else if(actionContext != EnumActionCharacteristics.None) 
+        else if(actionContext != EnumActionCharacteristics.Main) 
         {
             Debug.Log("No action node found and creating new one");
             relationships.Add(new RelationshipNode(
@@ -70,7 +70,7 @@ public static class RepercussionFunctions
             relationships.Add(new RelationshipNode(
                 "Main Node", null,
                 new RelationshipValues(lDelta, dbDelta, nbDelta),
-                EnumActionCharacteristics.None, null));
+                EnumActionCharacteristics.Main, null));
         }
         
     }

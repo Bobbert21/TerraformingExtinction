@@ -7,10 +7,17 @@ public class CharacterPsyche : MonoBehaviour
     [Header("Decision Making Variables")]
     public RelationshipPersonalTree RelationshipPersonalTree;
     public SubIdentifierNode SelfIdentifier;
+    /*
     public List<CharacterMainCPort> Friends;
     public List<CharacterMainCPort> Enemy;
     public List<SubIdentifierNode> FriendsNodes;
     public List<SubIdentifierNode> EnemyNodes;
+    */
+
+    public List<CharacterMainCPort> FriendsRanked;
+    public List<CharacterMainCPort> EnemiesRanked;
+    public Dictionary<CharacterMainCPort, SubIdentifierNode> FriendsCPortToSubNode = new Dictionary<CharacterMainCPort, SubIdentifierNode>();
+    public Dictionary<CharacterMainCPort, SubIdentifierNode> EnemiesCPortToSubNode = new Dictionary<CharacterMainCPort, SubIdentifierNode>();
     public EnumPersonalityStats BIdentity;
     public double OpportunismLevel;
     public double RiskAversion;
@@ -47,10 +54,10 @@ public class CharacterPsyche : MonoBehaviour
     {
         RelationshipPersonalTree = characterPsycheSO.RelationshipPersonalTree;
         SelfIdentifier = characterPsycheSO.SelfIdentifier;
-        Friends = characterPsycheSO.Friends;
-        Enemy = characterPsycheSO.Enemy;    
-        FriendsNodes = characterPsycheSO.FriendsNodes;
-        EnemyNodes = characterPsycheSO.EnemyNodes;
+        FriendsRanked = characterPsycheSO.FriendsRanked;
+        EnemiesRanked = characterPsycheSO.EnemiesRanked;
+        FriendsCPortToSubNode = characterPsycheSO.FriendsCPortToSubNode;
+        EnemiesCPortToSubNode = characterPsycheSO.EnemiesCPortToSubNode;
         BIdentity = characterPsycheSO.BIdentity;
         OpportunismLevel = characterPsycheSO.OpportunismLevel;
         RiskAversion = characterPsycheSO.RiskAversion;

@@ -22,7 +22,7 @@ public enum Objects
 
 public enum EnumActionCharacteristics
 {
-    None,
+    Main,
     Fight,
     Flee,
     Befriend,

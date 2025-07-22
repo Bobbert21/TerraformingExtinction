@@ -19,10 +19,10 @@ public class CharacterPsycheSO : ScriptableObject, ICharacterPsyche
     [Header("Decision Making Variables")]
     public RelationshipPersonalTree RelationshipPersonalTree;
     public SubIdentifierNode SelfIdentifier;
-    public List<CharacterMainCPort> Friends;
-    public List<CharacterMainCPort> Enemy;
-    public List<SubIdentifierNode> FriendsNodes;
-    public List<SubIdentifierNode> EnemyNodes;
+    public List<CharacterMainCPort> FriendsRanked;
+    public List<CharacterMainCPort> EnemiesRanked;
+    public Dictionary<CharacterMainCPort, SubIdentifierNode> FriendsCPortToSubNode = new Dictionary<CharacterMainCPort, SubIdentifierNode>();
+    public Dictionary<CharacterMainCPort, SubIdentifierNode> EnemiesCPortToSubNode = new Dictionary<CharacterMainCPort, SubIdentifierNode>();
     public EnumPersonalityStats BIdentity;
     //How much to consider stats not the lowest for Action Selection
     public double OpportunismLevel;

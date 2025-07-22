@@ -30,6 +30,7 @@ public class IdentityDetector : MonoBehaviour
     public bool IsDebugging;
 
     private CharacterMainCPort selfMainCPort;
+    private DecisionMaking decisionMaking;
     private List<CharacterMainCPort> envMainCPorts;
     private double timePassed = 0;
 
@@ -37,6 +38,7 @@ public class IdentityDetector : MonoBehaviour
     private void Start()
     {
         selfMainCPort = GetComponent<CharacterMainCPort>();
+        decisionMaking = GetComponent<DecisionMaking>();
     }
 
 
@@ -84,10 +86,10 @@ public class IdentityDetector : MonoBehaviour
         }
         else
         {
-            Dictionary<CharacterMainCPort, SubIdentifierRelationshipNodeInfo> cPortToSubIdMap = new Dictionary<CharacterMainCPort, SubIdentifierRelationshipNodeInfo>();
+            Dictionary<CharacterMainCPort, SubIdentifierRelationshipNodeInfo> envCPortToSubIdMap = new Dictionary<CharacterMainCPort, SubIdentifierRelationshipNodeInfo>();
             foreach (CharacterMainCPort envMainCPort in envMainCPorts)
             {
-                //This is the subidentifier node found from the environment
+                //This is the subidentifier node of the env found in self's relationship personal tree
                 //To-do: Convert this to a class to pass to
                 SubIdentifierNode foundEnvSubIdentifierInRPT = RunSingle(
                     envMainCPort.Name,
@@ -105,12 +107,13 @@ public class IdentityDetector : MonoBehaviour
                 //This is the relationship node from the identifier node
                 RelationshipNode foundRelationshipNodeFromEnv = findRelationshipNode(foundEnvSubIdentifierInRPT, envMainCPort.characterPhysical.ActionCommitting);
 
-                cPortToSubIdMap[envMainCPort] = new SubIdentifierRelationshipNodeInfo(foundEnvSubIdentifierInRPT, foundRelationshipNodeFromEnv);
+                envCPortToSubIdMap[envMainCPort] = new SubIdentifierRelationshipNodeInfo(foundEnvSubIdentifierInRPT, foundRelationshipNodeFromEnv);
 
                 
             }
 
             //To-Do: Passes the map to DM action selection
+            decisionMaking.ActionSelection(envCPortToSubIdMap);
         }
 
     }

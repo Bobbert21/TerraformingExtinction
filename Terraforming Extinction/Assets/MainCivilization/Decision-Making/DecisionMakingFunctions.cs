@@ -528,4 +528,95 @@ public static class DecisionMakingFunctions
 
     }
 
+    //Can move to DM Functions
+    //Env should be changed. This is for testing of character relationship with environment
+    public static (EnumPersonalityStats, double) FindStatOfInterest(CharacterMainCPort character, CharacterMainCPort env, RelationshipNode envRelationshipNodeInSelfRPT)
+    {
+        double L = character.characterPhysical.Stats.L;
+        double B = 0;
+
+        // Determine the B value based on BIdentity
+        if (character.characterPsyche.BIdentity == EnumPersonalityStats.NB)
+        {
+            B = character.characterPhysical.Stats.NB;
+        }
+        else
+        {
+            B = character.characterPhysical.Stats.DB;
+        }
+
+        double FL = 0;
+        double FDB = 0;
+        double FNB = 0;
+        double agentFriendPRScale = 0;
+        double agentEnvPRScale = 0;
+        int friendCount = character.characterPsyche.FriendsCPortToSubNode.Count;
+
+        //Adjust the collective friend stats based on empathy
+        foreach (CharacterMainCPort friendCPort in character.characterPsyche.FriendsCPortToSubNode.Keys)
+        {
+            SubIdentifierNode friendNode = character.characterPsyche.FriendsCPortToSubNode[friendCPort];
+            RelationshipNode friendRelationshipNode = friendNode.GetMainRelationshipNode();
+            agentFriendPRScale = (friendRelationshipNode.ModRValues.NurtureBelongingValue + friendRelationshipNode.ModRValues.DefensiveBelongingValue) / 2;
+            agentFriendPRScale /= 100;
+
+            //it ups the stats when calculating the stats to find the lowest stat to focus on. i.e. if bad relationship with friend, then will inflate stats of friend so wouldn't care too much
+            //11 is arbitrary. Just sets limit to 10 for highest empathy level
+            double adjustedEmpathyFriendPRScale = DMCalculationFunctions.CalculateTargetAdjustedEmpathyPRStat(character.characterPsyche.EmpathyLevel, agentFriendPRScale);
+
+            FL += friendCPort.characterPhysical.Stats.L * adjustedEmpathyFriendPRScale;
+            FDB += friendCPort.characterPhysical.Stats.DB * adjustedEmpathyFriendPRScale;
+            FNB += friendCPort.characterPhysical.Stats.NB * adjustedEmpathyFriendPRScale;
+
+        }
+
+        //Calculate averages if there are friends
+        if (friendCount > 0)
+        {
+            FL /= friendCount;
+            FDB /= friendCount;
+            FNB /= friendCount;
+        }
+
+        //Get the relationship to the environment
+        agentEnvPRScale = envRelationshipNodeInSelfRPT.ModRValues.NurtureBelongingValue + envRelationshipNodeInSelfRPT.ModRValues.DefensiveBelongingValue;
+        agentEnvPRScale /= 100;
+
+        double adjustedEmpathyEnvPRScale = DMCalculationFunctions.CalculateTargetAdjustedEmpathyPRStat(character.characterPsyche.EmpathyLevel, agentEnvPRScale);
+
+        //calculate N(Stats) values
+        double envL = env.characterPhysical.Stats.L * adjustedEmpathyEnvPRScale;
+        double envNB = env.characterPhysical.Stats.NB * adjustedEmpathyEnvPRScale;
+        double envDB = env.characterPhysical.Stats.DB * adjustedEmpathyEnvPRScale;
+
+        // Create a dictionary mapping enum values to their corresponding scores
+        Dictionary<EnumPersonalityStats, double> statValues = new()
+        {
+            { EnumPersonalityStats.L, L },
+            { EnumPersonalityStats.DB, character.characterPsyche.BIdentity == EnumPersonalityStats.DB ? B : double.MaxValue },
+            { EnumPersonalityStats.NB, character.characterPsyche.BIdentity == EnumPersonalityStats.NB ? B : double.MaxValue },
+            { EnumPersonalityStats.FL, FL },
+            { EnumPersonalityStats.FDB, FDB },
+            { EnumPersonalityStats.FNB, FNB },
+            { EnumPersonalityStats.NL, envL },
+            { EnumPersonalityStats.NDB, envDB },
+            { EnumPersonalityStats.NNB, envNB }
+        };
+
+        // Find the enum with the smallest value
+        EnumPersonalityStats minStat = EnumPersonalityStats.L;
+        double minValue = double.MaxValue;
+
+        foreach (var stat in statValues)
+        {
+            if (stat.Value < minValue)
+            {
+                minValue = stat.Value;
+                minStat = stat.Key;
+            }
+        }
+        Debug.Log("minimum value: " + minValue + " minStat: " + minStat);
+        return (minStat, minValue);
+    }
+
 }

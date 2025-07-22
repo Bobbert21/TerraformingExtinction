@@ -134,6 +134,14 @@ public class SubIdentifierNode
         };
     }
 
+    public RelationshipNode GetMainRelationshipNode()
+    {
+        RelationshipNode mainNode = RelationshipNodes
+            .FirstOrDefault(r => r.ActionContext == EnumActionCharacteristics.Main);
+
+        return mainNode;
+    }
+
     public void AddActionCharacteristic(EnumActionCharacteristics characteristic, float value)
     {
         var existing = ActionCharacteristicsWithValue

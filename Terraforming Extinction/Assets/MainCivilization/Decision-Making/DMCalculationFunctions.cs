@@ -11,7 +11,7 @@ using UnityEngine.TextCore.Text;
 //Utility functions for DM Functions
 public static class DMCalculationFunctions
 {
-
+    //Need to be able to get Enemy entity index eventually
     private static readonly Regex ComplexTermRegex = new(
        @"(?<entity>F\((?<entity_index>-?\d+)\)|A|N)-(?<relation>ModR|PR|SR):(?<stat>L|DB|NB|B)\((?<target>E\((?<target_index>-?\d+)\)|N|A|-(?<specific>\w+)-)\)",
        RegexOptions.Compiled);
@@ -61,12 +61,13 @@ public static class DMCalculationFunctions
             int entityIndex = int.Parse(match.Groups["entity_index"].Value);
             if (entityIndex == -1)
             {
-                entityObjects = agent.characterPsyche.Friends.ToList();
+                entityObjects = agent.characterPsyche.FriendsRanked.ToList();
             }
             else
             {
-                entityObjects.Add(agent.characterPsyche.Friends[entityIndex]);
+                entityObjects.Add(agent.characterPsyche.FriendsRanked[entityIndex]);
             }
+            //Need to do E(
         }
 
         //2. Obtain Target
@@ -92,7 +93,7 @@ public static class DMCalculationFunctions
             if (targetIndex == -1)
             {
                 //shallow copy so not by reference
-                targetEnemiesOrFriends = agent.characterPsyche.EnemyNodes.ToList();
+                targetEnemiesOrFriends = agent.characterPsyche.EnemiesCPortToSubNode.Values.ToList();
             }
             //normal. Like E(0) or E(1)
             else
@@ -103,7 +104,7 @@ public static class DMCalculationFunctions
         else if (target.StartsWith("-"))
         {
             //CharactersDictionary is the list of all characters. NEED TO DO THIS
-            foreach (CharacterMainCPort character in CharactersDictionary)
+            foreach (CharacterMainCPort character in GlobalCharacterDictionary.AllCharacters)
             {
                 string specific = match.Groups["specific"].Value;
                 if (character.Name == specific)
@@ -159,7 +160,7 @@ public static class DMCalculationFunctions
                     else if (entity == "A" && target == "A")
                     {
                         //Find the main relationship node which is context = none
-                        RelationshipNode mainRelationshipNode = agent.characterPsyche.SelfIdentifier.RelationshipNodes.FirstOrDefault(r => r.ActionContext == EnumActionCharacteristics.None);
+                        RelationshipNode mainRelationshipNode = agent.characterPsyche.SelfIdentifier.RelationshipNodes.FirstOrDefault(r => r.ActionContext == EnumActionCharacteristics.Main);
 
                         targetInAgentRelationshipValues.Add(
                                 relationType switch
@@ -175,7 +176,7 @@ public static class DMCalculationFunctions
                         List<EnumActionCharacteristics> agentActions = agent.characterPhysical.actionCharacteristics;
                         SubIdentifierNode foundAgentInEnvRPT = AdaptiveIdentifierFunctions.FindSubidentifierNodeWithAppearanceAndAction(env.characterPsyche.RelationshipPersonalTree, env.characterPsyche.SelfIdentifier.Parent.Identifier, agentAppearances, agentActions);
 
-                        RelationshipNode mainRelationshipNode = foundAgentInEnvRPT.RelationshipNodes.FirstOrDefault(r => r.ActionContext == EnumActionCharacteristics.None);
+                        RelationshipNode mainRelationshipNode = foundAgentInEnvRPT.RelationshipNodes.FirstOrDefault(r => r.ActionContext == EnumActionCharacteristics.Main);
 
                         targetInAgentRelationshipValues.Add(
                                 relationType switch
@@ -187,7 +188,7 @@ public static class DMCalculationFunctions
                     }
                     else if (entity == "N" && target == "N")
                     {
-                        RelationshipNode mainRelationshipNode = env.characterPsyche.SelfIdentifier.RelationshipNodes.FirstOrDefault(r => r.ActionContext == EnumActionCharacteristics.None);
+                        RelationshipNode mainRelationshipNode = env.characterPsyche.SelfIdentifier.RelationshipNodes.FirstOrDefault(r => r.ActionContext == EnumActionCharacteristics.Main);
                         targetInAgentRelationshipValues.Add(
                                 relationType switch
                                 {
@@ -203,7 +204,7 @@ public static class DMCalculationFunctions
                         foreach (SubIdentifierNode enemyNode in targetEnemiesOrFriends)
                         {
                             //Get main RN (action context = none)
-                            RelationshipNode mainRelationshipNode = enemyNode.RelationshipNodes.FirstOrDefault(n => n.ActionContext == EnumActionCharacteristics.None);
+                            RelationshipNode mainRelationshipNode = enemyNode.GetMainRelationshipNode();
                             if (mainRelationshipNode != null)
                             {
                                 targetInAgentRelationshipValues.Add(
@@ -250,12 +251,14 @@ public static class DMCalculationFunctions
 
     public static SubIdentifierNode GetEnemyByIndex(CharacterMainCPort agent, int index)
     {
-        if (index <= 0 || index > agent.characterPsyche.EnemyNodes.Count)
+        if (index <= 0 || index > agent.characterPsyche.EnemiesRanked.Count)
         {
             return null;
         }
 
-        return agent.characterPsyche.EnemyNodes[index - 1];
+        CharacterMainCPort enemy = agent.characterPsyche.EnemiesRanked[index - 1];
+
+        return agent.characterPsyche.EnemiesCPortToSubNode[enemy];
     }
 
     public static double ParseScaleChangeTerm(Match match)
@@ -322,12 +325,12 @@ public static class DMCalculationFunctions
             List<CharacterMainCPort> targetEOrF = new List<CharacterMainCPort>();
             if (target.StartsWith("E("))
             {
-                targetEOrF = agent.characterPsyche.Enemy;
+                targetEOrF = agent.characterPsyche.EnemiesRanked;
                 index = int.Parse(match.Groups["eIndex"].Value);
             }
             else if (target.StartsWith("F("))
             {
-                targetEOrF = agent.characterPsyche.Friends;
+                targetEOrF = agent.characterPsyche.FriendsRanked;
                 index = int.Parse(match.Groups["fIndex"].Value);
             }
 
@@ -537,6 +540,89 @@ public static class DMCalculationFunctions
         }
 
         return formula;
+    }
+
+    private static string TranslateEnumToString(EnumPersonalityStats stat)
+    {
+        if (stat == EnumPersonalityStats.L)
+        {
+            return "L(A)";
+        }
+        else if (stat == EnumPersonalityStats.NB)
+        {
+            return "NB(A)";
+        }
+        else if (stat == EnumPersonalityStats.DB)
+        {
+            return "DB(A)";
+        }
+        else if (stat == EnumPersonalityStats.FL)
+        {
+            return "L(F)";
+        }
+        else if (stat == EnumPersonalityStats.FDB)
+        {
+            return "DB(F)";
+        }
+        else if (stat == EnumPersonalityStats.FNB)
+        {
+            return "NB(F)";
+        }
+        else if (stat == EnumPersonalityStats.NL)
+        {
+            return "L(N)";
+        }
+        else if (stat == EnumPersonalityStats.NNB)
+        {
+            return "NB(N)";
+        }
+        else if (stat == EnumPersonalityStats.NDB)
+        {
+            return "DB(N)";
+        }
+        return "";
+    }
+
+    private static EnumPersonalityStats TranslatePersonalityStringToEnum(string target)
+    {
+        if (target == "L(A)")
+        {
+            return EnumPersonalityStats.L;
+        }
+        else if (target == "DB(A)")
+        {
+            return EnumPersonalityStats.DB;
+        }
+        else if (target == "NB(A)")
+        {
+            return EnumPersonalityStats.NB;
+        }
+        else if (target == "L(F)")
+        {
+            return EnumPersonalityStats.FL;
+        }
+        else if (target == "DB(F)")
+        {
+            return EnumPersonalityStats.FDB;
+        }
+        else if (target == "NB(F)")
+        {
+            return EnumPersonalityStats.FNB;
+        }
+        else if (target == "L(N)")
+        {
+            return EnumPersonalityStats.NL;
+        }
+        else if (target == "DB(N)")
+        {
+            return EnumPersonalityStats.NDB;
+        }
+        else if (target == "NB(N)")
+        {
+            return EnumPersonalityStats.NNB;
+        }
+        
+        throw new ArgumentException($"Unknown target: {target}");
     }
 
     // Helper method to split arguments while handling nested parentheses
@@ -899,101 +985,9 @@ public static class DMCalculationFunctions
         return (predictor: predictorValue, change: predictorValue - targetValue);
     }
 
-    //Can move to DM Functions
-    //Env should be changed. This is for testing of character relationship with environment
-    public static (EnumPersonalityStats, double) FindStatOfInterest(CharacterMainCPort character, CharacterMainCPort env)
+    public static double CalculateTargetAdjustedEmpathyPRStat(double empathyLevel, double individualPRScale)
     {
-        double L = character.characterPhysical.Stats.L;
-        double B = 0;
-
-        // Determine the B value based on BIdentity
-        if (character.characterPsyche.BIdentity == EnumPersonalityStats.NB)
-        {
-            B = character.characterPhysical.Stats.NB;
-        }
-        else
-        {
-            B = character.characterPhysical.Stats.DB;
-        }
-
-        double FL = 0;
-        double FDB = 0;
-        double FNB = 0;
-        double agentFriendPRScale = 0;
-        double agentEnvPRScale = 0;
-        int friendCount = character.characterPsyche.Friends.Count;
-
-        // Accumulate friends' stats and env
-        foreach (CharacterMainCPort friend in character.characterPsyche.Friends)
-        {
-            //find the friend in PR to see how much they care overall
-            foreach (RelationshipValueTest prCharacter in character.RelationshipSheet.PR)
-            {
-
-                if (prCharacter.Identifiers == env)
-                {
-                    agentEnvPRScale = (prCharacter.Stats.NB + prCharacter.Stats.DB) / 2;
-                    agentEnvPRScale /= 100;
-                }
-                if (prCharacter.Identifiers == friend)
-                {
-                    agentFriendPRScale = (prCharacter.Stats.NB + prCharacter.Stats.DB) / 2;
-                    agentFriendPRScale /= 100;
-                }
-            }
-            //it ups the stats when calculating the stats to find the lowest stat to focus on. i.e. if bad relationship with friend, then will inflate stats of friend so wouldn't care too much
-            //11 is arbitrary. Just sets limit to 10 for highest empathy level
-            double adjustedEmpathyFriendPRScale = CalculateTargetAdjustedEmpathyPRStat(character.EmpathyLevel, agentFriendPRScale);
-
-            FL += friend.characterPhysical.Stats.L * adjustedEmpathyFriendPRScale;
-            FDB += friend.characterPhysical.Stats.DB * adjustedEmpathyFriendPRScale;
-            FNB += friend.characterPhysical.Stats.NB * adjustedEmpathyFriendPRScale;
-
-
-        }
-
-        // Calculate averages if there are friends
-        if (friendCount > 0)
-        {
-            FL /= friendCount;
-            FDB /= friendCount;
-            FNB /= friendCount;
-        }
-
-        double adjustedEmpathyEnvPRScale = CalculateTargetAdjustedEmpathyPRStat(character.characterPsyche.EmpathyLevel, agentEnvPRScale);
-
-        //calculate N(Stats) values
-        double envL = env.characterPhysical.Stats.L * adjustedEmpathyEnvPRScale;
-        double envNB = env.characterPhysical.Stats.NB * adjustedEmpathyEnvPRScale;
-        double envDB = env.characterPhysical.Stats.DB * adjustedEmpathyEnvPRScale;
-
-        // Create a dictionary mapping enum values to their corresponding scores
-        Dictionary<EnumPersonalityStats, double> statValues = new()
-        {
-            { EnumPersonalityStats.L, L },
-            { EnumPersonalityStats.DB, character.characterPsyche.BIdentity == EnumPersonalityStats.DB ? B : double.MaxValue },
-            { EnumPersonalityStats.NB, character.characterPsyche.BIdentity == EnumPersonalityStats.NB ? B : double.MaxValue },
-            { EnumPersonalityStats.FL, FL },
-            { EnumPersonalityStats.FDB, FDB },
-            { EnumPersonalityStats.FNB, FNB },
-            { EnumPersonalityStats.NL, envL },
-            { EnumPersonalityStats.NDB, envDB },
-            { EnumPersonalityStats.NNB, envNB }
-        };
-
-        // Find the enum with the smallest value
-        EnumPersonalityStats minStat = EnumPersonalityStats.L;
-        double minValue = double.MaxValue;
-
-        foreach (var stat in statValues)
-        {
-            if (stat.Value < minValue)
-            {
-                minValue = stat.Value;
-                minStat = stat.Key;
-            }
-        }
-        Debug.Log("minimum value: " + minValue + " minStat: " + minStat);
-        return (minStat, minValue);
+        return 1 + (10 - empathyLevel) / 3 + (1 - individualPRScale);
     }
+
 }
