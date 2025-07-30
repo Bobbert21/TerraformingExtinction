@@ -1,0 +1,43 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f21c3f7ca35d5e24593f749e401f6d92, type: 3}
+  m_Name: PsychSO2
+  m_EditorClassIdentifier: 
+  RelationshipPersonalTreeSO: {fileID: 11400000, guid: a9ba2a0b3396d4843b6594c4b15fd867, type: 2}
+  FriendsRanked: []
+  EnemiesRanked: []
+  BIdentity: 2
+  OpportunismLevel: 0
+  RiskAversion: 0
+  RiskCutoff: 0
+  RewardCutoff: 0
+  EmpathyLevel: 0
+  SelfEfficacy: 0
+  ProgressInclination: 0
+  InternalMotivationLevel: 0
+  MaxHabitCounter: 10
+  HabitualTendencies: 0
+  PerspectiveAbility: 0
+  CognitiveStamina: 0
+  L_LearnedResponseDecisions: []
+  NB_LearnedResponseDecisions: []
+  DB_LearnedResponseDecisions: []
+  L_LearnedEnvironment: []
+  NB_LearnedEnvironment: []
+  DB_LearnedEnvironment: []
+  ProcessingSpeed: 0
+  AwarenessLevel: 0
+  DistinctiveAbility: 0
+  ExistingNodesDistinctiveAbility: 0
+  JudgementLevel: 0
+  ExtrapolationLevel: 0
+  GeneralizationLevel: 0

@@ -75,19 +75,37 @@ public class RelationshipNode
         ModRValues = new RelationshipValues(other.ModRValues);
         ActionContext = other.ActionContext; // enums are value types, so direct copy is fine
         ResponseNodes = new List<RelationshipDecisionNode>();
-        foreach (var node in other.ResponseNodes)
+
+        if(other.ResponseNodes != null)
         {
-            ResponseNodes.Add(new RelationshipDecisionNode(node));
+            foreach (var node in other.ResponseNodes)
+            {
+                ResponseNodes.Add(new RelationshipDecisionNode(node));
+            }
         }
+        
     }
 
-    public RelationshipNode(string name, RelationshipValues pRValues, RelationshipValues modRValues, EnumActionCharacteristics actionContext, List<RelationshipDecisionNode> responseNodes)
+    public RelationshipNode DeepCopy()
+    {
+        return new RelationshipNode(
+            Name,
+            new RelationshipValues(PRValues),
+            new RelationshipValues(ModRValues),
+            ActionContext,
+            ResponseNodes != null ? new List<RelationshipDecisionNode>(ResponseNodes.ConvertAll(r => new RelationshipDecisionNode(r))) : new List<RelationshipDecisionNode>(),
+            HabitCounter
+            );
+    }
+
+    public RelationshipNode(string name, RelationshipValues pRValues, RelationshipValues modRValues, EnumActionCharacteristics actionContext, List<RelationshipDecisionNode> responseNodes, int habitCounter = 0)
     {
         Name = name;
         PRValues = pRValues;
         ModRValues = modRValues;
         ActionContext = actionContext;
         ResponseNodes = responseNodes;
+        HabitCounter = habitCounter;
     }
 }
 

@@ -4,9 +4,9 @@ using System.Diagnostics.CodeAnalysis;
 using UnityEngine;
 
 //make it so it can edit. SO should not be edited
-public class RelationshipPersonalTree : MonoBehaviour
+public class RelationshipPersonalTree
 {
-    public RelationshipPersonalTreeSO RelationshipPersonalTreeSO;
+    //public RelationshipPersonalTreeSO RelationshipPersonalTreeSO;
     //DELETE THESE TESTS (FOR REPERCUSSION)
     public float lValueTest;
     public float dbValueTest;
@@ -14,32 +14,26 @@ public class RelationshipPersonalTree : MonoBehaviour
     public float learningRateTest;
     public EnumActionCharacteristics actionEnumTest;
     [Header("Do Not Edit")]
-    public List<IdentifierNode> RootIdentifiers;
-    //uhhh what is this?
-    public IdentifierMasterTreeSO MasterTree;
-    public List<EnumIdentifiers> identifiers;
-    public List<SubIdentifierNode> subIdentifiers;
+    public List<IdentifierNode> RootIdentifiers = new();
+    //This is to set the structure of the tree (currently not using very well...)
+    public IdentifierMasterTreeSO MasterTree = null;
+    public EnumIdentifiers SelfIdentifier = EnumIdentifiers.None;
+    public SubIdentifierNode SelfSubIdentifier = null;
     // Start is called before the first frame update
-    void Awake()
-    {
-        if (RootIdentifiers.Count == 0 && MasterTree == null && identifiers.Count == 0 && subIdentifiers.Count == 0)
-        {
-
-            RelationshipPersonalTreeSO relationshipPersonalTreeSODeepCopy = RelationshipPersonalTreeSO.DeepCopy();
-
-            RootIdentifiers = relationshipPersonalTreeSODeepCopy.RootIdentifiers;
-            MasterTree = relationshipPersonalTreeSODeepCopy.MasterTree;
-            identifiers = relationshipPersonalTreeSODeepCopy.identifiers;
-            subIdentifiers = relationshipPersonalTreeSODeepCopy.subIdentifiers;
-        }
-
-    }
-
-    // Update is called once per frame
-    void Update()
+    public RelationshipPersonalTree(RelationshipPersonalTreeSO RelationshipPersonalTreeSO)
     {
         
+        RelationshipPersonalTreeSO relationshipPersonalTreeSODeepCopy = RelationshipPersonalTreeSO.DeepCopy();
+
+        RootIdentifiers = relationshipPersonalTreeSODeepCopy.RootIdentifiers;
+        Debug.Log("Root Identifier copying into RPT with relationship node: " + RootIdentifiers[0].RelationshipNodes.Count);
+        MasterTree = relationshipPersonalTreeSODeepCopy.MasterTree;
+        SelfIdentifier = relationshipPersonalTreeSODeepCopy.identifier;
+        SelfSubIdentifier = relationshipPersonalTreeSODeepCopy.subIdentifier;
+        
+
     }
+
 
     public void AddValuesToSubIdentifier(SubIdentifierNode subIdentifierNode, float existingNodesDistinctiveAbility, float judgmentLevel, float extrapolationLevel, float generalizationAbility, int value = 1)
     {
@@ -68,7 +62,7 @@ public class RelationshipPersonalTree : MonoBehaviour
         }
 
         //DELETE LATER. Debug the repercussion system
-        RepercussionFunctions.ImplementRepercussion(subIdentifierNode, actionEnumTest, lValueTest, dbValueTest, nbValueTest, learningRateTest);
+        //RepercussionFunctions.ImplementRepercussion(subIdentifierNode, actionEnumTest, lValueTest, dbValueTest, nbValueTest, learningRateTest);
 
     }
 

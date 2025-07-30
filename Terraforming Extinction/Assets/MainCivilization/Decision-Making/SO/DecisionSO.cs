@@ -10,7 +10,10 @@ public class DecisionSO : ScriptableObject
     //public EnumActionCharacteristics Context;
     public DMTypes DMType;
     public List<Perspective> Perspectives;
-    public List<DecisionSO> ComplexGoalActions;
+    //The steps of actions in a complex goal 
+    //Simple decisions does not use this list
+    //To-DO Make a simple decision SO class without this list
+    public List<DecisionSO> ComplexGoalListOfDecisions;
     public int HabitCounter;
 }
 

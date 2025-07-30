@@ -133,11 +133,6 @@ public static class DecisionMakingFunctions
 
     private static double FulcrumStatScale = 30;
 
-
-
-    
-
-
     public static bool IsInternalCrave(double internalMotivationLevel, double currentLowestStat, double envChange, double cutOff)
     {
         double adjustedCutoff = cutOff * (100 - internalMotivationLevel) / 50 * currentLowestStat / 50;
@@ -509,10 +504,10 @@ public static class DecisionMakingFunctions
         //Too risky
         else if(!isSafeEnough)
         {
-            Debug.Log("Will not consider action: " + ultimateLargestPositivePredictorNode.Decision.name + " because not worth risk of " + ultimateLargestNegativePredictorPerspective.Name + " for the negative action " + ultimateLargestNegativePredictorNode.Decision.name);
+            Debug.Log("Will not consider action: " + ultimateLargestPositivePredictorNode?.Decision.name + " because not worth risk of " + ultimateLargestNegativePredictorPerspective.Name + " for the negative action " + ultimateLargestNegativePredictorNode?.Decision.name);
             Debug.Log(" Adjusted negative predictor change: " + ultimateLargestNegativePredictorNode +
                       " Largest predictor value: " + ultimateLargestNegativePredictorValue +
-                      " Initial value: " + allInitialStats.StatOfInterest(ultimateLargestNegativePredictorStat.ToString()));
+                      " Initial value: " + allInitialStats.StatOfInterest(ultimateLargestNegativePredictorStat));
 
             returnDecision.SetNiValuesWithRisk(ultimateLargestPositivePredictorValue, ultimateLargestPositivePredictorAdjustedChange, ultimateLargestNegativePredictorValue, 
                 ultimateLargestNegativePredictorAdjustedChange, ultimateLargestPositivePredictorStat, ultimateLargestNegativePredictorStat, 

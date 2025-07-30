@@ -21,13 +21,13 @@ public class IdentityDetector : MonoBehaviour
     public List<EnumAppearanceCharacteristics> testAppearanceCharacteristics;
     public List<EnumActionCharacteristics> testActionCharacteristics;
     public EnumIdentifiers testEnumIdentifier;
-    public RelationshipPersonalTree testRelationshipPersonalTree;
+    public RelationshipPersonalTreeSO testRelationshipPersonalTreeSO;
     public float testDistinctiveAbility;
     public float testExistingNodesDistinctiveAbility;
     public float testJudgementLevel;
     public float testExtrapolationLevel;
     public float testGeneralizationLevel;
-    public bool IsDebugging;
+    public bool IsDebugging = false;
 
     private CharacterMainCPort selfMainCPort;
     private DecisionMaking decisionMaking;
@@ -37,30 +37,60 @@ public class IdentityDetector : MonoBehaviour
     //Get all the surrounding env then process all the identifiers and pass it to DM
     private void Start()
     {
-        selfMainCPort = GetComponent<CharacterMainCPort>();
-        decisionMaking = GetComponent<DecisionMaking>();
+        if(IsDebugging == false)
+        {
+            selfMainCPort = GetComponent<CharacterMainCPort>();
+            decisionMaking = GetComponent<DecisionMaking>();
+
+            selfMainCPort.Initialize();
+
+            if (selfMainCPort == null)
+            {
+                Debug.Log("selfMainCPort is null — is CharacterMainCPort on this GameObject?");
+            }
+
+            if (selfMainCPort.characterPsyche == null)
+            {
+                Debug.Log("characterPsyche is null — it may not have been initialized in CharacterMainCPort.Awake()");
+            }
+
+
+        }
+        
     }
 
 
     private void Update()
     {
-        timePassed += Time.deltaTime;
-
-        double processingSpeed = selfMainCPort.characterPsyche.ProcessingSpeed;
-        float awarenessLevel = selfMainCPort.characterPsyche.AwarenessLevel;
-        if (timePassed > processingSpeed)
+        if(IsDebugging == false)
         {
-            envMainCPorts = new List<CharacterMainCPort>();
-            //Number can be adjusted like 
-            var foundColliders = Physics.OverlapSphere(Vector3.zero, awarenessLevel);
-
-            foreach (Collider collider in foundColliders)
+            timePassed += Time.deltaTime;
+            selfMainCPort.Initialize();
+            double processingSpeed = selfMainCPort.characterPsyche.ProcessingSpeed;
+            float awarenessLevel = selfMainCPort.characterPsyche.AwarenessLevel;
+            if (timePassed > processingSpeed)
             {
-                if (collider.TryGetComponent(out CharacterMainCPort envMainCPort))
+                envMainCPorts = new List<CharacterMainCPort>();
+                //Number can be adjusted like 
+                var foundColliders = Physics.OverlapSphere(Vector3.zero, awarenessLevel);
+
+                foreach (Collider collider in foundColliders)
                 {
-                    envMainCPorts.Add(envMainCPort);
+                    if (collider.TryGetComponent(out CharacterMainCPort envMainCPort))
+                    {
+                        envMainCPorts.Add(envMainCPort);
+
+                    }
+
+                }
+
+                if (envMainCPorts.Count > 0)
+                {
+                    Run();
+                    envMainCPorts.Clear();
                 }
             }
+
         }
 
 
@@ -71,6 +101,7 @@ public class IdentityDetector : MonoBehaviour
     {
         if (IsDebugging)
         {
+            RelationshipPersonalTree testRelationshipPersonalTree = new RelationshipPersonalTree(testRelationshipPersonalTreeSO);
             RunSingle(
                 testName,
                 testAppearanceCharacteristics,
@@ -112,7 +143,6 @@ public class IdentityDetector : MonoBehaviour
                 
             }
 
-            //To-Do: Passes the map to DM action selection
             decisionMaking.ActionSelection(envCPortToSubIdMap);
         }
 
@@ -132,7 +162,7 @@ public class IdentityDetector : MonoBehaviour
 
         //If hasn't found any nodes, then create a new one
 
-        RelationshipNode newRelationshipNode = new RelationshipNode(actionCommitting.ToString(), null, new RelationshipValues(0, 0, 0), actionCommitting, null);
+        RelationshipNode newRelationshipNode = new RelationshipNode(actionCommitting.ToString(), new RelationshipValues(0, 0, 0), new RelationshipValues(0, 0, 0), actionCommitting, null);
         foundSubIdentifierNode.AddRelationshipNode(newRelationshipNode);
 
         return newRelationshipNode;
@@ -169,15 +199,15 @@ public class IdentityDetector : MonoBehaviour
         if (foundSubIdentifierNode != null) 
         {
             //perfect match or close enough to not distinct and have to be the same name. 
-            if (likenessScore > testDistinctiveAbility && foundSubIdentifierNode.SubIdentifierName == testName)
+            if (likenessScore > selfDistinctiveAbility && foundSubIdentifierNode.SubIdentifierName == envName)
             {
                 Debug.Log("Found subidentifier same as node with name: " + foundSubIdentifierNode.SubIdentifierName);
                 //alters the relationship tree when perfect match (or similar enough) to be that specific thing
-                testRelationshipPersonalTree.AddValuesToSubIdentifier(foundSubIdentifierNode, testExistingNodesDistinctiveAbility, testJudgementLevel, testExtrapolationLevel, testGeneralizationLevel, 1);
+                selfRelationshipPersonalTree.AddValuesToSubIdentifier(foundSubIdentifierNode, selfExistingNodesDistinctiveAbility, selfJudgementLevel, selfExtrapolationLevel, selfGeneralizationLevel, 1);
                 return foundSubIdentifierNode;
             }
             //FIT
-            else if(likenessScore > testDistinctiveAbility * 0.8)
+            else if(likenessScore > selfDistinctiveAbility * 0.8)
             {
                 Debug.Log("Fit with " + foundSubIdentifierNode.SubIdentifierName);
                 float maxLikenessScore = AdaptiveIdentifierFunctions.GetMaxLikenessScorePossible(foundSubIdentifierNode);
@@ -187,7 +217,7 @@ public class IdentityDetector : MonoBehaviour
                 //2. Calculate adoptedValue
                 //3. Populate the new LearningPeriodValues for characteristics and relationship nodes
                 SubIdentifierNode newSubIdentifierNode = new SubIdentifierNode(foundSubIdentifierNode.Parent);
-                newSubIdentifierNode.SubIdentifierName = testName;
+                newSubIdentifierNode.SubIdentifierName = envName;
                 foundSubIdentifierNode.Specifics.Add(newSubIdentifierNode);
                 newSubIdentifierNode.Heuristic = foundSubIdentifierNode;
                 float adoptedValue = likenessScore / maxLikenessScore;
@@ -231,6 +261,7 @@ public class IdentityDetector : MonoBehaviour
                     RelationshipValues newPRValues = new(relationshipNode.PRValues.LivelihoodValue * adoptedValue, relationshipNode.PRValues.DefensiveBelongingValue * adoptedValue, relationshipNode.PRValues.NurtureBelongingValue * adoptedValue);
                     RelationshipValues newModRValues = new(relationshipNode.ModRValues.LivelihoodValue * adoptedValue, relationshipNode.ModRValues.DefensiveBelongingValue * adoptedValue, relationshipNode.ModRValues.NurtureBelongingValue * adoptedValue);
                     RelationshipNode newRelationshipNode = new RelationshipNode(relationshipNode.Name, newPRValues, newModRValues, relationshipNode.ActionContext, relationshipNode.ResponseNodes);
+                    newSubIdentifierNode.AddRelationshipNode(newRelationshipNode);  
                 }
 
                 return newSubIdentifierNode;
@@ -241,24 +272,39 @@ public class IdentityDetector : MonoBehaviour
         {
 
             bool foundIdentifierNode = false;
-            foreach (IdentifierNode identifierNode in testRelationshipPersonalTree.RootIdentifiers) { 
-                if(identifierNode.Identifier == testEnumIdentifier)
+            foreach (IdentifierNode identifierNode in selfRelationshipPersonalTree.RootIdentifiers) { 
+                if(identifierNode.Identifier == envEnumIdentifier)
                 {
                     //add new subidentifier node
                     SubIdentifierNode newSubIdentifierNode = new SubIdentifierNode(identifierNode);
-                    foreach(EnumAppearanceCharacteristics appearanceCharacteristic in testAppearanceCharacteristics)
+                    foreach(EnumAppearanceCharacteristics appearanceCharacteristic in envAppearanceCharacteristics)
                     {
                         newSubIdentifierNode.AddAppearanceCharacteristic(appearanceCharacteristic, 1);
                     }
 
-                    foreach (EnumActionCharacteristics actionCharacteristic in testActionCharacteristics)
+                    foreach (EnumActionCharacteristics actionCharacteristic in envActionCharacteristics)
                     {
                         newSubIdentifierNode.AddActionCharacteristic(actionCharacteristic, 1);
                     }
 
-                    newSubIdentifierNode.SubIdentifierName = testName;
+                    //Adopt the Relationship node (identifier node has no appearance or action)
+                    float adoptedValue = 1.0f;
+
+                    Debug.Log("Relationship Nodes for identifier node count: " + identifierNode.RelationshipNodes.Count + " identifier node name: " + identifierNode.Identifier.ToString());
+
+                    foreach (RelationshipNode relationshipNode in identifierNode.RelationshipNodes)
+                    {
+                        RelationshipValues newPRValues = new(relationshipNode.PRValues.LivelihoodValue * adoptedValue, relationshipNode.PRValues.DefensiveBelongingValue * adoptedValue, relationshipNode.PRValues.NurtureBelongingValue * adoptedValue);
+                        RelationshipValues newModRValues = new(relationshipNode.ModRValues.LivelihoodValue * adoptedValue, relationshipNode.ModRValues.DefensiveBelongingValue * adoptedValue, relationshipNode.ModRValues.NurtureBelongingValue * adoptedValue);
+                        RelationshipNode newRelationshipNode = new RelationshipNode(relationshipNode.Name, newPRValues, newModRValues, relationshipNode.ActionContext, relationshipNode.ResponseNodes);
+                        Debug.Log("Adding relationship node " + newRelationshipNode.Name + " to subidentifier node " + newSubIdentifierNode.SubIdentifierName);
+                        newSubIdentifierNode.AddRelationshipNode(newRelationshipNode);
+                    }
+
+                    newSubIdentifierNode.SubIdentifierName = envName;
                     identifierNode.SubIdentifiers.Add(newSubIdentifierNode);
                     foundIdentifierNode = true;
+
 
                     Debug.Log("Added subidentifier node " + newSubIdentifierNode.SubIdentifierName + " in identifier " + identifierNode.Identifier.ToString());
                     return newSubIdentifierNode;

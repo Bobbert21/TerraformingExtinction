@@ -2,11 +2,11 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class CharacterPsyche : MonoBehaviour
+public class CharacterPsyche
 {
-    [Header("Decision Making Variables")]
+    //[Header("Decision Making Variables")]
     public RelationshipPersonalTree RelationshipPersonalTree;
-    public SubIdentifierNode SelfIdentifier;
+    private SubIdentifierNode SelfIdentifier;
     /*
     public List<CharacterMainCPort> Friends;
     public List<CharacterMainCPort> Enemy;
@@ -41,7 +41,7 @@ public class CharacterPsyche : MonoBehaviour
     public List<RelationshipNode> DB_LearnedEnvironment;
     public Dictionary<DecisionSO, int> Decision_Step_Tracker = new Dictionary<DecisionSO, int>();
 
-    [Header("Identifier Script Variables")]
+    //[Header("Identifier Script Variables")]
     public double ProcessingSpeed;
     public float AwarenessLevel;
     public float DistinctiveAbility;
@@ -52,8 +52,7 @@ public class CharacterPsyche : MonoBehaviour
 
     public CharacterPsyche(CharacterPsycheSO characterPsycheSO)
     {
-        RelationshipPersonalTree = characterPsycheSO.RelationshipPersonalTree;
-        SelfIdentifier = characterPsycheSO.SelfIdentifier;
+        RelationshipPersonalTree = new RelationshipPersonalTree(characterPsycheSO.RelationshipPersonalTreeSO);
         FriendsRanked = characterPsycheSO.FriendsRanked;
         EnemiesRanked = characterPsycheSO.EnemiesRanked;
         FriendsCPortToSubNode = characterPsycheSO.FriendsCPortToSubNode;
@@ -86,5 +85,11 @@ public class CharacterPsyche : MonoBehaviour
         JudgementLevel = characterPsycheSO.JudgementLevel;
         ExtrapolationLevel = characterPsycheSO.ExtrapolationLevel;
         GeneralizationLevel = characterPsycheSO.GeneralizationLevel;
+
+        SelfIdentifier = RelationshipPersonalTree.SelfSubIdentifier;
+    }
+
+    public SubIdentifierNode GetSelfSubIdentifier() { 
+        return SelfIdentifier;
     }
 }

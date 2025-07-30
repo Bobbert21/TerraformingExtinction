@@ -18,11 +18,11 @@ public static class DMCalculationFunctions
         //A-ModR:DB(N)
 
     private static readonly Regex SimpleTermRegex = new(
-        @"^(?:(?<stat>L|DB|NB)\((?<target>A|N|F\((?<fIndex>-?\d+)\))\)|E\((?<eIndex>-?\d+)\))$",
+        @"(?:(?<stat>L|DB|NB)\((?<target>A|N|F\((?<fIndex>-?\d+)\))\)|E\((?<eIndex>-?\d+)\))",
         RegexOptions.Compiled);
 
     private static readonly Regex EmpTermRegex = new(
-        @"ScaleChg\((?<initial_value>\d+)\,(?<change_value>\d+)\)",
+        @"Emp\((A|N)\-(A|N)\)",
         RegexOptions.Compiled);
 
     private static readonly Regex ScaleChgRegex = new(
@@ -160,7 +160,8 @@ public static class DMCalculationFunctions
                     else if (entity == "A" && target == "A")
                     {
                         //Find the main relationship node which is context = none
-                        RelationshipNode mainRelationshipNode = agent.characterPsyche.SelfIdentifier.RelationshipNodes.FirstOrDefault(r => r.ActionContext == EnumActionCharacteristics.Main);
+                        SubIdentifierNode selfIdentifierNode = agent.characterPsyche.GetSelfSubIdentifier();
+                        RelationshipNode mainRelationshipNode = selfIdentifierNode.RelationshipNodes.FirstOrDefault(r => r.ActionContext == EnumActionCharacteristics.Main);
 
                         targetInAgentRelationshipValues.Add(
                                 relationType switch
@@ -174,7 +175,8 @@ public static class DMCalculationFunctions
                     {
                         List<EnumAppearanceCharacteristics> agentAppearances = agent.characterPhysical.appearanceCharacteristics;
                         List<EnumActionCharacteristics> agentActions = agent.characterPhysical.actionCharacteristics;
-                        SubIdentifierNode foundAgentInEnvRPT = AdaptiveIdentifierFunctions.FindSubidentifierNodeWithAppearanceAndAction(env.characterPsyche.RelationshipPersonalTree, env.characterPsyche.SelfIdentifier.Parent.Identifier, agentAppearances, agentActions);
+                        SubIdentifierNode envSubIdentifierNode = env.characterPsyche.GetSelfSubIdentifier();
+                        SubIdentifierNode foundAgentInEnvRPT = AdaptiveIdentifierFunctions.FindSubidentifierNodeWithAppearanceAndAction(env.characterPsyche.RelationshipPersonalTree, envSubIdentifierNode.Parent.Identifier, agentAppearances, agentActions);
 
                         RelationshipNode mainRelationshipNode = foundAgentInEnvRPT.RelationshipNodes.FirstOrDefault(r => r.ActionContext == EnumActionCharacteristics.Main);
 
@@ -188,7 +190,8 @@ public static class DMCalculationFunctions
                     }
                     else if (entity == "N" && target == "N")
                     {
-                        RelationshipNode mainRelationshipNode = env.characterPsyche.SelfIdentifier.RelationshipNodes.FirstOrDefault(r => r.ActionContext == EnumActionCharacteristics.Main);
+                        SubIdentifierNode envSubIdentifierNode = env.characterPsyche.GetSelfSubIdentifier();
+                        RelationshipNode mainRelationshipNode = envSubIdentifierNode.RelationshipNodes.FirstOrDefault(r => r.ActionContext == EnumActionCharacteristics.Main);
                         targetInAgentRelationshipValues.Add(
                                 relationType switch
                                 {
@@ -289,6 +292,7 @@ public static class DMCalculationFunctions
         {
             throw new ArgumentException("Invalid match passed to ParseSimpleTerm");
         }
+
 
         // Extract the stat and target from the matched term
         string stat = match.Groups["stat"].Value;
@@ -477,7 +481,7 @@ public static class DMCalculationFunctions
             // If the formula has changed after evaluation, continue processing
             containsCustomFunctions = !formula.Equals(previousFormula);
         }
-
+        Debug.Log("Final formula: " + formula);
         // Once all custom functions are resolved, evaluate the basic expression
         return EvaluateBasicExpression(formula).ToString();
     }
@@ -768,6 +772,7 @@ public static class DMCalculationFunctions
             largestPositivePredictorStat, largestNegativePredictorStat, positivePerspective, negativePerspective);
     }
 
+    //Change return value to class
     public static (double, double, double, double, EnumPersonalityStats, EnumPersonalityStats, Perspective, Perspective) CalculateComplexPositiveAndNegativePredictorChange(
         DecisionSO decisionSO, EnumPersonalityStats targetStat, AllStats allInitialStats, int habitCountDecision, 
         CharacterMainCPort agent, CharacterMainCPort env, RelationshipNode envInAgentRPTNode)
@@ -783,6 +788,8 @@ public static class DMCalculationFunctions
 
         //Determine the complex goal step
         int complexGoalStep = 0;
+
+        //Saved or remembered step in decision
         if (agent.characterPsyche.Decision_Step_Tracker.TryGetValue(decisionSO, out int step))
         {
             complexGoalStep = step;
@@ -796,7 +803,7 @@ public static class DMCalculationFunctions
         //Perspective of overall goal
         List<Perspective> goalPerspectives = decisionSO.Perspectives;
         //Perspective of the action in complex action currently on
-        List<Perspective> actionPerspectives = decisionSO.ComplexGoalActions[complexGoalStep].Perspectives;
+        List<Perspective> actionPerspectives = decisionSO.ComplexGoalListOfDecisions[complexGoalStep].Perspectives;
 
         List<Perspective> sortedHabitGoalPerspectives = goalPerspectives.OrderByDescending(p => p.Target == targetStat.ToString()).
             ThenByDescending(p => p.HabitCounter).ToList();
@@ -825,7 +832,7 @@ public static class DMCalculationFunctions
             //Adjusted so self-efficacy is maxed at 100
             double selfEfficacyScore = ((100 - agent.characterPsyche.SelfEfficacy * 150 / 100 + 50) / 100);
             //If high in self-efficacy, feels like there's not a lot of steps to get to goal. Lower self-efficacy score is better 
-            double totalStepsPerceived = decisionSO.ComplexGoalActions.Count * selfEfficacyScore;
+            double totalStepsPerceived = decisionSO.ComplexGoalListOfDecisions.Count * selfEfficacyScore;
             //how close are they to goal. Closer they are, the more they are enticed by it
             double progressPerceived = Math.Min(complexGoalStep + 1 / totalStepsPerceived, 1);
 
@@ -928,55 +935,45 @@ public static class DMCalculationFunctions
         return habitContribution;
     }
 
-    public static (double predictor, double change) Translate_String_To_Formula_Calculations(string formula, string target, CharacterMainCPort agent, 
+    public static (double predictor, double change) Translate_String_To_Formula_Calculations(string formula, string target, CharacterMainCPort agent,
         CharacterMainCPort env, RelationshipNode envInAgentRPTNode)
     {
 
         // Replace special terms in the formula
-        while (EmpTermRegex.IsMatch(formula))
-        {
-            formula = EmpTermRegex.Replace(formula,
-                match => DMCalculationFunctions.ParseEmpTerm(match, agent, env, envInAgentRPTNode).ToString());
-        }
+        formula = RegexReplaceLoop(formula, EmpTermRegex, match =>
+            ParseEmpTerm(match, agent, env, envInAgentRPTNode).ToString());
 
-        // Replace complex terms in the formula
-        while (ComplexTermRegex.IsMatch(formula))
-        {
-            formula = ComplexTermRegex.Replace(formula,
-                match => DMCalculationFunctions.ParseComplexTerm(match, agent, env, envInAgentRPTNode).ToString());
-        }
+        // Step 3: Replace Complex Terms like N-ModR:DB(A)
+        formula = RegexReplaceLoop(formula, ComplexTermRegex, match =>
+            ParseComplexTerm(match, agent, env, envInAgentRPTNode).ToString());
 
-        // Replace simple terms in the formula
-        while (SimpleTermRegex.IsMatch(formula))
+        // Step 4: Replace Simple Terms like DB(A)
+        formula = RegexReplaceLoop(formula, SimpleTermRegex, match =>
         {
-            formula = SimpleTermRegex.Replace(formula,
-                match => DMCalculationFunctions.ParseSimpleTerm(match, agent, env).ToString());
-        }
+            return ParseSimpleTerm(match, agent, env).ToString();
+        });
 
         // Replace scale terms (these scale the change in accordance to the initial values)
-        while (EmpTermRegex.IsMatch(formula))
-        {
-            formula = EmpTermRegex.Replace(formula,
-                match => DMCalculationFunctions.ParseScaleChangeTerm(match).ToString());
-        }
-
+        formula = RegexReplaceLoop(formula, ScaleChgRegex, match =>
+            ParseScaleChangeTerm(match).ToString());
         // Evaluate custom functions
-        formula = DMCalculationFunctions.EvaluateCustomFunctionsUntilDone(formula);
+        formula = EvaluateCustomFunctionsUntilDone(formula);
 
-        double predictorValue = DMCalculationFunctions.EvaluateBasicExpression(formula);
+
+        double predictorValue = EvaluateBasicExpression(formula);
 
 
         //Parse through the target
         while (SimpleTermRegex.IsMatch(target))
         {
             target = SimpleTermRegex.Replace(target,
-                match => DMCalculationFunctions.ParseSimpleTerm(match, agent, env).ToString());
+                match => ParseSimpleTerm(match, agent, env).ToString());
         }
 
         while (ComplexTermRegex.IsMatch(target))
         {
             target = ComplexTermRegex.Replace(target,
-                match => DMCalculationFunctions.ParseComplexTerm(match, agent, env, envInAgentRPTNode).ToString());
+                match => ParseComplexTerm(match, agent, env, envInAgentRPTNode).ToString());
         }
 
         double targetValue = double.Parse(target);
@@ -984,6 +981,17 @@ public static class DMCalculationFunctions
         // Evaluate the final expression (without functions)
         return (predictor: predictorValue, change: predictorValue - targetValue);
     }
+
+    private static string RegexReplaceLoop(string input, Regex regex, Func<Match, string> replacer)
+    {
+        string result = input;
+        while (regex.IsMatch(result))
+        {
+            result = regex.Replace(result, new MatchEvaluator(replacer));
+        }
+        return result;
+    }
+
 
     public static double CalculateTargetAdjustedEmpathyPRStat(double empathyLevel, double individualPRScale)
     {

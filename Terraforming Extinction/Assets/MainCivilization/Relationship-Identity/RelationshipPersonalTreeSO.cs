@@ -8,28 +8,26 @@ public class RelationshipPersonalTreeSO : ScriptableObject
     [Header("Do Not Edit")]
     public List<IdentifierNode> RootIdentifiers;
     public IdentifierMasterTreeSO MasterTree;
-    public List<EnumIdentifiers> identifiers;
-    public List<SubIdentifierNode> subIdentifiers;
+    public EnumIdentifiers identifier;
+    public SubIdentifierNode subIdentifier;
 
     public RelationshipPersonalTreeSO DeepCopy()
     {
-        RelationshipPersonalTreeSO newSO = ScriptableObject.CreateInstance<RelationshipPersonalTreeSO>();
+        RelationshipPersonalTreeSO newRPT = ScriptableObject.CreateInstance<RelationshipPersonalTreeSO>();
 
-        newSO.RootIdentifiers = RootIdentifiers != null
-            ? RootIdentifiers.ConvertAll(node => node.DeepCopy()) 
+        newRPT.RootIdentifiers = RootIdentifiers != null
+            ? RootIdentifiers.ConvertAll(node => node.DeepCopy(newRPT)) 
             : new List<IdentifierNode>();
 
-        newSO.subIdentifiers = subIdentifiers != null
-            ? subIdentifiers.ConvertAll(s => s.DeepCopy())
-            : new List<SubIdentifierNode>();
+        newRPT.subIdentifier = subIdentifier != null
+            ? subIdentifier.DeepCopy()
+            : new SubIdentifierNode();
 
-        newSO.identifiers = identifiers != null
-            ? new List<EnumIdentifiers>(identifiers)
-            : new List<EnumIdentifiers>();
+        newRPT.identifier = identifier;
 
-        newSO.MasterTree = this.MasterTree;
+        newRPT.MasterTree = this.MasterTree;
 
-        return newSO;
+        return newRPT;
     }
 
     [ContextMenu("Initialize Identifier Tree")]

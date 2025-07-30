@@ -14,23 +14,42 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   RootIdentifiers:
   - Identifier: 1
+    Tracker: {fileID: 0}
+    RelationshipNodes: []
     Children:
     - Identifier: 4
+      Tracker: {fileID: 0}
+      RelationshipNodes: []
       Children: []
-      identifierCharacteristics: []
-    identifierCharacteristics: []
+      SubIdentifiers: []
+    - Identifier: 0
+      Tracker: {fileID: 0}
+      RelationshipNodes: []
+      Children: []
+      SubIdentifiers: []
+    SubIdentifiers: []
   - Identifier: 2
+    Tracker: {fileID: 0}
+    RelationshipNodes: []
     Children:
     - Identifier: 6
+      Tracker: {fileID: 0}
+      RelationshipNodes: []
       Children: []
-      identifierCharacteristics: []
+      SubIdentifiers: []
     - Identifier: 0
+      Tracker: {fileID: 0}
+      RelationshipNodes: []
       Children: []
-      identifierCharacteristics: []
-    identifierCharacteristics: []
+      SubIdentifiers: []
+    SubIdentifiers: []
   - Identifier: 3
+    Tracker: {fileID: 0}
+    RelationshipNodes: []
     Children:
     - Identifier: 5
+      Tracker: {fileID: 0}
+      RelationshipNodes: []
       Children: []
-      identifierCharacteristics: []
-    identifierCharacteristics: []
+      SubIdentifiers: []
+    SubIdentifiers: []

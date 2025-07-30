@@ -49,6 +49,36 @@ public class AllStats
 
         throw new ArgumentException($"Invalid stat input: {stat}", nameof(stat));
     }
+
+    public double StatOfInterest(EnumPersonalityStats stat)
+    {
+        if (stat == EnumPersonalityStats.L)
+        {
+            return L;
+        }
+        else if (stat == EnumPersonalityStats.DB)
+        {
+            return DB;
+        }
+        else if (stat == EnumPersonalityStats.NB)
+        {
+            return NB;
+        }
+        else if (stat == EnumPersonalityStats.NL)
+        {
+            return NL;
+        }
+        else if (stat == EnumPersonalityStats.NDB)
+        {
+            return NDB;
+        }
+        else if (stat == EnumPersonalityStats.NNB)
+        {
+            return NNB;
+        }
+
+        throw new ArgumentException($"Invalid stat input: {stat}", nameof(stat));
+    }
 }
 
 public class DecisionMaking : MonoBehaviour
@@ -65,7 +95,7 @@ public class DecisionMaking : MonoBehaviour
     }
 
     //Will normally character pass parameters to this with the psyche. Implement later. Have this in the inspector because of testing
-    //This dictionary is passing the env MainCPort and the RelationshipNode with its action
+    //This dictionary is passing the env MainCPort and the RelationshipNode with the action it is committing
     public void ActionSelection(Dictionary<CharacterMainCPort, SubIdentifierRelationshipNodeInfo> envCPortToSubIdMap)
     {
         double ultimateLargestPositivePredictorValue = double.MinValue;
@@ -84,7 +114,7 @@ public class DecisionMaking : MonoBehaviour
         RelationshipDecisionNode ultimateNiNegativeDecisionNode = null;
         //Go through all the env
         foreach (CharacterMainCPort envMainCPort in envCPortToSubIdMap.Keys)
-        {
+        {     
             //1. Cohesive Planning
             //2. Blurred Planning
             //3. Incohesive Planning
@@ -124,6 +154,8 @@ public class DecisionMaking : MonoBehaviour
             //Whether your hunger or friend's hunger focus should be based on empathy
 
             bool isInternalCrave = DecisionMakingFunctions.IsInternalCrave(selfMainCPort.characterPsyche.InternalMotivationLevel, targetStatInitialValue, envChange, externalMotivationCutoff);
+
+            Debug.Log("Is internal crave: " + isInternalCrave + " Target stat type: " + targetStatType + " Target stat initial value: " + targetStatInitialValue);
 
             //2. Find the appropriate response (Ne or Ni)
 

@@ -38,7 +38,7 @@ public class RelationshipPersonalTreeEditor : Editor
         Color defaultColor = GUI.backgroundColor;
 
         // Highlight identifier in green if selected
-        if (identifierSO.identifiers.Contains(node.Identifier))
+        if (identifierSO.identifier == node.Identifier)
         {
             GUI.backgroundColor = Color.green;
         }
@@ -49,13 +49,13 @@ public class RelationshipPersonalTreeEditor : Editor
         if (GUILayout.Button(indentLevel.ToString() + ": " + node.Identifier.ToString(), GUILayout.Width(150)))
         {
             // Toggle selection for identifier
-            if (!identifierSO.identifiers.Contains(node.Identifier))
+            if (identifierSO.identifier != node.Identifier)
             {
-                identifierSO.identifiers.Add(node.Identifier);
+                identifierSO.identifier = node.Identifier;
             }
             else
             {
-                identifierSO.identifiers.Remove(node.Identifier);
+                identifierSO.identifier = EnumIdentifiers.None;
             }
 
             // Mark as dirty to update Unity
@@ -72,7 +72,7 @@ public class RelationshipPersonalTreeEditor : Editor
             foreach (var subIdentifier in node.SubIdentifiers)
             {
                 // Highlight subidentifier in green if selected
-                if (identifierSO.subIdentifiers.Contains(subIdentifier))
+                if (identifierSO.subIdentifier == subIdentifier)
                 {
                     GUI.backgroundColor = Color.green;
                 }
@@ -83,13 +83,13 @@ public class RelationshipPersonalTreeEditor : Editor
                 if (GUILayout.Button("Sub: " + subIdentifier.SubIdentifierName, GUILayout.Width(150)))
                 {
                     // Toggle selection for subIdentifier
-                    if (!identifierSO.subIdentifiers.Contains(subIdentifier))
+                    if (identifierSO.subIdentifier != subIdentifier)
                     {
-                        identifierSO.subIdentifiers.Add(subIdentifier);
+                        identifierSO.subIdentifier = subIdentifier;
                     }
                     else
                     {
-                        identifierSO.subIdentifiers.Remove(subIdentifier);
+                        identifierSO.subIdentifier = null;
                     }
 
                     // Mark as dirty to update Unity

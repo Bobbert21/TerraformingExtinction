@@ -13,12 +13,10 @@ public enum EnumMentalOpportunities
 
 //Can eliminate ICharacterPsyche. Will only use interface if there will be many subcategories of characters (i.e. enemies, players, allies, etc.)
 [CreateAssetMenu(fileName = "CharacterPsycheSO", menuName = "ScriptableObject/CPort/CharacterPsycheSO")]
-//TO-DO: Make CharacterPsyche, not SO. So I can adjust the values 
 public class CharacterPsycheSO : ScriptableObject, ICharacterPsyche
 {
     [Header("Decision Making Variables")]
-    public RelationshipPersonalTree RelationshipPersonalTree;
-    public SubIdentifierNode SelfIdentifier;
+    public RelationshipPersonalTreeSO RelationshipPersonalTreeSO;
     public List<CharacterMainCPort> FriendsRanked;
     public List<CharacterMainCPort> EnemiesRanked;
     public Dictionary<CharacterMainCPort, SubIdentifierNode> FriendsCPortToSubNode = new Dictionary<CharacterMainCPort, SubIdentifierNode>();

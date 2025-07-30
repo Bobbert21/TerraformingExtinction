@@ -6,7 +6,7 @@ using UnityEngine;
 public class CharacterMainCPortSO : ScriptableObject
 {
     public string Name;
-    public CharacterPsycheSO characterPsycheSO;
+    public CharacterPsycheSO CharacterPsycheSO;
     public CharacterPhysicalSO CharacterPhysicalSO;
 
 }

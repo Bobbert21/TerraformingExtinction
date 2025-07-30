@@ -29,14 +29,22 @@ public class IdentifierNode
     public List<IdentifierNode> Children = new();
     public List<SubIdentifierNode> SubIdentifiers = new();
 
-    public IdentifierNode DeepCopy()
+    public IdentifierNode DeepCopy(RelationshipPersonalTreeSO newRPT)
     {
         return new IdentifierNode
         {
             Identifier = this.Identifier,
+            Parent = Parent?.DeepCopy(newRPT),
+            Tracker = newRPT, // Assign the new RPT to the copied node
+            RelationshipNodes = RelationshipNodes != null
+                ? new List<RelationshipNode>(RelationshipNodes.Select(r => r.DeepCopy()))
+                : new List<RelationshipNode>(),
+            Children = Children != null
+                ? new List<IdentifierNode>(Children.Select(c => c.DeepCopy(newRPT)))
+                : new List<IdentifierNode>(),
             SubIdentifiers = SubIdentifiers != null
                 ? new List<SubIdentifierNode>(SubIdentifiers.ConvertAll(s => s.DeepCopy()))
-                : new List<SubIdentifierNode>()
+                : new List<SubIdentifierNode>(),
         };
     }
 

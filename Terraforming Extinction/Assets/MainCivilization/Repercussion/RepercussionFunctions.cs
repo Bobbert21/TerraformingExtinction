@@ -51,7 +51,7 @@ public static class RepercussionFunctions
         {
             Debug.Log("No action node found and creating new one");
             relationships.Add(new RelationshipNode(
-                actionContext.ToString(), null,
+                actionContext.ToString(), new RelationshipValues(0,0,0),
                 new RelationshipValues(lDelta, dbDelta, nbDelta),
                 actionContext, null));
         }
@@ -67,10 +67,17 @@ public static class RepercussionFunctions
         else
         {
             Debug.Log("No main node found and creating new one");
-            relationships.Add(new RelationshipNode(
-                "Main Node", null,
-                new RelationshipValues(lDelta, dbDelta, nbDelta),
-                EnumActionCharacteristics.Main, null));
+            relationships.Add(
+                new RelationshipNode(
+                    "Main Node",
+                    //PRValues
+                    new RelationshipValues(0,0,0),
+                    //ModRValues
+                    new RelationshipValues(lDelta, dbDelta, nbDelta),
+                    EnumActionCharacteristics.Main, 
+                    null
+                    )
+                );
         }
         
     }
