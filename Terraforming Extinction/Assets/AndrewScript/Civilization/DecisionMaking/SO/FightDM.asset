@@ -9,43 +9,13 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 0f5f4cf94c429d743a844d910b2bd797, type: 3}
+  m_Script: {fileID: 11500000, guid: 77d557ad13dfca1408f33704d53cd701, type: 3}
   m_Name: FightDM
   m_EditorClassIdentifier: 
-  Name: Fight
-  Action: 1
+  Name: 
+  Action: 0
   Context: 0
-  DMType: 1
-  Perspectives:
-  - Name: Consume DB
-    Description: 
-    RewardType: 0
-    Empathy: 
-    Target: DB(A)
-    Predictor: (DB(A) + DB(N))/2 + (L(A) - L(N))/2
-    HabitCounter: 0
-  - Name: Eliminate threats to friends' DB by attacking threat's DB
-    Description: 
-    RewardType: 4
-    Empathy: 
-    Target: DB(F)
-    Predictor: DB(F) + F(-1)-ModR:DB(N) * -(1 - Mathf.Max(((DB(A) + DB(N)) / 2 +
-      (L(N) - L(A)) / 2), 0) / DB(N))
-    HabitCounter: 5
-  - Name: Eliminate threats to friends' L by attacking threat's L
-    Description: 
-    RewardType: 4
-    Empathy: 
-    Target: L(F)
-    Predictor: L(F) + F(-1)-ModR:L(N) * -(1 - Mathf.Max((L(N) - L(A) * 1.5), 0) /
-      L(N))
-    HabitCounter: 0
-  - Name: Lose L
-    Description: Hurt while fighting
-    RewardType: 6
-    Empathy: 
-    Target: L(A)
-    Predictor: 'Mathf.Max(L(A) -  L(N) * 1.1, 0) '
-    HabitCounter: 3
+  DMType: 0
+  Perspectives: []
   ComplexGoalActions: []
   HabitCounter: 0

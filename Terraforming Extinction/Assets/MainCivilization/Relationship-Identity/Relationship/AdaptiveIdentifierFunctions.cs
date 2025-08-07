@@ -270,7 +270,7 @@ public static class AdaptiveIdentifierFunctions
 
         likenessScore -= (float)System.Math.Pow(unmatchedActionNewVersionToExistingCharacteristicsCount, 1.5);
 
-        Debug.Log("New likeness score of " + likenessScore + " with " + subIdentifierNode.SubIdentifierName);
+        //Debug.Log("New likeness score of " + likenessScore + " with " + subIdentifierNode.SubIdentifierName);
 
         //calculated characteristics in this existing node that is not in new version
         int unmatchedExistingToNewVersionCharacteristicsCount = unmatchedExistingActionToNewVersion.Count + unmatchedExistingAppearanceToNewVersion.Count;
@@ -283,7 +283,7 @@ public static class AdaptiveIdentifierFunctions
         if (unmatchedExistingToNewVersionCharacteristicsCount == 0 && unmatchedAppearanceNewVersionToExistingCharacteristicsCount == 0
             && unmatchedActionNewVersionToExistingCharacteristicsCount == 0 && subIdentifierNode.SubIdentifierName == name && subIdentifierNode.isAnchor == false)
             { 
-                Debug.Log("Found identical node " + subIdentifierNode.SubIdentifierName);
+                //DebugManager.Instance?.SetIdentityDebugValue("Found Identical Node", subIdentifierNode.SubIdentifierName);
                 return (subIdentifierNode, likenessScore, true);
             }
 
@@ -295,14 +295,15 @@ public static class AdaptiveIdentifierFunctions
                 //Check if it is a specific subidentifier node
                 if (highestLikenessNode.SubIdentifierName != name || highestLikenessNode.isAnchor)
                 {
-                    Debug.Log("Finding subidentifier node to match. New Highest score: " + likenessScore + " with subidentifier name " + subIdentifierNode.SubIdentifierName);
+                    //Debug.Log("Finding subidentifier node to match. New Highest score: " + likenessScore + " with subidentifier name " + subIdentifierNode.SubIdentifierName);
+                    //DebugManager.Instance?.SetIdentityDebugValue("New Highest Likeness Node", subIdentifierNode.SubIdentifierName);
                     highestLikenessScore = likenessScore;
                     highestLikenessNode = subIdentifierNode;
                 }
             }
             else
             {
-                Debug.Log("First time setting highest likeness node of " + subIdentifierNode.SubIdentifierName + " with score of " + likenessScore);
+                //Debug.Log("First time setting highest likeness node of " + subIdentifierNode.SubIdentifierName + " with score of " + likenessScore);
                 highestLikenessScore = likenessScore;
                 highestLikenessNode = subIdentifierNode;
             }
@@ -352,11 +353,13 @@ public static class AdaptiveIdentifierFunctions
         {   
             if(highestLikenessNode != null)
             {
-                Debug.Log("Found node like enough: " + highestLikenessNode.SubIdentifierName + " with likeness score of " + highestLikenessScore);
+                //Debug.Log("Found node like enough: " + highestLikenessNode.SubIdentifierName + " with likeness score of " + highestLikenessScore);
+                //DebugManager.Instance?.SetIdentityDebugValue("Found Likeness Node", highestLikenessNode.SubIdentifierName);
             }
             else
             {
-                Debug.Log("Did not find node like enough with score of " + highestLikenessScore);
+                //Debug.Log("Did not find node like enough with score of " + highestLikenessScore);
+                //DebugManager.Instance?.SetIdentityDebugValue("Found Likeness Node", "None");
             }
             
             return (highestLikenessNode, highestLikenessScore, false);

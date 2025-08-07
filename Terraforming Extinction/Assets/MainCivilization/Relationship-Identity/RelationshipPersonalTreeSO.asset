@@ -16,18 +16,18 @@ MonoBehaviour:
   - Identifier: 1
     Tracker: {fileID: 0}
     RelationshipNodes:
-    - Name: Test
+    - Name: Main Node
       PRValues:
         DefensiveBelongingValue: 0
         NurtureBelongingValue: 0
         LivelihoodValue: 0
       ModRValues:
-        DefensiveBelongingValue: 0
-        NurtureBelongingValue: 0
-        LivelihoodValue: 0
+        DefensiveBelongingValue: 10
+        NurtureBelongingValue: 10
+        LivelihoodValue: 10
       ActionContext: 0
       ResponseNodes:
-      - Decision: {fileID: 0}
+      - Decision: {fileID: 11400000, guid: e5f0aecc9f8ecae49965c64877c30a6b, type: 2}
         ModRValues:
           DefensiveBelongingValue: 10
           NurtureBelongingValue: 10
@@ -90,7 +90,7 @@ MonoBehaviour:
       SubIdentifiers: []
     SubIdentifiers: []
   MasterTree: {fileID: 11400000, guid: b85088a8a44516740af9fb03a4b6d9b1, type: 2}
-  identifier: 0
+  identifier: 2
   subIdentifier:
     SubIdentifierName: Self
     ActionCharacteristicsWithValue: []

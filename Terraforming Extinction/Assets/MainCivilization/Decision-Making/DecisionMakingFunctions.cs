@@ -59,6 +59,8 @@ public class ReturnDecision
     public void SetNeValuesWithRisk(double largestNegativePredictorValue, double largestNegativePredictorChange, EnumPersonalityStats targetNegativeStatOfInterest,
         RelationshipNode neNegativeDecision)
     {
+        IsNeDecision = true;
+        IsNiDecision = false;
         HasRiskyAction = true;
         LargestNegativePredictorValue = largestNegativePredictorValue;
         LargestNegativePredictorChange = largestNegativePredictorChange;
@@ -100,6 +102,8 @@ public class ReturnDecision
         Perspective positivePerspective, Perspective negativePerspective, 
         RelationshipDecisionNode niPositiveDecision, RelationshipDecisionNode niNegativeDecision)
     {
+        IsNeDecision = false;
+        IsNiDecision = true;
         LargestPositivePredictorValue = largestPositivePredictorValue;
         LargestPositivePredictorChange = largestPositivePredictorChange;
         LargestNegativePredictorValue = largestNegativePredictorValue;
@@ -387,7 +391,8 @@ public static class DecisionMakingFunctions
 
             //Calculate reward and risk cutoffs for all these decision's perspectives to see if worth 
             //Pick best safe and rewarding actions
-            double largestNegativePredictorAdjustedChangeWithRisk = largestNegativePredictorAdjustedChange * agent.characterPsyche.RiskAversion;
+            //Adjust based on 40
+            double largestNegativePredictorAdjustedChangeWithRisk = largestNegativePredictorAdjustedChange * agent.characterPsyche.RiskAversion/40;
 
             if(largestPositivePredictorAdjustedChange > Math.Abs(largestNegativePredictorAdjustedChangeWithRisk))
             {
@@ -482,10 +487,9 @@ public static class DecisionMakingFunctions
             Debug.Log("Will consider action: " + ultimateLargestPositivePredictorNode.Decision.name + " because of " + ultimateLargestPositivePredictorPerspective.Name);
             Debug.Log("Predictor adjusted CHANGE: " + ultimateLargestPositivePredictorAdjustedChange +
                         " Predictor VALUE: " + ultimateLargestPositivePredictorValue +
-                        " Initial value: " + allInitialStats.StatOfInterest(ultimateLargestPositivePredictorStat.ToString()));
-
+                        " Initial value: " + allInitialStats.StatOfInterest(ultimateLargestPositivePredictorStat));
+            
             returnDecision.SetNiValuesWithCommit(ultimateLargestPositivePredictorValue, ultimateLargestPositivePredictorAdjustedChange, ultimateLargestPositivePredictorStat, ultimateLargestPositivePredictorNode);
-
             return returnDecision;
         }
         //Not rewarding enough
@@ -494,7 +498,7 @@ public static class DecisionMakingFunctions
             Debug.Log("Will not consider action: " + ultimateLargestPositivePredictorNode.Decision.name + " because " + ultimateLargestPositivePredictorPerspective.Name + " not worth it for the reward inclination of " + agent.characterPsyche.RewardCutoff);
             Debug.Log(" Adjusted predictor CHANGE: " + ultimateLargestPositivePredictorAdjustedChange +
                         " Predictor VALUE: " + ultimateLargestPositivePredictorValue +
-                        " Initial value: " + allInitialStats.StatOfInterest(ultimateLargestPositivePredictorStat.ToString()));
+                        " Initial value: " + allInitialStats.StatOfInterest(ultimateLargestPositivePredictorStat));
 
             returnDecision.SetNiValuesWithoutCommitDueToNotRewarding(ultimateLargestPositivePredictorValue, ultimateLargestPositivePredictorAdjustedChange, ultimateLargestPositivePredictorStat, ultimateLargestPositivePredictorPerspective, ultimateLargestPositivePredictorNode);
             
@@ -572,9 +576,16 @@ public static class DecisionMakingFunctions
             FDB /= friendCount;
             FNB /= friendCount;
         }
+        //If no friends, set to max value
+        else
+        {
+            FL = double.MaxValue;
+            FDB = double.MaxValue;
+            FNB = double.MaxValue;
+        }
 
-        //Get the relationship to the environment
-        agentEnvPRScale = envRelationshipNodeInSelfRPT.ModRValues.NurtureBelongingValue + envRelationshipNodeInSelfRPT.ModRValues.DefensiveBelongingValue;
+            //Get the relationship to the environment
+            agentEnvPRScale = envRelationshipNodeInSelfRPT.ModRValues.NurtureBelongingValue + envRelationshipNodeInSelfRPT.ModRValues.DefensiveBelongingValue;
         agentEnvPRScale /= 100;
 
         double adjustedEmpathyEnvPRScale = DMCalculationFunctions.CalculateTargetAdjustedEmpathyPRStat(character.characterPsyche.EmpathyLevel, agentEnvPRScale);

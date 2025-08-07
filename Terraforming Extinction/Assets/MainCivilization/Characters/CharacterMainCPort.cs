@@ -14,7 +14,7 @@ public class CharacterMainCPort : MonoBehaviour
     public CharacterPhysical characterPhysical;
 
     private void Start()
-    {
+    { 
         Name = characterMainCPortSO.Name;
         characterPsyche = new CharacterPsyche(characterMainCPortSO.CharacterPsycheSO);
         characterPhysical = new CharacterPhysical(characterMainCPortSO.CharacterPhysicalSO);

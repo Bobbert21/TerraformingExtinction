@@ -9,12 +9,14 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 1efb893d48eba3e479f7ba65ad5b532a, type: 3}
-  m_Name: BefriendDM
+  m_Script: {fileID: 11500000, guid: c3bd3cecd8b69c64dae69d0884b2fd83, type: 3}
+  m_Name: PhysicalSO2
   m_EditorClassIdentifier: 
-  Name: 
-  Action: 0
-  DMType: 0
-  Perspectives: []
-  ComplexGoalListOfDecisions: []
-  HabitCounter: 0
+  Stats:
+    L: 0
+    DB: 0
+    NB: 0
+  actionCharacteristics: 
+  appearanceCharacteristics: 
+  Identifier: 0
+  ActionCommitting: 0

@@ -146,8 +146,7 @@ public class DecisionMaking : MonoBehaviour
             };
 
             //Get largest change (whether positive or negative)
-            double envChange = allEnvModRValues.OrderByDescending(v => System.Math.Abs(v)).First();
-
+            double envChange = System.Math.Abs(allEnvModRValues.OrderByDescending(v => System.Math.Abs(v)).First());
             //Note: Even if considering env stats, will be considered internal
             //i.e. Friend's hunger is internal and Friend yelling at you is external
             //If internal, you are more worried about your friend being hungry rather than them yelling at you right now
@@ -155,8 +154,8 @@ public class DecisionMaking : MonoBehaviour
 
             bool isInternalCrave = DecisionMakingFunctions.IsInternalCrave(selfMainCPort.characterPsyche.InternalMotivationLevel, targetStatInitialValue, envChange, externalMotivationCutoff);
 
-            Debug.Log("Is internal crave: " + isInternalCrave + " Target stat type: " + targetStatType + " Target stat initial value: " + targetStatInitialValue);
-
+            DebugManager.Instance?.SetActionSelectionDebugValue("Is internal crave (Si - Ne)", isInternalCrave);
+            DebugManager.Instance?.SetActionSelectionDebugValue("Target stat type", targetStatType);
             //2. Find the appropriate response (Ne or Ni)
 
             //Get all the Decisions (done before) based on the env Relationship Node
@@ -218,6 +217,7 @@ public class DecisionMaking : MonoBehaviour
                         ultimateNePositiveDecisionNode = returnSiNeDecision.NePositiveDecision;
                         isUltimateActionNe = true;
                         isSafeEnough = returnSiNeDecision.IsSafeEnough;
+                        DebugManager.Instance?.SetActionSelectionDebugValue("Is safe enough for Si - Ne action selection", "True");
                     }
                 }
 
@@ -232,6 +232,11 @@ public class DecisionMaking : MonoBehaviour
                         ultimateNegativeTargetStatType = returnSiNeDecision.TargetNegativeStatOfInterest;
                         ultimateNeNegativeDecisionNode = returnSiNeDecision.NeNegativeDecision;
                         isSafeEnough = false;
+                        DebugManager.Instance?.SetActionSelectionDebugValue("Too risky of decision for Si - Ne action selection", "True");
+                        DebugManager.Instance?.SetActionSelectionDebugValue("Largest Positive Predictor Change", ultimateLargestPositivePredictorChange);
+                        DebugManager.Instance?.SetActionSelectionDebugValue("Largest Positive Predictor Value", ultimateLargestPositivePredictorValue);
+                        DebugManager.Instance?.SetActionSelectionDebugValue("Positive Target Stat Type", ultimatePositiveTargetStatType.ToString());
+                        DebugManager.Instance?.SetActionSelectionDebugValue("Ne Positive Decision Node", ultimateNePositiveDecisionNode);
                     }
                 }
 
@@ -244,7 +249,11 @@ public class DecisionMaking : MonoBehaviour
                     ultimatePositiveTargetStatType = returnSiNeDecision.TargetPositiveStatOfInterest;
                     ultimateNePositiveDecisionNode = returnSiNeDecision.NePositiveDecision;
                     isRewardingEnough = false;
-                    Debug.Log("No rewarding decisions found for Si - Ne action selection.");
+                    DebugManager.Instance?.SetActionSelectionDebugValue("No rewarding decisions found for Si - Ne action selection", "True");
+                    DebugManager.Instance?.SetActionSelectionDebugValue("Largest Positive Predictor Change", ultimateLargestPositivePredictorChange);
+                    DebugManager.Instance?.SetActionSelectionDebugValue("Largest Positive Predictor Value", ultimateLargestPositivePredictorValue);
+                    DebugManager.Instance?.SetActionSelectionDebugValue("Positive Target Stat Type", ultimatePositiveTargetStatType.ToString());
+                    DebugManager.Instance?.SetActionSelectionDebugValue("Ne Positive Decision Node", ultimateNePositiveDecisionNode);
                 }
             }
             //Se - Ni
@@ -259,7 +268,8 @@ public class DecisionMaking : MonoBehaviour
 
                 AllStats allInitialStats = new AllStats(selfStats.L, selfStats.DB, selfStats.NB, envStats.L, envStats.DB, envStats.NB);
                 ReturnDecision returnSeNiDecision = DecisionMakingFunctions.CalculateSeNiDecisions(niResponseNodes, targetStatType, allInitialStats, selfMainCPort, envMainCPort, envRelationshipNode);
-
+                
+                
                 if (returnSeNiDecision.IsNiDecision)
                 {
                     //Commit action
@@ -269,11 +279,20 @@ public class DecisionMaking : MonoBehaviour
                         {
                             ultimateLargestPositivePredictorChange = returnSeNiDecision.LargestPositivePredictorChange;
                             ultimateLargestPositivePredictorValue = returnSeNiDecision.LargestPositivePredictorValue;
+                            ultimateLargestNegativePredictorValue = returnSeNiDecision.LargestNegativePredictorValue;
+                            ultimateLargestNegativePredictorChange = returnSeNiDecision.LargestNegativePredictorChange;
                             ultimatePositiveTargetStatType = returnSeNiDecision.TargetPositiveStatOfInterest;
                             ultimateNiPositiveDecisionNode = returnSeNiDecision.NiPositiveDecision;
                             isUltimateActionNi = true;
                             isSafeEnough = returnSeNiDecision.IsSafeEnough;
                             isRewardingEnough = returnSeNiDecision.IsRewardingEnough;
+                            DebugManager.Instance?.SetActionSelectionDebugValue("Rewarding decisions found for Se - Ni action selection", "True");
+                            DebugManager.Instance?.SetActionSelectionDebugValue("Largest Positive Predictor Change", ultimateLargestPositivePredictorChange);
+                            DebugManager.Instance?.SetActionSelectionDebugValue("Largest Positive Predictor Value", ultimateLargestPositivePredictorValue);
+                            DebugManager.Instance?.SetActionSelectionDebugValue("Largest Negative Predictor Change", ultimateLargestNegativePredictorChange);
+                            DebugManager.Instance?.SetActionSelectionDebugValue("Largest Negative Predictor Value", ultimateLargestNegativePredictorValue);
+                            DebugManager.Instance?.SetActionSelectionDebugValue("Positive Target Stat Type", ultimatePositiveTargetStatType.ToString());
+                            DebugManager.Instance?.SetActionSelectionDebugValue("Ni Positive Decision Node", ultimateNiPositiveDecisionNode);
                         }
                     }
 
@@ -293,6 +312,13 @@ public class DecisionMaking : MonoBehaviour
                             ultimateNiNegativeDecisionNode = returnSeNiDecision.NiNegativeDecision;
                             isSafeEnough = false;
                             isUltimateActionNi = true;
+                            DebugManager.Instance?.SetActionSelectionDebugValue("Too risky of decisions found for Se - Ni action selection", "True");
+                            DebugManager.Instance?.SetActionSelectionDebugValue("Largest Positive Predictor Change", ultimateLargestPositivePredictorChange);
+                            DebugManager.Instance?.SetActionSelectionDebugValue("Largest Positive Predictor Value", ultimateLargestPositivePredictorValue);
+                            DebugManager.Instance?.SetActionSelectionDebugValue("Largest Negative Predictor Change", ultimateLargestNegativePredictorChange);
+                            DebugManager.Instance?.SetActionSelectionDebugValue("Largest Negative Predictor Value", ultimateLargestNegativePredictorValue);
+                            DebugManager.Instance?.SetActionSelectionDebugValue("Positive Target Stat Type", ultimatePositiveTargetStatType.ToString());
+                            DebugManager.Instance?.SetActionSelectionDebugValue("Ni Positive Decision Node", ultimateNiPositiveDecisionNode);
                         }
                     }
 
@@ -305,7 +331,12 @@ public class DecisionMaking : MonoBehaviour
                         ultimatePositiveTargetStatType = returnSeNiDecision.TargetPositiveStatOfInterest;
                         ultimateNiPositiveDecisionNode = returnSeNiDecision.NiPositiveDecision;
                         isRewardingEnough = false;
-                        Debug.Log("No rewarding decisions found for Si - Ne action selection.");
+                        //Debug.Log("No rewarding decisions found for Si - Ne action selection.");
+                        DebugManager.Instance?.SetActionSelectionDebugValue("No rewarding decisions found for Se - Ni action selection", "True");
+                        DebugManager.Instance?.SetActionSelectionDebugValue("Largest Positive Predictor Change", ultimateLargestPositivePredictorChange);
+                        DebugManager.Instance?.SetActionSelectionDebugValue("Largest Positive Predictor Value", ultimateLargestPositivePredictorValue);
+                        DebugManager.Instance?.SetActionSelectionDebugValue("Positive Target Stat Type", ultimatePositiveTargetStatType.ToString());
+                        DebugManager.Instance?.SetActionSelectionDebugValue("Ni Positive Decision Node", ultimateNiPositiveDecisionNode);
                     }
                 }
                 else

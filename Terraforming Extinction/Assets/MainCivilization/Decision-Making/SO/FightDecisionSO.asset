@@ -20,8 +20,8 @@ MonoBehaviour:
     Description: Fighting
     RewardType: 0
     Empathy: 
-    Target: DB
-    Predictor: 
+    Target: DB(A)
+    Predictor: '(DB(A) + DB(N))/2 + (L(A) - L(N))/2 '
     HabitCounter: 0
   ComplexGoalListOfDecisions: []
   HabitCounter: 0

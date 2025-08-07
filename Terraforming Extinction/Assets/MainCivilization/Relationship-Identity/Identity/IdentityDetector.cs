@@ -189,7 +189,8 @@ public class IdentityDetector : MonoBehaviour
         (foundSubIdentifierNode, likenessScore) = AdaptiveIdentifierFunctions.FindSubidentifierNodeWithAppearanceAndActionWithLikenessScore(selfRelationshipPersonalTree, envEnumIdentifier, envAppearanceCharacteristics, envActionCharacteristics, envName);
         if (foundSubIdentifierNode != null) 
         {
-            Debug.Log("Found subidentifier nodes: " + foundSubIdentifierNode.SubIdentifierName + " Likness Score: " + likenessScore);
+            DebugManager.Instance?.SetIdentityDebugValue("FoundSubIdentifierNode", foundSubIdentifierNode.SubIdentifierName);
+            DebugManager.Instance?.SetIdentityDebugValue("LikenessScore", likenessScore);
         }
         else
         {
@@ -201,7 +202,7 @@ public class IdentityDetector : MonoBehaviour
             //perfect match or close enough to not distinct and have to be the same name. 
             if (likenessScore > selfDistinctiveAbility && foundSubIdentifierNode.SubIdentifierName == envName)
             {
-                Debug.Log("Found subidentifier same as node with name: " + foundSubIdentifierNode.SubIdentifierName);
+                DebugManager.Instance?.SetIdentityDebugValue("PerfectMatchSubIdentifierNode", foundSubIdentifierNode.SubIdentifierName);
                 //alters the relationship tree when perfect match (or similar enough) to be that specific thing
                 selfRelationshipPersonalTree.AddValuesToSubIdentifier(foundSubIdentifierNode, selfExistingNodesDistinctiveAbility, selfJudgementLevel, selfExtrapolationLevel, selfGeneralizationLevel, 1);
                 return foundSubIdentifierNode;
@@ -209,7 +210,7 @@ public class IdentityDetector : MonoBehaviour
             //FIT
             else if(likenessScore > selfDistinctiveAbility * 0.8)
             {
-                Debug.Log("Fit with " + foundSubIdentifierNode.SubIdentifierName);
+                DebugManager.Instance?.SetIdentityDebugValue("FitSubIdentifierNode", foundSubIdentifierNode.SubIdentifierName);
                 float maxLikenessScore = AdaptiveIdentifierFunctions.GetMaxLikenessScorePossible(foundSubIdentifierNode);
 
                 //ADOPT in FIT
@@ -290,7 +291,6 @@ public class IdentityDetector : MonoBehaviour
                     //Adopt the Relationship node (identifier node has no appearance or action)
                     float adoptedValue = 1.0f;
 
-                    Debug.Log("Relationship Nodes for identifier node count: " + identifierNode.RelationshipNodes.Count + " identifier node name: " + identifierNode.Identifier.ToString());
 
                     foreach (RelationshipNode relationshipNode in identifierNode.RelationshipNodes)
                     {
@@ -305,8 +305,7 @@ public class IdentityDetector : MonoBehaviour
                     identifierNode.SubIdentifiers.Add(newSubIdentifierNode);
                     foundIdentifierNode = true;
 
-
-                    Debug.Log("Added subidentifier node " + newSubIdentifierNode.SubIdentifierName + " in identifier " + identifierNode.Identifier.ToString());
+                    DebugManager.Instance?.SetIdentityDebugValue("AddedSubIdentifierNode", newSubIdentifierNode.SubIdentifierName);
                     return newSubIdentifierNode;
                 }
             }

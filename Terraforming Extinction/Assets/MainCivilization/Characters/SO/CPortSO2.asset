@@ -12,6 +12,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b3dd1ace340b2c947b18ac91fdabe2cb, type: 3}
   m_Name: CPortSO2
   m_EditorClassIdentifier: 
-  Name: 
+  Name: Env
   CharacterPsycheSO: {fileID: 11400000, guid: ba87cfb0ef5cee748821ad3ec6d40e69, type: 2}
   CharacterPhysicalSO: {fileID: 11400000, guid: 68b92fa244d841d479cdf7a7a319f6e6, type: 2}

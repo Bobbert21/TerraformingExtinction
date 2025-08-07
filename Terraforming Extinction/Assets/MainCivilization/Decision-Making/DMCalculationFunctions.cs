@@ -746,7 +746,7 @@ public static class DMCalculationFunctions
 
             double adjustedChangeValueWithHabit = adjustedChangeValue + totalHabitContribution;
             double predictorValueWithHabit = predictorValue + adjustedChangeValueWithHabit;
-
+            Debug.Log("Adjusted change value with habit: " + adjustedChangeValueWithHabit + " predictor value with habit: " + predictorValueWithHabit);
             //evaluate the greatest change for perspectives
             if (adjustedChangeValueWithHabit > largestPositivePredictorChange)
             {
@@ -767,7 +767,6 @@ public static class DMCalculationFunctions
 
 
         }
-
         return (largestPositivePredictorValue, largestNegativePredictorValue, largestPositivePredictorChange, largestNegativePredictorChange, 
             largestPositivePredictorStat, largestNegativePredictorStat, positivePerspective, negativePerspective);
     }
