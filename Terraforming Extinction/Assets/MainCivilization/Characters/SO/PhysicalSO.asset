@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   Stats:
     L: 100
-    DB: 100
+    DB: 50
     NB: 100
   actionCharacteristics: 01000000
   appearanceCharacteristics: 0100000003000000

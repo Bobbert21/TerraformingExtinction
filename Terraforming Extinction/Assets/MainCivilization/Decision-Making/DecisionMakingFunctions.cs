@@ -34,6 +34,7 @@ public class ReturnDecision
     {
         IsNeDecision = true;
         IsNiDecision = false;
+        NePositiveDecision = nePositiveDecision;
         LargestPositivePredictorValue = largestPositivePredictorValue;
         LargestPositivePredictorChange = largestPositivePredictorChange;
         TargetPositiveStatOfInterest = targetStatOfInterest;
@@ -139,8 +140,9 @@ public static class DecisionMakingFunctions
 
     public static bool IsInternalCrave(double internalMotivationLevel, double currentLowestStat, double envChange, double cutOff)
     {
-        double adjustedCutoff = cutOff * (100 - internalMotivationLevel) / 50 * currentLowestStat / 50;
+        double adjustedCutoff = cutOff * (100 - internalMotivationLevel) / 50 * (100 - currentLowestStat) / 50;
 
+        //Greater the cutoff, the more likely to be internal
         //If environment isn't concerning enough, then will be internal motive
         if (Math.Abs(envChange) < adjustedCutoff)
         {
@@ -169,14 +171,14 @@ public static class DecisionMakingFunctions
         for(int i = 0; i < neRelationshipNodes.Count && i < characterPsyche.CognitiveStamina; i++)
         {
             RelationshipNode neRelationshipNode = neRelationshipNodes[i];
-            double predictorValueOfInterest = double.MinValue;
+            double changeValueOfInterest = 0;
             // Get the ModR values
             RelationshipValues modRValues = neRelationshipNode.ModRValues;
             Dictionary<EnumPersonalityStats, double> alternativeStatPerspectivesValues = new Dictionary<EnumPersonalityStats, double>();
             // TO-DO: Would having env (i.e. NL instead of L) affect how these are calculated? Should the results be scaled less?
             if (statOfInterest == EnumPersonalityStats.L || statOfInterest == EnumPersonalityStats.NL)
             {
-                predictorValueOfInterest = modRValues.LivelihoodValue;
+                changeValueOfInterest = modRValues.LivelihoodValue;
                 if(perspectivesExplored < characterPsyche.PerspectiveAbility)
                 {
                     if(statOfInterest == EnumPersonalityStats.L)
@@ -196,7 +198,7 @@ public static class DecisionMakingFunctions
             }
             else if(statOfInterest == EnumPersonalityStats.DB || statOfInterest == EnumPersonalityStats.NDB)
             {
-                predictorValueOfInterest = modRValues.DefensiveBelongingValue;
+                changeValueOfInterest = modRValues.DefensiveBelongingValue;
                 if (perspectivesExplored < characterPsyche.PerspectiveAbility)
                 {
                     if (statOfInterest == EnumPersonalityStats.DB)
@@ -216,7 +218,7 @@ public static class DecisionMakingFunctions
             }
             else if(statOfInterest == EnumPersonalityStats.NB || statOfInterest == EnumPersonalityStats.NNB)
             {
-                predictorValueOfInterest = modRValues.NurtureBelongingValue;
+                changeValueOfInterest = modRValues.NurtureBelongingValue;
                 if (perspectivesExplored < characterPsyche.PerspectiveAbility)
                 {
                     if (statOfInterest == EnumPersonalityStats.NB)
@@ -241,8 +243,10 @@ public static class DecisionMakingFunctions
             }
 
             //Adjust based on initial stats
-            double changeValueOfInterest = predictorValueOfInterest - allInitialStats.StatOfInterest(statOfInterest.ToString());
-            double adjustedChangeValueOfInterest = DMCalculationFunctions.ScaleSurvivalStatChange(changeValueOfInterest, allInitialStats.StatOfInterest(statOfInterest.ToString()));
+            //Not adjusted by habits nor survival stat
+            double predictorValueOfInterest = changeValueOfInterest + allInitialStats.StatOfInterest(statOfInterest);
+
+            double adjustedChangeValueOfInterest = DMCalculationFunctions.ScaleSurvivalStatChange(changeValueOfInterest, allInitialStats.StatOfInterest(statOfInterest));
 
             //Add the habit contribution
             double habitContribution = DMCalculationFunctions.HabitContribution(neRelationshipNode.HabitCounter, characterPsyche.MaxHabitCounter, characterPsyche.HabitualTendencies);
@@ -254,8 +258,9 @@ public static class DecisionMakingFunctions
             // Check if this is the largest positive predictor value for stat of interest or more than the reward cutoff for character
             if (adjustedPositiveChangeValueOfInterest > largestPositivePredictorChange)
             {
-                //add hbit to make it better than it is
-                largestPositivePredictorValue = predictorValueOfInterest + habitContribution;
+                //add habit to make it better than it is
+                //Predictor value is not adjusted by survival stats
+                largestPositivePredictorValue = predictorValueOfInterest;
                 largestPositivePredictorNode = neRelationshipNode;
                 largestPositivePredictorChange = adjustedPositiveChangeValueOfInterest;
                 largestPositivePredictorStat = statOfInterest;
@@ -266,7 +271,7 @@ public static class DecisionMakingFunctions
             if (adjustedNegativeChangeValueOfInterest < largestNegativePredictorChange) 
             { 
                 //Subtracting to make it worse than it is
-                largestNegativePredictorValue = predictorValueOfInterest - habitContribution;
+                largestNegativePredictorValue = predictorValueOfInterest;
                 largestNegativePredictorNode = neRelationshipNode;
                 largestNegativePredictorChange = adjustedNegativeChangeValueOfInterest;
                 largestNegativePredictorStat = statOfInterest;
@@ -275,11 +280,11 @@ public static class DecisionMakingFunctions
             //Check other values to see
             foreach (KeyValuePair<EnumPersonalityStats, double> alternateStatPerspectiveValue in alternativeStatPerspectivesValues)
             {
-                double predictorValue = alternateStatPerspectiveValue.Value;
-                double changeValue = predictorValue - allInitialStats.StatOfInterest(alternateStatPerspectiveValue.Key.ToString());
+                double changeValue = alternateStatPerspectiveValue.Value;
+                double predictorValue = changeValue + allInitialStats.StatOfInterest(alternateStatPerspectiveValue.Key);
 
                 //Adjust values based on initial and opportunism level
-                double adjustedChangeValue = DMCalculationFunctions.ScaleSurvivalStatChange(changeValue, allInitialStats.StatOfInterest(alternateStatPerspectiveValue.Key.ToString()));
+                double adjustedChangeValue = DMCalculationFunctions.ScaleSurvivalStatChange(changeValue, allInitialStats.StatOfInterest(alternateStatPerspectiveValue.Key));
                 //Opportunism Adjustment debuffs because it's not target of interest
                 adjustedChangeValue = DMCalculationFunctions.OpportunismAdjustment(adjustedChangeValue, characterPsyche.OpportunismLevel);
 
@@ -289,7 +294,7 @@ public static class DecisionMakingFunctions
 
                 if (adjustedPositiveChangeValue > largestPositivePredictorChange)
                 {
-                    largestPositivePredictorValue = predictorValue + habitContribution;
+                    largestPositivePredictorValue = predictorValue;
                     largestPositivePredictorChange = adjustedPositiveChangeValue;
                     largestPositivePredictorNode = neRelationshipNode;
                     largestPositivePredictorStat = alternateStatPerspectiveValue.Key;
@@ -297,7 +302,7 @@ public static class DecisionMakingFunctions
 
                 if(adjustedNegativeChangeValue < largestNegativePredictorChange)
                 {
-                    largestNegativePredictorValue = predictorValueOfInterest - habitContribution;
+                    largestNegativePredictorValue = predictorValue;
                     largestNegativePredictorNode = neRelationshipNode;
                     largestNegativePredictorChange = adjustedNegativeChangeValue;
                     largestNegativePredictorStat = alternateStatPerspectiveValue.Key;
@@ -328,8 +333,8 @@ public static class DecisionMakingFunctions
         }
 
 
-        
 
+        Debug.Log("Largest positive predictor node: " + largestPositivePredictorNode.Name);
         returnDecision.SetNeValuesWithCommit(largestPositivePredictorValue, largestPositivePredictorChange, largestPositivePredictorStat, largestPositivePredictorNode);
 
         return returnDecision;
@@ -473,9 +478,6 @@ public static class DecisionMakingFunctions
             }
 
         }
-
-
-        
 
         ReturnDecision returnDecision = new ReturnDecision();
 

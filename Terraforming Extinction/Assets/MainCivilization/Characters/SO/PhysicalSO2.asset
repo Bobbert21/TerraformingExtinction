@@ -13,10 +13,10 @@ MonoBehaviour:
   m_Name: PhysicalSO2
   m_EditorClassIdentifier: 
   Stats:
-    L: 0
-    DB: 0
-    NB: 0
-  actionCharacteristics: 
-  appearanceCharacteristics: 
-  Identifier: 0
+    L: 60
+    DB: 100
+    NB: 100
+  actionCharacteristics: 01000000
+  appearanceCharacteristics: 0300000002000000
+  Identifier: 1
   ActionCommitting: 0

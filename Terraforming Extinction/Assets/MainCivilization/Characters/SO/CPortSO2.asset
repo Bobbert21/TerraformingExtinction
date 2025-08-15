@@ -14,4 +14,4 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   Name: Env
   CharacterPsycheSO: {fileID: 11400000, guid: ba87cfb0ef5cee748821ad3ec6d40e69, type: 2}
-  CharacterPhysicalSO: {fileID: 11400000, guid: 68b92fa244d841d479cdf7a7a319f6e6, type: 2}
+  CharacterPhysicalSO: {fileID: 11400000, guid: 9c0818e6e5cd27b4295c48398a8d92b0, type: 2}

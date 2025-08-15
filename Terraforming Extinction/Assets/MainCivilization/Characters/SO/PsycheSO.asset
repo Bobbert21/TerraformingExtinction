@@ -15,7 +15,7 @@ MonoBehaviour:
   RelationshipPersonalTreeSO: {fileID: 11400000, guid: a9ba2a0b3396d4843b6594c4b15fd867, type: 2}
   FriendsRanked: []
   EnemiesRanked: []
-  BIdentity: 1
+  BIdentity: 2
   OpportunismLevel: 90
   RiskAversion: 10
   RiskCutoff: 10
@@ -31,9 +31,33 @@ MonoBehaviour:
   L_LearnedResponseDecisions: []
   NB_LearnedResponseDecisions: []
   DB_LearnedResponseDecisions: []
-  L_LearnedEnvironment: []
+  L_LearnedEnvironment:
+  - Name: 
+    PRValues:
+      DefensiveBelongingValue: 0
+      NurtureBelongingValue: 0
+      LivelihoodValue: 0
+    ModRValues:
+      DefensiveBelongingValue: 0
+      NurtureBelongingValue: 0
+      LivelihoodValue: 0
+    ActionContext: 0
+    ResponseNodes: []
+    HabitCounter: 0
   NB_LearnedEnvironment: []
-  DB_LearnedEnvironment: []
+  DB_LearnedEnvironment:
+  - Name: Battle Cage
+    PRValues:
+      DefensiveBelongingValue: 0
+      NurtureBelongingValue: 0
+      LivelihoodValue: 0
+    ModRValues:
+      DefensiveBelongingValue: 20
+      NurtureBelongingValue: 0
+      LivelihoodValue: 0
+    ActionContext: 1
+    ResponseNodes: []
+    HabitCounter: 0
   ProcessingSpeed: 1
   AwarenessLevel: 100
   DistinctiveAbility: 0

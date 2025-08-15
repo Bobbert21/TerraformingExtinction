@@ -22,16 +22,16 @@ MonoBehaviour:
         NurtureBelongingValue: 0
         LivelihoodValue: 0
       ModRValues:
-        DefensiveBelongingValue: 10
-        NurtureBelongingValue: 10
-        LivelihoodValue: 10
+        DefensiveBelongingValue: -40
+        NurtureBelongingValue: -50
+        LivelihoodValue: -40
       ActionContext: 0
       ResponseNodes:
       - Decision: {fileID: 11400000, guid: e5f0aecc9f8ecae49965c64877c30a6b, type: 2}
         ModRValues:
-          DefensiveBelongingValue: 10
-          NurtureBelongingValue: 10
-          LivelihoodValue: 10
+          DefensiveBelongingValue: 0
+          NurtureBelongingValue: -60
+          LivelihoodValue: -60
         HabitCounter: 0
       HabitCounter: 0
     Children:

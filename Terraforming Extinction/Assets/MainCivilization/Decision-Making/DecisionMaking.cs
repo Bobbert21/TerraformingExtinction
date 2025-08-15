@@ -218,6 +218,10 @@ public class DecisionMaking : MonoBehaviour
                         isUltimateActionNe = true;
                         isSafeEnough = returnSiNeDecision.IsSafeEnough;
                         DebugManager.Instance?.SetActionSelectionDebugValue("Is safe enough for Si - Ne action selection", "True");
+                        DebugManager.Instance?.SetActionSelectionDebugValue("Largest Positive Predictor Change", ultimateLargestPositivePredictorChange);
+                        DebugManager.Instance?.SetActionSelectionDebugValue("Largest Positive Predictor Value", ultimateLargestPositivePredictorValue);
+                        DebugManager.Instance?.SetActionSelectionDebugValue("Positive Target Stat Type", ultimatePositiveTargetStatType.ToString());
+                        DebugManager.Instance?.SetActionSelectionDebugValue("Ne Positive Decision Node", ultimateNePositiveDecisionNode.Name);
                     }
                 }
 
@@ -236,7 +240,7 @@ public class DecisionMaking : MonoBehaviour
                         DebugManager.Instance?.SetActionSelectionDebugValue("Largest Positive Predictor Change", ultimateLargestPositivePredictorChange);
                         DebugManager.Instance?.SetActionSelectionDebugValue("Largest Positive Predictor Value", ultimateLargestPositivePredictorValue);
                         DebugManager.Instance?.SetActionSelectionDebugValue("Positive Target Stat Type", ultimatePositiveTargetStatType.ToString());
-                        DebugManager.Instance?.SetActionSelectionDebugValue("Ne Positive Decision Node", ultimateNePositiveDecisionNode);
+                        DebugManager.Instance?.SetActionSelectionDebugValue("Ne Positive Decision Node", ultimateNePositiveDecisionNode.Name);
                     }
                 }
 
@@ -253,7 +257,7 @@ public class DecisionMaking : MonoBehaviour
                     DebugManager.Instance?.SetActionSelectionDebugValue("Largest Positive Predictor Change", ultimateLargestPositivePredictorChange);
                     DebugManager.Instance?.SetActionSelectionDebugValue("Largest Positive Predictor Value", ultimateLargestPositivePredictorValue);
                     DebugManager.Instance?.SetActionSelectionDebugValue("Positive Target Stat Type", ultimatePositiveTargetStatType.ToString());
-                    DebugManager.Instance?.SetActionSelectionDebugValue("Ne Positive Decision Node", ultimateNePositiveDecisionNode);
+                    DebugManager.Instance?.SetActionSelectionDebugValue("Ne Positive Decision Node", ultimateNePositiveDecisionNode.Name);
                 }
             }
             //Se - Ni
