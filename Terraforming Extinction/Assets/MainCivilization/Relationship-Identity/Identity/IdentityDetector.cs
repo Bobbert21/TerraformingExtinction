@@ -162,7 +162,7 @@ public class IdentityDetector : MonoBehaviour
 
         //If hasn't found any nodes, then create a new one
 
-        RelationshipNode newRelationshipNode = new RelationshipNode(actionCommitting.ToString(), new RelationshipValues(0, 0, 0), new RelationshipValues(0, 0, 0), actionCommitting, null);
+        RelationshipNode newRelationshipNode = new RelationshipNode(actionCommitting.ToString(), new RelationshipValues(0, 0, 0), new RelationshipValues(0, 0, 0), actionCommitting, null, 0, foundSubIdentifierNode);
         foundSubIdentifierNode.AddRelationshipNode(newRelationshipNode);
 
         return newRelationshipNode;
@@ -261,7 +261,8 @@ public class IdentityDetector : MonoBehaviour
                 {
                     RelationshipValues newPRValues = new(relationshipNode.PRValues.LivelihoodValue * adoptedValue, relationshipNode.PRValues.DefensiveBelongingValue * adoptedValue, relationshipNode.PRValues.NurtureBelongingValue * adoptedValue);
                     RelationshipValues newModRValues = new(relationshipNode.ModRValues.LivelihoodValue * adoptedValue, relationshipNode.ModRValues.DefensiveBelongingValue * adoptedValue, relationshipNode.ModRValues.NurtureBelongingValue * adoptedValue);
-                    RelationshipNode newRelationshipNode = new RelationshipNode(relationshipNode.Name, newPRValues, newModRValues, relationshipNode.ActionContext, relationshipNode.ResponseNodes);
+                    RelationshipNode newRelationshipNode = new RelationshipNode(relationshipNode.Name, newPRValues, 
+                        newModRValues, relationshipNode.ActionContext, relationshipNode.ResponseNodes, 0, foundSubIdentifierNode);
                     newSubIdentifierNode.AddRelationshipNode(newRelationshipNode);  
                 }
 
@@ -296,7 +297,8 @@ public class IdentityDetector : MonoBehaviour
                     {
                         RelationshipValues newPRValues = new(relationshipNode.PRValues.LivelihoodValue * adoptedValue, relationshipNode.PRValues.DefensiveBelongingValue * adoptedValue, relationshipNode.PRValues.NurtureBelongingValue * adoptedValue);
                         RelationshipValues newModRValues = new(relationshipNode.ModRValues.LivelihoodValue * adoptedValue, relationshipNode.ModRValues.DefensiveBelongingValue * adoptedValue, relationshipNode.ModRValues.NurtureBelongingValue * adoptedValue);
-                        RelationshipNode newRelationshipNode = new RelationshipNode(relationshipNode.Name, newPRValues, newModRValues, relationshipNode.ActionContext, relationshipNode.ResponseNodes);
+                        RelationshipNode newRelationshipNode = new RelationshipNode(relationshipNode.Name, newPRValues, newModRValues, relationshipNode.ActionContext, 
+                            relationshipNode.ResponseNodes, 0, newSubIdentifierNode);
                         Debug.Log("Adding relationship node " + newRelationshipNode.Name + " to subidentifier node " + newSubIdentifierNode.SubIdentifierName);
                         newSubIdentifierNode.AddRelationshipNode(newRelationshipNode);
                     }

@@ -59,6 +59,8 @@ public class RelationshipValues
 public class RelationshipNode
 {
     public string Name;
+    public SubIdentifierNode ParentSubIdentifierNode;
+    public IdentifierNode ParentIdentifierNode;
     public RelationshipValues PRValues;
     public RelationshipValues ModRValues;
     public EnumActionCharacteristics ActionContext;
@@ -68,9 +70,11 @@ public class RelationshipNode
     public RelationshipNode() { }
 
     //Copy constructor
-    public RelationshipNode(RelationshipNode other)
+    public RelationshipNode(RelationshipNode other, SubIdentifierNode parentSubIdentifierNode = null, IdentifierNode parentIdentifierNode = null)
     {
         Name = other.Name;
+        ParentSubIdentifierNode = parentSubIdentifierNode;
+        ParentIdentifierNode = parentIdentifierNode;
         PRValues = new RelationshipValues(other.PRValues);  
         ModRValues = new RelationshipValues(other.ModRValues);
         ActionContext = other.ActionContext; // enums are value types, so direct copy is fine
@@ -80,27 +84,45 @@ public class RelationshipNode
         {
             foreach (var node in other.ResponseNodes)
             {
-                ResponseNodes.Add(new RelationshipDecisionNode(node));
+                ResponseNodes.Add(new RelationshipDecisionNode(node, other));
             }
         }
         
     }
 
-    public RelationshipNode DeepCopy()
+    public RelationshipNode DeepCopy(SubIdentifierNode copyParentSubIdentifierNode = null, IdentifierNode copyParentIdentifierNode = null)
     {
-        return new RelationshipNode(
+        // Create the new RelationshipNode shell first
+        var newNode = new RelationshipNode(
             Name,
             new RelationshipValues(PRValues),
             new RelationshipValues(ModRValues),
             ActionContext,
-            ResponseNodes != null ? new List<RelationshipDecisionNode>(ResponseNodes.ConvertAll(r => new RelationshipDecisionNode(r))) : new List<RelationshipDecisionNode>(),
-            HabitCounter
-            );
+            new List<RelationshipDecisionNode>(), // empty for now
+            HabitCounter,
+            copyParentSubIdentifierNode,
+            copyParentIdentifierNode
+        );
+
+        // Now copy ResponseNodes, linking them to the *new* RelationshipNode
+        if (ResponseNodes != null)
+        {
+            foreach (var response in ResponseNodes)
+            {
+                newNode.ResponseNodes.Add(new RelationshipDecisionNode(response, newNode));
+            }
+        }
+
+        return newNode;
     }
 
-    public RelationshipNode(string name, RelationshipValues pRValues, RelationshipValues modRValues, EnumActionCharacteristics actionContext, List<RelationshipDecisionNode> responseNodes, int habitCounter = 0)
+    public RelationshipNode(string name, RelationshipValues pRValues, RelationshipValues modRValues, EnumActionCharacteristics actionContext, 
+        List<RelationshipDecisionNode> responseNodes, int habitCounter = 0, SubIdentifierNode parentSubIdentifierNode = null, 
+        IdentifierNode parentIdentifierNode = null)
     {
         Name = name;
+        ParentSubIdentifierNode = parentSubIdentifierNode;
+        ParentIdentifierNode = parentIdentifierNode;
         PRValues = pRValues;
         ModRValues = modRValues;
         ActionContext = actionContext;
@@ -113,12 +135,14 @@ public class RelationshipNode
 public class RelationshipDecisionNode
 {
     public DecisionSO Decision;
+    public RelationshipNode ParentRelationshipNode; 
     public RelationshipValues ModRValues;
     public int HabitCounter;
 
-    public RelationshipDecisionNode(RelationshipDecisionNode other) 
+    public RelationshipDecisionNode(RelationshipDecisionNode other, RelationshipNode parentRelationshipNode) 
     { 
         Decision = other.Decision;
+        ParentRelationshipNode = parentRelationshipNode;
         ModRValues = other.ModRValues;
         HabitCounter = other.HabitCounter;
     }

@@ -195,7 +195,7 @@ public class RelationshipPersonalTree
                 //Transcend relationship
                 foreach (RelationshipNode relationshipNode in specificNode.RelationshipNodes)
                 {
-                    RelationshipNode newRelationshipNode = new RelationshipNode(relationshipNode);
+                    RelationshipNode newRelationshipNode = new RelationshipNode(relationshipNode, heuristicNode);
 
                     //loop through pr and modr values and adjust them
                     //Create new array with PR and ModR and loop through them
@@ -212,9 +212,10 @@ public class RelationshipPersonalTree
             }
             else
             {
+                //transcend to identifier node if there are no parent subidentifiers
                 foreach (RelationshipNode relationshipNode in specificNode.RelationshipNodes)
                 {
-                    RelationshipNode newRelationshipNode = new RelationshipNode(relationshipNode);
+                    RelationshipNode newRelationshipNode = new RelationshipNode(relationshipNode, null, specificNode.Parent);
 
                     //loop through pr and modr values and adjust them
                     //Create new array with PR and ModR and loop through them
@@ -261,7 +262,7 @@ public class RelationshipPersonalTree
                 //Trickle relationship
                 foreach (RelationshipNode relationshipNode in heuristicNode.RelationshipNodes)
                 {
-                    RelationshipNode newRelationshipNode = new RelationshipNode(relationshipNode);
+                    RelationshipNode newRelationshipNode = new RelationshipNode(relationshipNode, specificNode);
 
                     //loop through pr and modr values and adjust them
                     //Create new array with PR and ModR and loop through them
@@ -281,7 +282,7 @@ public class RelationshipPersonalTree
             {
                 foreach (RelationshipNode relationshipNode in specificNode.Parent.RelationshipNodes)
                 {
-                    RelationshipNode newRelationshipNode = new RelationshipNode(relationshipNode);
+                    RelationshipNode newRelationshipNode = new RelationshipNode(relationshipNode, specificNode);
 
                     //loop through pr and modr values and adjust them
                     //Create new array with PR and ModR and loop through them

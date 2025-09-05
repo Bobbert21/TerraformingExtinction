@@ -35,14 +35,17 @@ public class CharacterPsycheSO : ScriptableObject, ICharacterPsyche
     public double HabitualTendencies;
     //How many perspectives they can consider
     public int PerspectiveAbility;
+    //Consideration of abstract concepts vs. concrete concepts
+    public double AbstractInclination;
     //how many actions they can decide
     public int CognitiveStamina;
     public List<RelationshipDecisionNode> L_LearnedResponseDecisions;
     public List<RelationshipDecisionNode> NB_LearnedResponseDecisions;
     public List<RelationshipDecisionNode> DB_LearnedResponseDecisions;
-    public List<RelationshipNode> L_LearnedEnvironment;
-    public List<RelationshipNode> NB_LearnedEnvironment;
-    public List<RelationshipNode> DB_LearnedEnvironment;
+    public ScenarioMemory ScenarioMemoryBank = new ScenarioMemory();
+    public List<RelationshipNode> L_LearnedScenarios;
+    public List<RelationshipNode> NB_LearnedScenarios;
+    public List<RelationshipNode> DB_LearnedScenarios;
 
     [Header("Identifier Script Variables")]
     public double ProcessingSpeed;

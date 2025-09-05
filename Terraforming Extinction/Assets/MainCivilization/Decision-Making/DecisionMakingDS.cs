@@ -52,3 +52,54 @@ public class Perspective
     public int HabitCounter;
 }
 
+
+public class DMReturnPredictorCalculations
+{
+    public double largestPositivePredictorValue;
+    public double largestNegativePredictorValue;
+    public double largestPositivePredictorAdjustedChange;
+    public double largestNegativePredictorAdjustedChange;
+    public EnumPersonalityStats largestPositivePredictorStat;
+    public EnumPersonalityStats largestNegativePredictorStat;
+    public Perspective positivePerspective;
+    public Perspective negativePerspective;
+
+    public DMReturnPredictorCalculations() { }
+
+    public DMReturnPredictorCalculations(EnumPersonalityStats statOfInterest) {
+        this.largestPositivePredictorValue = double.MinValue;
+        this.largestNegativePredictorValue = double.MaxValue;
+        this.largestPositivePredictorAdjustedChange = double.MinValue;
+        this.largestNegativePredictorAdjustedChange = double.MaxValue;
+        this.largestPositivePredictorStat = statOfInterest;
+        this.largestNegativePredictorStat = statOfInterest;
+        this.positivePerspective = null;
+        this.negativePerspective = null;
+
+    }
+
+    public void SetPredictorValues(double largestPositivePredictorValue, double largestNegativePredictorValue)
+    {
+        this.largestPositivePredictorValue = largestPositivePredictorValue;
+        this.largestNegativePredictorValue = largestNegativePredictorValue;
+    }
+
+    public void SetChangeValues(double largestPositivePredictorChange, double largestNegativePredictorChange)
+    {
+        this.largestPositivePredictorAdjustedChange = largestPositivePredictorChange;
+        this.largestNegativePredictorAdjustedChange = largestNegativePredictorChange;
+    }
+
+    public void SetPersonalityStats(EnumPersonalityStats largestPositivePredictorStat, EnumPersonalityStats largestNegativePredictorStat)
+    {
+        this.largestPositivePredictorStat = largestPositivePredictorStat;
+        this.largestNegativePredictorStat = largestNegativePredictorStat;
+    }
+
+    public void SetPerspectives(Perspective positivePerspective, Perspective negativePerspective)
+    {
+        this.positivePerspective = positivePerspective;
+        this.negativePerspective = negativePerspective;
+    }
+
+}

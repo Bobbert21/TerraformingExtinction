@@ -698,8 +698,10 @@ public static class DMCalculationFunctions
         return delta * (1 + (max - current) / max);
     }
 
-    public static (double, double, double, double, EnumPersonalityStats, EnumPersonalityStats, Perspective, Perspective) CalculateSimplePositiveAndNegativePredictorChange(List<Perspective> perspectives, 
-        EnumPersonalityStats targetStat, AllStats allInitialStats, int habitCountDecision, CharacterMainCPort agent, CharacterMainCPort env, RelationshipNode envInAgentRPTNode)
+    //Ni decision making
+    public static DMReturnPredictorCalculations CalculateSimplePositiveAndNegativePredictorChange(
+        RelationshipValues modR, List<Perspective> perspectives, EnumPersonalityStats targetStat, AllStats allInitialStats, int habitCountDecision, 
+        CharacterMainCPort agent, CharacterMainCPort env, RelationshipNode envInAgentRPTNode)
     {
         double largestPositivePredictorValue = double.MinValue;
         double largestNegativePredictorValue = double.MaxValue;
@@ -709,7 +711,7 @@ public static class DMCalculationFunctions
         Perspective negativePerspective = null;
         EnumPersonalityStats largestPositivePredictorStat = targetStat; // Default to the target stat
         EnumPersonalityStats largestNegativePredictorStat = targetStat; // Default to the target stat
-        double opportunismLevel = agent.characterPsyche.OpportunismLevel;
+        
 
         string targetStatString = TranslateEnumToString(targetStat);
 
@@ -720,21 +722,47 @@ public static class DMCalculationFunctions
 
         //get the targetStat change that matters
         //This is the goal and perspective of the decision
-        for (int i = 0; i < sortedHabitPerspectives.Count && i < agent.characterPsyche.PerspectiveAbility; i++)
+        for (int i = 0; i < sortedHabitPerspectives.Count && i <= agent.characterPsyche.PerspectiveAbility; i++)
         {
-            string target = sortedHabitPerspectives[i].Target;
 
-            (double predictorValue, double changeValue) = Translate_String_To_Formula_Calculations(sortedHabitPerspectives[i].Predictor, 
-                sortedHabitPerspectives[i].Target, agent, env, envInAgentRPTNode);
+            string target;
+            double predictorValue = 0;
+            double changeValue = 0;
+
+            //Will only consider if not enough perspective ability to cover it all
+            if (i == agent.characterPsyche.PerspectiveAbility)
+            {
+                target = targetStatString;
+                //Don't have target looking into L(F), L(N), etc.
+                switch (target)
+                {
+                    case "L(A)":
+                        changeValue = modR.LivelihoodValue;
+                        break;
+                    case "DB(A)":
+                        changeValue = modR.DefensiveBelongingValue;
+                        break;
+                    case "NB(A)":
+                        changeValue = modR.NurtureBelongingValue;
+                        break;
+                    default:
+                        continue; // Skip if target is not recognized (I don't have ModR for others yet)
+                }
+
+                predictorValue = changeValue + allInitialStats.StatOfInterest(target);
+
+            }
+            else
+            {
+                target = sortedHabitPerspectives[i].Target;
+                (predictorValue, changeValue) = Translate_String_To_Formula_Calculations(sortedHabitPerspectives[i].Predictor,
+                    sortedHabitPerspectives[i].Target, agent, env, envInAgentRPTNode);
+            }
+                
+
 
             //all stat calculations will be adjusted based on initial stats
             double adjustedChangeValue = ScaleSurvivalStatChange(changeValue, allInitialStats.StatOfInterest(target));
-
-            if (target != targetStatString)
-            {
-                //A slight defect based on Opportunism level if not the target stat
-                adjustedChangeValue = OpportunismAdjustment(adjustedChangeValue, opportunismLevel);
-            }
 
             Debug.Log(sortedHabitPerspectives[i].Name + " predictor value: " + predictorValue + " Change value: " + changeValue + "adjusted change value: " + adjustedChangeValue);
 
@@ -767,13 +795,19 @@ public static class DMCalculationFunctions
 
 
         }
-        return (largestPositivePredictorValue, largestNegativePredictorValue, largestPositivePredictorChange, largestNegativePredictorChange, 
-            largestPositivePredictorStat, largestNegativePredictorStat, positivePerspective, negativePerspective);
+        DMReturnPredictorCalculations returnValues = new();
+        returnValues.SetPredictorValues(largestPositivePredictorValue, largestNegativePredictorValue);
+        returnValues.SetChangeValues(largestPositivePredictorChange, largestNegativePredictorChange);
+        returnValues.SetPerspectives(positivePerspective, negativePerspective);
+        returnValues.SetPersonalityStats(largestPositivePredictorStat, largestNegativePredictorStat);
+
+
+        return returnValues;
     }
 
     //Change return value to class
-    public static (double, double, double, double, EnumPersonalityStats, EnumPersonalityStats, Perspective, Perspective) CalculateComplexPositiveAndNegativePredictorChange(
-        DecisionSO decisionSO, EnumPersonalityStats targetStat, AllStats allInitialStats, int habitCountDecision, 
+    public static DMReturnPredictorCalculations CalculateComplexPositiveAndNegativePredictorChange(
+        RelationshipValues goalModR, DecisionSO decisionSO, EnumPersonalityStats targetStat, AllStats allInitialStats, int habitCountDecision,
         CharacterMainCPort agent, CharacterMainCPort env, RelationshipNode envInAgentRPTNode)
     {
         double largestPositivePredictorValue = double.MinValue;
@@ -802,28 +836,55 @@ public static class DMCalculationFunctions
         //Perspective of overall goal
         List<Perspective> goalPerspectives = decisionSO.Perspectives;
         //Perspective of the action in complex action currently on
-        List<Perspective> actionPerspectives = decisionSO.ComplexGoalListOfDecisions[complexGoalStep].Perspectives;
+        DecisionSO actionDecisionSO = decisionSO.ComplexGoalListOfDecisions[complexGoalStep];
+        List<Perspective> actionPerspectives = actionDecisionSO.Perspectives;
 
         List<Perspective> sortedHabitGoalPerspectives = goalPerspectives.OrderByDescending(p => p.Target == targetStat.ToString()).
             ThenByDescending(p => p.HabitCounter).ToList();
         List<Perspective> sortedHabitActionPerspectives = actionPerspectives.OrderByDescending(p => p.Target == targetStat.ToString()).
             ThenByDescending(p => p.HabitCounter).ToList();
 
-        //get the targetStat change that matters
-        for (int i = 0; i < sortedHabitGoalPerspectives.Count && i < agent.characterPsyche.PerspectiveAbility; i++)
-        {
-            string target = sortedHabitGoalPerspectives[i].Target;
 
-            (double predictorValue, double changeValue) = Translate_String_To_Formula_Calculations(sortedHabitGoalPerspectives[i].Predictor, 
-                sortedHabitGoalPerspectives[i].Target, agent, env, envInAgentRPTNode);
+
+        //get the targetStat change that matters
+        for (int i = 0; i < sortedHabitGoalPerspectives.Count && i <= agent.characterPsyche.PerspectiveAbility; i++)
+        {
+            string target;
+            double predictorValue = 0;
+            double changeValue = 0;
+
+            //if doesn't go through all perspectives, will consider ModR
+            if (i == agent.characterPsyche.PerspectiveAbility)
+            {
+                target = targetStat.ToString();
+                switch (target)
+                {
+                    case "L(A)":
+                        changeValue = goalModR.LivelihoodValue;
+                        break;
+                    case "DB(A)":
+                        changeValue = goalModR.DefensiveBelongingValue;
+                        break;
+                    case "NB(A)":
+                        changeValue = goalModR.NurtureBelongingValue;
+                        break;
+                    default:
+                        continue; // Skip if target is not recognized (I don't have ModR for others yet)
+                }
+
+                predictorValue = changeValue + allInitialStats.StatOfInterest(target);
+            }
+            else
+            {
+                target = sortedHabitGoalPerspectives[i].Target;
+
+                (predictorValue, changeValue) = Translate_String_To_Formula_Calculations(sortedHabitGoalPerspectives[i].Predictor,
+                    sortedHabitGoalPerspectives[i].Target, agent, env, envInAgentRPTNode);
+            }
+
+
 
             double adjustedChangeValue = ScaleSurvivalStatChange(changeValue, allInitialStats.StatOfInterest(target));
-
-            //If not stat of interst, will add a debuff of opportunism adjustment
-            if(target != targetStat.ToString())
-            {
-                adjustedChangeValue = OpportunismAdjustment(adjustedChangeValue, agent.characterPsyche.OpportunismLevel);
-            }
 
             //adjust value depending on which step and progress inclination
 
@@ -849,8 +910,8 @@ public static class DMCalculationFunctions
             double goalAdjustedChangeValueWithHabit = goalAdjustedChangeValue + totalHabitContribution;
             double goalAdjustedPredictorValueWithHabit = goalAdjustedPredictorValue + totalHabitContribution;
 
-            Debug.Log("Name of goal perspective: " + sortedHabitGoalPerspectives[i].Name + " Predictor Value: " + predictorValue + 
-                " Goal predicted value with progression values + habit: " + goalAdjustedPredictorValueWithHabit + 
+            Debug.Log("Name of goal perspective: " + sortedHabitGoalPerspectives[i].Name + " Predictor Value: " + predictorValue +
+                " Goal predicted value with progression values + habit: " + goalAdjustedPredictorValueWithHabit +
                 " Goal adjusted change value with habit: " + goalAdjustedChangeValueWithHabit);
 
 
@@ -870,26 +931,52 @@ public static class DMCalculationFunctions
                 negativePerspective = sortedHabitGoalPerspectives[i];
                 largestNegativePredictorStat = TranslatePersonalityStringToEnum(target);
             }
-            
+
 
         }
 
         //Alongside the goal, will also look at the specific action required
-        for (int i = 0; i < sortedHabitActionPerspectives.Count && i < agent.characterPsyche.PerspectiveAbility; i++)
+        for (int i = 0; i < sortedHabitActionPerspectives.Count && i <= agent.characterPsyche.PerspectiveAbility; i++)
         {
-            string target = sortedHabitActionPerspectives[i].Target;
-            //check for internal opportunities. See greatest change for what is highest need for 
+            string target;
+            double predictorValue = 0;
+            double changeValue = 0;
 
-            (double predictorValue, double changeValue) = Translate_String_To_Formula_Calculations(sortedHabitGoalPerspectives[i].Predictor,
-                sortedHabitGoalPerspectives[i].Target, agent, env, envInAgentRPTNode);
-            
-            double adjustedChangeValue = ScaleSurvivalStatChange(changeValue, allInitialStats.StatOfInterest(target));
-
-            //a slight defect if not target stat
-            if(target != targetStat.ToString())
+            //if doesn't go through all perspectives, will consider ModR
+            if (i == agent.characterPsyche.PerspectiveAbility)
             {
-                adjustedChangeValue = OpportunismAdjustment(adjustedChangeValue, agent.characterPsyche.OpportunismLevel);
+                target = targetStat.ToString();
+
+                //uses goal ModR
+                switch (target)
+                {
+                    case "L(A)":
+                        changeValue = goalModR.LivelihoodValue;
+                        break;
+                    case "DB(A)":
+                        changeValue = goalModR.DefensiveBelongingValue;
+                        break;
+                    case "NB(A)":
+                        changeValue = goalModR.NurtureBelongingValue;
+                        break;
+                    default:
+                        continue; // Skip if target is not recognized (I don't have ModR for others yet)
+                }
+
+                predictorValue = changeValue + allInitialStats.StatOfInterest(target);
             }
+            else
+            {
+                target = sortedHabitActionPerspectives[i].Target;
+                //check for internal opportunities. See greatest change for what is highest need for 
+
+                (predictorValue, changeValue) = Translate_String_To_Formula_Calculations(sortedHabitGoalPerspectives[i].Predictor,
+                    sortedHabitGoalPerspectives[i].Target, agent, env, envInAgentRPTNode);
+            }
+
+
+
+            double adjustedChangeValue = ScaleSurvivalStatChange(changeValue, allInitialStats.StatOfInterest(target));
 
             //Get habit contribution
             double habitDecisionContribution = HabitContribution(decisionSO.HabitCounter, agent.characterPsyche.MaxHabitCounter, agent.characterPsyche.HabitualTendencies);
@@ -915,12 +1002,19 @@ public static class DMCalculationFunctions
                 negativePerspective = sortedHabitActionPerspectives[i];
                 largestNegativePredictorStat = TranslatePersonalityStringToEnum(target);
             }
-            
+
 
 
         }
 
-        return (largestPositivePredictorValue, largestNegativePredictorValue, largestPositivePredictorChange, largestNegativePredictorChange, largestPositivePredictorStat, largestNegativePredictorStat, positivePerspective, negativePerspective);
+        DMReturnPredictorCalculations returnValues = new DMReturnPredictorCalculations();
+        returnValues.SetPredictorValues(largestPositivePredictorValue, largestNegativePredictorValue);
+        returnValues.SetChangeValues(largestPositivePredictorChange, largestNegativePredictorChange);
+        returnValues.SetPerspectives(positivePerspective, negativePerspective);
+        returnValues.SetPersonalityStats(largestPositivePredictorStat, largestNegativePredictorStat);
+
+
+        return returnValues;
     }
 
     public static double OpportunismAdjustment(double stat, double opportunismLevel)

@@ -31,21 +31,41 @@ public class IdentifierNode
 
     public IdentifierNode DeepCopy(RelationshipPersonalTreeSO newRPT)
     {
-        return new IdentifierNode
+        var newNode = new IdentifierNode
         {
             Identifier = this.Identifier,
-            Parent = Parent?.DeepCopy(newRPT),
-            Tracker = newRPT, // Assign the new RPT to the copied node
-            RelationshipNodes = RelationshipNodes != null
-                ? new List<RelationshipNode>(RelationshipNodes.Select(r => r.DeepCopy()))
-                : new List<RelationshipNode>(),
-            Children = Children != null
-                ? new List<IdentifierNode>(Children.Select(c => c.DeepCopy(newRPT)))
-                : new List<IdentifierNode>(),
-            SubIdentifiers = SubIdentifiers != null
-                ? new List<SubIdentifierNode>(SubIdentifiers.ConvertAll(s => s.DeepCopy()))
-                : new List<SubIdentifierNode>(),
+            Tracker = newRPT,
+            RelationshipNodes = new List<RelationshipNode>(), // fill later
+            Children = new List<IdentifierNode>(),
+            SubIdentifiers = new List<SubIdentifierNode>()
         };
+
+        // Handle parent separately to avoid recursive issues
+        if (Parent != null)
+            newNode.Parent = Parent.DeepCopy(newRPT);
+
+        // Copy relationship nodes, passing the *new* identifier
+        if (RelationshipNodes != null)
+        {
+            foreach (var r in RelationshipNodes)
+                newNode.RelationshipNodes.Add(r.DeepCopy(null, newNode));
+        }
+
+        // Copy children, passing new RPT
+        if (Children != null)
+        {
+            foreach (var c in Children)
+                newNode.Children.Add(c.DeepCopy(newRPT));
+        }
+
+        // Copy sub-identifiers
+        if (SubIdentifiers != null)
+        {
+            foreach (var s in SubIdentifiers)
+                newNode.SubIdentifiers.Add(s.DeepCopy());
+        }
+
+        return newNode;
     }
 
     public void AddChild(IdentifierNode child)
@@ -90,7 +110,7 @@ public class IdentifierNode
         else
         {
             //Add deep copy
-            RelationshipNodes.Add(new RelationshipNode(relationshipNode));
+            RelationshipNodes.Add(new RelationshipNode(relationshipNode, null, this));
         }
 
     }
@@ -220,7 +240,7 @@ public class SubIdentifierNode
         else
         {
             //Add deep copy
-            RelationshipNodes.Add(new RelationshipNode(relationshipNode));
+            RelationshipNodes.Add(new RelationshipNode(relationshipNode, this, null));
         }
     
     }

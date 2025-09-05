@@ -53,7 +53,7 @@ public static class RepercussionFunctions
             relationships.Add(new RelationshipNode(
                 actionContext.ToString(), new RelationshipValues(0,0,0),
                 new RelationshipValues(lDelta, dbDelta, nbDelta),
-                actionContext, null));
+                actionContext, null, 0, sourceNode));
         }
 
         //Update or create Main (None) node
@@ -75,7 +75,9 @@ public static class RepercussionFunctions
                     //ModRValues
                     new RelationshipValues(lDelta, dbDelta, nbDelta),
                     EnumActionCharacteristics.Main, 
-                    null
+                    null,
+                    0,
+                    sourceNode
                     )
                 );
         }

@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 1efb893d48eba3e479f7ba65ad5b532a, type: 3}
   m_Name: FightDecisionSO
   m_EditorClassIdentifier: 
-  Name: Testing
+  Name: Fighting
   Action: 1
   DMType: 1
   Perspectives:

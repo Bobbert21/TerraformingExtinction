@@ -81,6 +81,14 @@ public class AllStats
     }
 }
 
+public enum CraveType
+{
+    Si,
+    Se,
+    Ne,
+    Ni
+}
+
 public class DecisionMaking : MonoBehaviour
 {
     private CharacterMainCPort selfMainCPort;
@@ -93,6 +101,8 @@ public class DecisionMaking : MonoBehaviour
     {
         selfMainCPort = GetComponent<CharacterMainCPort>();
     }
+
+    
 
     //Will normally character pass parameters to this with the psyche. Implement later. Have this in the inspector because of testing
     //This dictionary is passing the env MainCPort and the RelationshipNode with the action it is committing
@@ -108,10 +118,14 @@ public class DecisionMaking : MonoBehaviour
         bool isUltimateActionNi = false;
         bool isSafeEnough = false;
         bool isRewardingEnough = false;
-        RelationshipNode ultimateNePositiveDecisionNode = null;
+        RelationshipNode ultimateNePositiveRelationshipNode = null;
         RelationshipNode ultimateNeNegativeDecisionNode = null;
         RelationshipDecisionNode ultimateNiPositiveDecisionNode = null;
         RelationshipDecisionNode ultimateNiNegativeDecisionNode = null;
+
+        CharacterPsyche selfPsyche = selfMainCPort.characterPsyche;
+        CharacterPhysical selfPhysical = selfMainCPort.characterPhysical;
+
         //Go through all the env
         foreach (CharacterMainCPort envMainCPort in envCPortToSubIdMap.Keys)
         {     
@@ -124,7 +138,7 @@ public class DecisionMaking : MonoBehaviour
             RelationshipNode envRelationshipNode = envCPortToSubIdMap[envMainCPort].RelationshipNode;
             //COHESIVE PLANNING
             //Si - Ne, Se - Ni
-            //i.e. I am hungry, lets go to the kitchen (Si - Ne)
+            //i.e. I am hungry, I'm thinking about the kitchen (Si - Ne)
             //i.e. There is a threat, I will fight it (Se - Ni)
 
             //1. Find whether crave is internal or external (Si or Se)
@@ -133,68 +147,109 @@ public class DecisionMaking : MonoBehaviour
             //3. Pick the best decision
 
             //1.
-
+            //Future: statOfinterest will go beyond L, DB, NB, and could be friend, env, or other stats (this means will consider effects on others)
             //Internal
-            (EnumPersonalityStats targetStatType, double targetStatInitialValue) = DecisionMakingFunctions.FindStatOfInterest(selfMainCPort, envMainCPort, envRelationshipNode);
+            (EnumPersonalityStats lowestSiStatType, double lowestSiValue) = DecisionMakingFunctions.FindStatOfInterest(selfMainCPort, envMainCPort, envRelationshipNode);
 
             //External: Largest env change
-            double[] allEnvModRValues =
+            double[] allSeModRValues =
             {
-                envRelationshipNode.ModRValues.LivelihoodValue,
-                envRelationshipNode.ModRValues.DefensiveBelongingValue,
-                envRelationshipNode.ModRValues.NurtureBelongingValue
+                //scale with survival
+                DMCalculationFunctions.ScaleSurvivalStatChange(envRelationshipNode.ModRValues.LivelihoodValue, selfPhysical.Stats.L),
+                DMCalculationFunctions.ScaleSurvivalStatChange(envRelationshipNode.ModRValues.DefensiveBelongingValue, selfPhysical.Stats.DB),
+                DMCalculationFunctions.ScaleSurvivalStatChange(envRelationshipNode.ModRValues.NurtureBelongingValue, selfPhysical.Stats.NB)
             };
 
+            //Ni largest change
+            double niLChange = selfMainCPort.characterPsyche.L_LearnedResponseDecisions.Count > 0 ? 
+                DMCalculationFunctions.ScaleSurvivalStatChange(selfPsyche.L_LearnedResponseDecisions.First().ModRValues.LivelihoodValue, selfPhysical.Stats.L): 0;
+            double niDBChange = selfMainCPort.characterPsyche.DB_LearnedResponseDecisions.Count > 0 ?
+                DMCalculationFunctions.ScaleSurvivalStatChange(selfPsyche.DB_LearnedResponseDecisions.First().ModRValues.DefensiveBelongingValue, selfPhysical.Stats.DB) : 0;
+            double niNBChange = selfMainCPort.characterPsyche.NB_LearnedResponseDecisions.Count > 0 ? 
+                DMCalculationFunctions.ScaleSurvivalStatChange(selfPsyche.NB_LearnedResponseDecisions.First().ModRValues.NurtureBelongingValue, selfPhysical.Stats.NB) : 0;
+
+            double[] allNiModRValues =
+            {
+                niLChange,
+                niDBChange,
+                niNBChange
+            };
+
+            double largestNiChange = System.Math.Abs(allNiModRValues.OrderByDescending(v => System.Math.Abs(v)).First());
+
+            //largest Ne Change scaled with survival
+            double neLChange = selfMainCPort.characterPsyche.L_LearnedScenarios.Count > 0 ? 
+                DMCalculationFunctions.ScaleSurvivalStatChange(selfPsyche.L_LearnedScenarios.First().ModRValues.LivelihoodValue, selfPhysical.Stats.L) : 0;
+            double neDBChange = selfMainCPort.characterPsyche.DB_LearnedScenarios.Count > 0 ? 
+                DMCalculationFunctions.ScaleSurvivalStatChange(selfPsyche.DB_LearnedScenarios.First().ModRValues.DefensiveBelongingValue, selfPhysical.Stats.DB) : 0;
+            double neNBChange = selfMainCPort.characterPsyche.NB_LearnedScenarios.Count > 0 ? 
+                DMCalculationFunctions.ScaleSurvivalStatChange(selfPsyche.NB_LearnedScenarios.First().ModRValues.NurtureBelongingValue, selfPhysical.Stats.NB) : 0;
+            
+            double[] allNeModRValues =
+            {
+                neLChange,
+                neDBChange,
+                neNBChange
+            };
+
+            double largestNeChange = System.Math.Abs(allNeModRValues.OrderByDescending(v => System.Math.Abs(v)).First());
+
             //Get largest change (whether positive or negative)
-            double envChange = System.Math.Abs(allEnvModRValues.OrderByDescending(v => System.Math.Abs(v)).First());
+            double largestSeChange = System.Math.Abs(allSeModRValues.OrderByDescending(v => System.Math.Abs(v)).First());
+            
             //Note: Even if considering env stats, will be considered internal
             //i.e. Friend's hunger is internal and Friend yelling at you is external
             //If internal, you are more worried about your friend being hungry rather than them yelling at you right now
             //Whether your hunger or friend's hunger focus should be based on empathy
 
-            bool isInternalCrave = DecisionMakingFunctions.IsInternalCrave(selfMainCPort.characterPsyche.InternalMotivationLevel, targetStatInitialValue, envChange, externalMotivationCutoff);
-
-            DebugManager.Instance?.SetActionSelectionDebugValue("Is internal crave (Si - Ne)", isInternalCrave);
-            DebugManager.Instance?.SetActionSelectionDebugValue("Target stat type", targetStatType);
-            //2. Find the appropriate response (Ne or Ni)
+            //can delete isInternalCrave (changed to craveType)
+            bool isInternalCrave = DecisionMakingFunctions.IsInternalCrave(selfMainCPort.characterPsyche.InternalMotivationLevel, lowestSiValue, largestSeChange, externalMotivationCutoff);
+            CraveType craveType = DecisionMakingFunctions.DetermineCraveType(lowestSiValue, largestNiChange, largestSeChange, largestNeChange, selfMainCPort.characterPsyche.InternalMotivationLevel, 
+                selfMainCPort.characterPsyche.AbstractInclination, externalMotivationCutoff);
+            DebugManager.Instance?.SetActionSelectionDebugValue("Crave Type: ", craveType.ToString());
+            DebugManager.Instance?.SetActionSelectionDebugValue("Target stat type", lowestSiStatType);
+            //2. Find the appropriate response (Ne or Ni) 
 
             //Get all the Decisions (done before) based on the env Relationship Node
             List<RelationshipDecisionNode> niResponseNodes = null;
             List<RelationshipNode> neRelationshipNodes = null;
 
             //Getting the crave
-            if (isInternalCrave)
+            if (craveType == CraveType.Si)
             {
                 //Ne
 
                 //To-Do: Incorporate Planning Flexibility Stat to not always be Ne (or Ni if external crave)
                 //To-Do: Figure out what to do if internal crave is Env's stats (i.e. my friend has low DB)
                 
-                if (targetStatType == EnumPersonalityStats.L || targetStatType == EnumPersonalityStats.NL)
+                List<RelationshipNode> workingMemoryScenarios = selfMainCPort.characterPsyche.ScenarioMemoryBank.GetConsideredScenarios();
+
+                if (lowestSiStatType == EnumPersonalityStats.L || lowestSiStatType == EnumPersonalityStats.NL)
                 {
-                    neRelationshipNodes = selfMainCPort.characterPsyche.L_LearnedEnvironment;
+                    neRelationshipNodes = selfMainCPort.characterPsyche.L_LearnedScenarios;
                 }
-                else if (targetStatType == EnumPersonalityStats.DB || targetStatType == EnumPersonalityStats.NDB)
+                else if (lowestSiStatType == EnumPersonalityStats.DB || lowestSiStatType == EnumPersonalityStats.NDB)
                 {
-                    neRelationshipNodes = selfMainCPort.characterPsyche.DB_LearnedEnvironment;
+                    neRelationshipNodes = selfMainCPort.characterPsyche.DB_LearnedScenarios;
                 }
-                else if (targetStatType == EnumPersonalityStats.NB || targetStatType == EnumPersonalityStats.NNB)
+                else if (lowestSiStatType == EnumPersonalityStats.NB || lowestSiStatType == EnumPersonalityStats.NNB)
                 {
-                    neRelationshipNodes = selfMainCPort.characterPsyche.NB_LearnedEnvironment;
+                    neRelationshipNodes = selfMainCPort.characterPsyche.NB_LearnedScenarios;
                 }
                 
             }
             //External crave
-            else
+            else if(craveType == CraveType.Se)
             {
                 //Ni
                 niResponseNodes = envRelationshipNode.ResponseNodes;
-            }
+                //
+            } 
 
             //Action Selection Logic 
 
             //Si - Ne
-            if (isInternalCrave)
+            if (craveType == CraveType.Si)
             {
                 //TO-DO: Will start to pass incoherent and blurry planning which will require changes in implementation (since not all of the time it is Si)
 
@@ -204,7 +259,7 @@ public class DecisionMaking : MonoBehaviour
 
                 //Original return: (largestPositivePredictorValue, largestPositivePredictorChange, targetStatType, neDecisionNode)
                 //Accounts for habits, opportunism, risk aversion, and reward cutoff
-                ReturnDecision returnSiNeDecision = DecisionMakingFunctions.CalculateSiNeDecisions(neRelationshipNodes, targetStatType, allInitialStats, selfMainCPort.characterPsyche);
+                ReturnDecision returnSiNeDecision = DecisionMakingFunctions.CalculateSiNeDecisions(neRelationshipNodes, lowestSiStatType, allInitialStats, selfMainCPort.characterPsyche);
 
                 //Commit action
                 //To-Do: Make this more abstracted so i'm not setting this manually (instead it will just be a function)
@@ -214,14 +269,15 @@ public class DecisionMaking : MonoBehaviour
                         ultimateLargestPositivePredictorChange = returnSiNeDecision.LargestPositivePredictorChange;
                         ultimateLargestPositivePredictorValue = returnSiNeDecision.LargestPositivePredictorValue;
                         ultimatePositiveTargetStatType = returnSiNeDecision.TargetPositiveStatOfInterest;
-                        ultimateNePositiveDecisionNode = returnSiNeDecision.NePositiveDecision;
+                        ultimateNePositiveRelationshipNode = returnSiNeDecision.NePositiveDecision;
                         isUltimateActionNe = true;
+                        selfMainCPort.characterPsyche.ScenarioMemoryBank.AddScenario(returnSiNeDecision.NePositiveDecision);
                         isSafeEnough = returnSiNeDecision.IsSafeEnough;
-                        DebugManager.Instance?.SetActionSelectionDebugValue("Is safe enough for Si - Ne action selection", "True");
+                        DebugManager.Instance?.SetActionSelectionDebugValue("Planning Style", "Safe and Rewarding Si-Ne");
                         DebugManager.Instance?.SetActionSelectionDebugValue("Largest Positive Predictor Change", ultimateLargestPositivePredictorChange);
                         DebugManager.Instance?.SetActionSelectionDebugValue("Largest Positive Predictor Value", ultimateLargestPositivePredictorValue);
                         DebugManager.Instance?.SetActionSelectionDebugValue("Positive Target Stat Type", ultimatePositiveTargetStatType.ToString());
-                        DebugManager.Instance?.SetActionSelectionDebugValue("Ne Positive Decision Node", ultimateNePositiveDecisionNode.Name);
+                        DebugManager.Instance?.SetActionSelectionDebugValue("Ne Positive Relationship Node", ultimateNePositiveRelationshipNode.Name);
                     }
                 }
 
@@ -236,11 +292,11 @@ public class DecisionMaking : MonoBehaviour
                         ultimateNegativeTargetStatType = returnSiNeDecision.TargetNegativeStatOfInterest;
                         ultimateNeNegativeDecisionNode = returnSiNeDecision.NeNegativeDecision;
                         isSafeEnough = false;
-                        DebugManager.Instance?.SetActionSelectionDebugValue("Too risky of decision for Si - Ne action selection", "True");
+                        DebugManager.Instance?.SetActionSelectionDebugValue("Planning Style", "Too Risky Si-Ne");
                         DebugManager.Instance?.SetActionSelectionDebugValue("Largest Positive Predictor Change", ultimateLargestPositivePredictorChange);
                         DebugManager.Instance?.SetActionSelectionDebugValue("Largest Positive Predictor Value", ultimateLargestPositivePredictorValue);
                         DebugManager.Instance?.SetActionSelectionDebugValue("Positive Target Stat Type", ultimatePositiveTargetStatType.ToString());
-                        DebugManager.Instance?.SetActionSelectionDebugValue("Ne Positive Decision Node", ultimateNePositiveDecisionNode.Name);
+                        DebugManager.Instance?.SetActionSelectionDebugValue("Ne Positive Relationship Node", ultimateNePositiveRelationshipNode.Name);
                     }
                 }
 
@@ -251,17 +307,17 @@ public class DecisionMaking : MonoBehaviour
                     ultimateLargestPositivePredictorChange = returnSiNeDecision.LargestPositivePredictorChange;
                     ultimateLargestPositivePredictorValue = returnSiNeDecision.LargestPositivePredictorValue;
                     ultimatePositiveTargetStatType = returnSiNeDecision.TargetPositiveStatOfInterest;
-                    ultimateNePositiveDecisionNode = returnSiNeDecision.NePositiveDecision;
+                    ultimateNePositiveRelationshipNode = returnSiNeDecision.NePositiveDecision;
                     isRewardingEnough = false;
-                    DebugManager.Instance?.SetActionSelectionDebugValue("No rewarding decisions found for Si - Ne action selection", "True");
+                    DebugManager.Instance?.SetActionSelectionDebugValue("Planning Style", "No Rewards Available for Si-Ne");
                     DebugManager.Instance?.SetActionSelectionDebugValue("Largest Positive Predictor Change", ultimateLargestPositivePredictorChange);
                     DebugManager.Instance?.SetActionSelectionDebugValue("Largest Positive Predictor Value", ultimateLargestPositivePredictorValue);
                     DebugManager.Instance?.SetActionSelectionDebugValue("Positive Target Stat Type", ultimatePositiveTargetStatType.ToString());
-                    DebugManager.Instance?.SetActionSelectionDebugValue("Ne Positive Decision Node", ultimateNePositiveDecisionNode.Name);
+                    DebugManager.Instance?.SetActionSelectionDebugValue("Ne Positive Relationship Node", ultimateNePositiveRelationshipNode.Name);
                 }
             }
             //Se - Ni
-            else
+            else if(craveType == CraveType.Se)
             {
                 //1. Pass through the action nodes and crave stat
                 //2. Get the largest change from the crave stat with function
@@ -271,7 +327,7 @@ public class DecisionMaking : MonoBehaviour
                 Stats envStats = envMainCPort.characterPhysical.Stats;
 
                 AllStats allInitialStats = new AllStats(selfStats.L, selfStats.DB, selfStats.NB, envStats.L, envStats.DB, envStats.NB);
-                ReturnDecision returnSeNiDecision = DecisionMakingFunctions.CalculateSeNiDecisions(niResponseNodes, targetStatType, allInitialStats, selfMainCPort, envMainCPort, envRelationshipNode);
+                ReturnDecision returnSeNiDecision = DecisionMakingFunctions.CalculateSeNiDecisions(niResponseNodes, lowestSiStatType, allInitialStats, selfMainCPort, envMainCPort, envRelationshipNode);
                 
                 
                 if (returnSeNiDecision.IsNiDecision)
@@ -290,13 +346,13 @@ public class DecisionMaking : MonoBehaviour
                             isUltimateActionNi = true;
                             isSafeEnough = returnSeNiDecision.IsSafeEnough;
                             isRewardingEnough = returnSeNiDecision.IsRewardingEnough;
-                            DebugManager.Instance?.SetActionSelectionDebugValue("Rewarding decisions found for Se - Ni action selection", "True");
+                            DebugManager.Instance?.SetActionSelectionDebugValue("Planning Style", "Safe and Reward Se-Ni");
                             DebugManager.Instance?.SetActionSelectionDebugValue("Largest Positive Predictor Change", ultimateLargestPositivePredictorChange);
                             DebugManager.Instance?.SetActionSelectionDebugValue("Largest Positive Predictor Value", ultimateLargestPositivePredictorValue);
                             DebugManager.Instance?.SetActionSelectionDebugValue("Largest Negative Predictor Change", ultimateLargestNegativePredictorChange);
                             DebugManager.Instance?.SetActionSelectionDebugValue("Largest Negative Predictor Value", ultimateLargestNegativePredictorValue);
                             DebugManager.Instance?.SetActionSelectionDebugValue("Positive Target Stat Type", ultimatePositiveTargetStatType.ToString());
-                            DebugManager.Instance?.SetActionSelectionDebugValue("Ni Positive Decision Node", ultimateNiPositiveDecisionNode);
+                            DebugManager.Instance?.SetActionSelectionDebugValue("Ni Positive Decision Node", ultimateNiPositiveDecisionNode.Decision.Name);
                         }
                     }
 
@@ -316,13 +372,13 @@ public class DecisionMaking : MonoBehaviour
                             ultimateNiNegativeDecisionNode = returnSeNiDecision.NiNegativeDecision;
                             isSafeEnough = false;
                             isUltimateActionNi = true;
-                            DebugManager.Instance?.SetActionSelectionDebugValue("Too risky of decisions found for Se - Ni action selection", "True");
+                            DebugManager.Instance?.SetActionSelectionDebugValue("Planning Style", "Too Risky Se-Ni");
                             DebugManager.Instance?.SetActionSelectionDebugValue("Largest Positive Predictor Change", ultimateLargestPositivePredictorChange);
                             DebugManager.Instance?.SetActionSelectionDebugValue("Largest Positive Predictor Value", ultimateLargestPositivePredictorValue);
                             DebugManager.Instance?.SetActionSelectionDebugValue("Largest Negative Predictor Change", ultimateLargestNegativePredictorChange);
                             DebugManager.Instance?.SetActionSelectionDebugValue("Largest Negative Predictor Value", ultimateLargestNegativePredictorValue);
                             DebugManager.Instance?.SetActionSelectionDebugValue("Positive Target Stat Type", ultimatePositiveTargetStatType.ToString());
-                            DebugManager.Instance?.SetActionSelectionDebugValue("Ni Positive Decision Node", ultimateNiPositiveDecisionNode);
+                            DebugManager.Instance?.SetActionSelectionDebugValue("Ni Positive Decision Node", ultimateNiPositiveDecisionNode.Decision.Name);
                         }
                     }
 
@@ -336,11 +392,11 @@ public class DecisionMaking : MonoBehaviour
                         ultimateNiPositiveDecisionNode = returnSeNiDecision.NiPositiveDecision;
                         isRewardingEnough = false;
                         //Debug.Log("No rewarding decisions found for Si - Ne action selection.");
-                        DebugManager.Instance?.SetActionSelectionDebugValue("No rewarding decisions found for Se - Ni action selection", "True");
+                        DebugManager.Instance?.SetActionSelectionDebugValue("Planning Style", "No rewarding decisions found for Se-Ni");
                         DebugManager.Instance?.SetActionSelectionDebugValue("Largest Positive Predictor Change", ultimateLargestPositivePredictorChange);
                         DebugManager.Instance?.SetActionSelectionDebugValue("Largest Positive Predictor Value", ultimateLargestPositivePredictorValue);
                         DebugManager.Instance?.SetActionSelectionDebugValue("Positive Target Stat Type", ultimatePositiveTargetStatType.ToString());
-                        DebugManager.Instance?.SetActionSelectionDebugValue("Ni Positive Decision Node", ultimateNiPositiveDecisionNode);
+                        DebugManager.Instance?.SetActionSelectionDebugValue("Ni Positive Decision Node", ultimateNiPositiveDecisionNode.Decision.Name);
                     }
                 }
                 else
@@ -376,7 +432,7 @@ public class DecisionMaking : MonoBehaviour
             " Is ultimate action Ne: " + isUltimateActionNe +
             " Is safe enough: " + isSafeEnough +
             " Is rewarding enough: " + isRewardingEnough +
-            " Ultimate Ne decision node: " + (ultimateNePositiveDecisionNode != null ? ultimateNePositiveDecisionNode.Name : "null"));
+            " Ultimate Ne decision node: " + (ultimateNePositiveRelationshipNode != null ? ultimateNePositiveRelationshipNode.Name : "null"));
         }
             
 

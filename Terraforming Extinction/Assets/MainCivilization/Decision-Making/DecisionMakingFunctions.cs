@@ -5,6 +5,7 @@ using System.ComponentModel;
 using System.Data;
 using System.Linq;
 using System.Text.RegularExpressions;
+using JetBrains.Annotations;
 using UnityEngine;
 using UnityEngine.TextCore.Text;
 
@@ -138,6 +139,50 @@ public static class DecisionMakingFunctions
 
     private static double FulcrumStatScale = 30;
 
+    public static CraveType DetermineCraveType(double lowestSi, double largestNi, double largestSe, 
+        double largestNe, double internalMotivationLevel, double abstractInclination, double cutOff)
+    {
+        //Everything except Si is considered external since even Ni is based on an abstract external self
+        //Si: If all other values are below the cutoff
+        //Ne: Greatest value after internal motivation adjustment and abstract inclination
+        //Ni: Greatest value after internal motivation adjustment and abstract inclination
+        //S2: Greatest value
+
+        double internalMotivationFactor = (100 - internalMotivationLevel) / 50.0;
+        double siFactor = (100 - lowestSi) / 50.0;
+        double adjustedConcreteCutoff = cutOff * internalMotivationFactor * siFactor;
+
+        // Constants for tuning
+        const double AbstractScaling = 0.8;
+        const double MotivationShift = 50.0;
+
+        double abstractModifier = abstractInclination * AbstractScaling / 100;
+        double internalModifier = (internalMotivationLevel + MotivationShift) / 100;
+        double largestAdjustedNi = largestNi * abstractModifier * internalModifier;
+        double largestAdjustedNe = largestNe * abstractModifier * internalModifier;
+
+        double largestValue = Math.Max(largestAdjustedNi, Math.Max(largestAdjustedNe, largestSe));
+
+        //if the largest value is not above the cutoff, then Si
+        if(largestValue < adjustedConcreteCutoff)
+        {
+            return CraveType.Si;
+        }
+
+        if (largestValue == largestSe)
+        {
+            return CraveType.Se;
+        }
+        else if(largestValue == largestAdjustedNe)
+        {
+            return CraveType.Ne;
+        }
+        else
+        {
+            return CraveType.Ni;
+        }
+    }
+
     public static bool IsInternalCrave(double internalMotivationLevel, double currentLowestStat, double envChange, double cutOff)
     {
         double adjustedCutoff = cutOff * (100 - internalMotivationLevel) / 50 * (100 - currentLowestStat) / 50;
@@ -151,10 +196,12 @@ public static class DecisionMakingFunctions
         return false;
     }
 
+
     
 
     //Predictor value, predictor change, stat of interest, and relationship node
-    public static ReturnDecision CalculateSiNeDecisions(List<RelationshipNode> neRelationshipNodes, EnumPersonalityStats statOfInterest, AllStats allInitialStats, CharacterPsyche characterPsyche)
+    public static ReturnDecision CalculateSiNeDecisions(List<RelationshipNode> neRelationshipNodes, EnumPersonalityStats statOfInterest, 
+        AllStats allInitialStats, CharacterPsyche characterPsyche)
     {
         // Order by habits
         neRelationshipNodes = neRelationshipNodes.OrderByDescending(rn => rn.HabitCounter).ToList();
@@ -343,7 +390,8 @@ public static class DecisionMakingFunctions
 
     //Goes through all the decisions and perspectives for each decision
     //return predictor value, changebalue, personality stats of interest, and decision node
-    public static ReturnDecision CalculateSeNiDecisions(List<RelationshipDecisionNode> niResponseNodes, EnumPersonalityStats statOfInterest, AllStats allInitialStats, CharacterMainCPort agent, CharacterMainCPort env, RelationshipNode envInAgentRPTNode)
+    public static ReturnDecision CalculateSeNiDecisions(List<RelationshipDecisionNode> niResponseNodes, EnumPersonalityStats statOfInterest, 
+        AllStats allInitialStats, CharacterMainCPort agent, CharacterMainCPort env, RelationshipNode envInAgentRPTNode)
     {
         // Order by habit counter
         niResponseNodes = niResponseNodes.OrderByDescending(rn => rn.HabitCounter).ToList();
@@ -364,14 +412,7 @@ public static class DecisionMakingFunctions
 
         for (int i = 0; i < niResponseNodes.Count && i < agent.characterPsyche.CognitiveStamina; i++)
         {
-            double largestPositivePredictorValue = double.MinValue;
-            double largestPositivePredictorAdjustedChange = double.MinValue;
-            double largestNegativePredictorValue = double.MaxValue;
-            double largestNegativePredictorAdjustedChange = double.MaxValue;
-            EnumPersonalityStats largestPositivePredictorStat = statOfInterest; // Default to the stat of interest
-            EnumPersonalityStats largestNegativePredictorStat = statOfInterest; // Default to the stat of interest
-            Perspective largestPositivePredictorPerspective = null;
-            Perspective largestNegativePredictorPerspective = null;
+            DMReturnPredictorCalculations dmReturnPredictorCalculations = new DMReturnPredictorCalculations(statOfInterest);
 
 
             RelationshipDecisionNode niResponseNode = niResponseNodes[i];
@@ -381,36 +422,34 @@ public static class DecisionMakingFunctions
             //Already does habit contribution with these calculations
             if (isComplexGoal)
             {
-                (largestPositivePredictorValue, largestNegativePredictorValue, largestPositivePredictorAdjustedChange, largestNegativePredictorAdjustedChange,
-                    largestPositivePredictorStat, largestNegativePredictorStat, largestPositivePredictorPerspective, largestNegativePredictorPerspective) =
-                    DMCalculationFunctions.CalculateComplexPositiveAndNegativePredictorChange(niResponseNode.Decision, statOfInterest, allInitialStats, 
+               dmReturnPredictorCalculations = DMCalculationFunctions.CalculateComplexPositiveAndNegativePredictorChange(niResponseNode.ModRValues, 
+                   niResponseNode.Decision, statOfInterest, allInitialStats, 
                     niResponseNode.Decision.HabitCounter, agent, env, envInAgentRPTNode);
             }
             else
             {
-                (largestPositivePredictorValue, largestNegativePredictorValue, largestPositivePredictorAdjustedChange, largestNegativePredictorAdjustedChange, 
-                    largestPositivePredictorStat, largestNegativePredictorStat, largestPositivePredictorPerspective, largestNegativePredictorPerspective) =
-                    DMCalculationFunctions.CalculateSimplePositiveAndNegativePredictorChange(niResponseNode.Decision.Perspectives, statOfInterest, allInitialStats, 
+                dmReturnPredictorCalculations =
+                    DMCalculationFunctions.CalculateSimplePositiveAndNegativePredictorChange(niResponseNode.ModRValues, niResponseNode.Decision.Perspectives, statOfInterest, allInitialStats, 
                     niResponseNode.Decision.HabitCounter, agent, env, envInAgentRPTNode);
             }
 
             //Calculate reward and risk cutoffs for all these decision's perspectives to see if worth 
             //Pick best safe and rewarding actions
             //Adjust based on 40
-            double largestNegativePredictorAdjustedChangeWithRisk = largestNegativePredictorAdjustedChange * agent.characterPsyche.RiskAversion/40;
+            double largestNegativePredictorAdjustedChangeWithRisk = dmReturnPredictorCalculations.largestNegativePredictorAdjustedChange * agent.characterPsyche.RiskAversion/40;
 
-            if(largestPositivePredictorAdjustedChange > Math.Abs(largestNegativePredictorAdjustedChangeWithRisk))
+            if(dmReturnPredictorCalculations.largestPositivePredictorAdjustedChange > Math.Abs(largestNegativePredictorAdjustedChangeWithRisk))
             {
-                if(largestPositivePredictorAdjustedChange > agent.characterPsyche.RewardCutoff)
+                if(dmReturnPredictorCalculations.largestPositivePredictorAdjustedChange > agent.characterPsyche.RewardCutoff)
                 {
                     //Will replace automatically if currently no safe nor rewarding actions
                     if(!hasCommitedAction)
                     {
-                        ultimateLargestPositivePredictorValue = largestPositivePredictorValue;
-                        ultimateLargestPositivePredictorAdjustedChange = largestPositivePredictorAdjustedChange;
+                        ultimateLargestPositivePredictorValue = dmReturnPredictorCalculations.largestPositivePredictorValue;
+                        ultimateLargestPositivePredictorAdjustedChange = dmReturnPredictorCalculations.largestPositivePredictorAdjustedChange;
                         ultimateLargestPositivePredictorNode = niResponseNode;
-                        ultimateLargestPositivePredictorStat = largestPositivePredictorStat;
-                        ultimateLargestPositivePredictorPerspective = largestPositivePredictorPerspective;
+                        ultimateLargestPositivePredictorStat = dmReturnPredictorCalculations.largestPositivePredictorStat;
+                        ultimateLargestPositivePredictorPerspective = dmReturnPredictorCalculations.positivePerspective;
                         isSafeEnough = true;
                         isRewardingEnough = true;
                         hasCommitedAction = true;
@@ -418,13 +457,13 @@ public static class DecisionMakingFunctions
                     else
                     {
                         //Already safe and rewarding action so have to see if worth it
-                        if(largestPositivePredictorAdjustedChange > ultimateLargestPositivePredictorAdjustedChange)
+                        if(dmReturnPredictorCalculations.largestPositivePredictorAdjustedChange > ultimateLargestPositivePredictorAdjustedChange)
                         {
-                            ultimateLargestPositivePredictorValue = largestPositivePredictorValue;
-                            ultimateLargestPositivePredictorAdjustedChange = largestPositivePredictorAdjustedChange;
+                            ultimateLargestPositivePredictorValue = dmReturnPredictorCalculations.largestPositivePredictorValue;
+                            ultimateLargestPositivePredictorAdjustedChange = dmReturnPredictorCalculations.largestPositivePredictorAdjustedChange;
                             ultimateLargestPositivePredictorNode = niResponseNode;
-                            ultimateLargestPositivePredictorStat = largestPositivePredictorStat;
-                            ultimateLargestPositivePredictorPerspective = largestPositivePredictorPerspective;
+                            ultimateLargestPositivePredictorStat = dmReturnPredictorCalculations.largestPositivePredictorStat;
+                            ultimateLargestPositivePredictorPerspective = dmReturnPredictorCalculations.positivePerspective;
                             isSafeEnough = true;
                             isRewardingEnough = true;
                             hasCommitedAction = true;
@@ -442,13 +481,13 @@ public static class DecisionMakingFunctions
                     {
                         if (!hasCommitedAction)
                         {
-                            if (largestPositivePredictorAdjustedChange > ultimateLargestPositivePredictorAdjustedChange)
+                            if (dmReturnPredictorCalculations.largestPositivePredictorAdjustedChange > ultimateLargestPositivePredictorAdjustedChange)
                             {
-                                ultimateLargestPositivePredictorValue = largestPositivePredictorValue;
-                                ultimateLargestPositivePredictorAdjustedChange = largestPositivePredictorAdjustedChange;
+                                ultimateLargestPositivePredictorValue = dmReturnPredictorCalculations.largestPositivePredictorValue;
+                                ultimateLargestPositivePredictorAdjustedChange = dmReturnPredictorCalculations.largestPositivePredictorAdjustedChange;
                                 ultimateLargestPositivePredictorNode = niResponseNode;
-                                ultimateLargestPositivePredictorStat = largestPositivePredictorStat;
-                                ultimateLargestPositivePredictorPerspective = largestPositivePredictorPerspective;
+                                ultimateLargestPositivePredictorStat = dmReturnPredictorCalculations.largestPositivePredictorStat;
+                                ultimateLargestPositivePredictorPerspective = dmReturnPredictorCalculations.positivePerspective;
                                 isRewardingEnough = false;
                             }
                         }
@@ -462,13 +501,13 @@ public static class DecisionMakingFunctions
                 //If there's already a decision to consider then ignore
                 if(!hasCommitedAction)
                 {
-                    if (largestNegativePredictorAdjustedChange < ultimateLargestNegativePredictorAdjustedChange)
+                    if (dmReturnPredictorCalculations.largestNegativePredictorAdjustedChange < ultimateLargestNegativePredictorAdjustedChange)
                     {
-                        ultimateLargestNegativePredictorValue = largestNegativePredictorValue;
-                        ultimateLargestNegativePredictorAdjustedChange = largestNegativePredictorAdjustedChange;
+                        ultimateLargestNegativePredictorValue = dmReturnPredictorCalculations.largestNegativePredictorValue;
+                        ultimateLargestNegativePredictorAdjustedChange = dmReturnPredictorCalculations.largestNegativePredictorAdjustedChange;
                         ultimateLargestNegativePredictorNode = niResponseNode;
-                        ultimateLargestNegativePredictorStat = largestNegativePredictorStat;
-                        ultimateLargestNegativePredictorPerspective = largestNegativePredictorPerspective;
+                        ultimateLargestNegativePredictorStat = dmReturnPredictorCalculations.largestNegativePredictorStat;
+                        ultimateLargestNegativePredictorPerspective = dmReturnPredictorCalculations.negativePerspective;
                         isSafeEnough = false;
                     }
                 }

@@ -23,7 +23,7 @@ MonoBehaviour:
   EmpathyLevel: 10
   SelfEfficacy: 10
   ProgressInclination: 10
-  InternalMotivationLevel: 10
+  InternalMotivationLevel: 1
   MaxHabitCounter: 10
   HabitualTendencies: 50
   PerspectiveAbility: 60

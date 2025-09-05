@@ -650,7 +650,7 @@ public static class AdaptiveIdentifierFunctions
         //Mixing relationship nodes
         //Deep copy
         newCollectiveAnchor.RelationshipNodes = subIdentifierNode1.RelationshipNodes
-            .Select(rn => new RelationshipNode(rn))
+            .Select(rn => new RelationshipNode(rn, newCollectiveAnchor))
             .ToList();
 
 

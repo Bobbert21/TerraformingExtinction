@@ -112,6 +112,10 @@ public class RelationshipTreeDebugUI : MonoBehaviour
         if (btn != null)
             btn.gameObject.SetActive(false);
 
+        Button relBtn = headerGO.transform.Find("RelationshipNodesMoreInfoButton")?.GetComponent<Button>();
+        if (relBtn != null)
+            relBtn.gameObject.SetActive(false);
+
         // Set a smaller preferredHeight to reduce extra space
         LayoutElement le = headerGO.GetComponent<LayoutElement>();
         if (le == null)
@@ -153,6 +157,10 @@ public class RelationshipTreeDebugUI : MonoBehaviour
         if (btn != null)
             btn.gameObject.SetActive(false);
 
+        Button relBtn = rowGO.transform.Find("RelationshipNodesMoreInfoButton")?.GetComponent<Button>();
+        if (relBtn != null)
+            relBtn.gameObject.SetActive(false);
+
         LayoutElement le = rowGO.GetComponent<LayoutElement>();
         if (le == null)
             le = rowGO.AddComponent<LayoutElement>();
@@ -167,10 +175,11 @@ public class RelationshipTreeDebugUI : MonoBehaviour
         Text txt = row.transform.Find("Label")?.GetComponent<Text>();
         if (txt != null)
         {
-            txt.text = new string(' ', depth * 4) + "- " + sub.SubIdentifierName; // deeper indent
+            txt.text = new string(' ', depth * 4) + "- " + sub.SubIdentifierName;
             txt.color = Color.blue;
         }
 
+        // Sub details button
         Button btn = row.transform.Find("MoreInfoButton")?.GetComponent<Button>();
         if (btn != null)
         {
@@ -178,6 +187,21 @@ public class RelationshipTreeDebugUI : MonoBehaviour
             btn.onClick.RemoveAllListeners();
             btn.onClick.AddListener(() => ShowSubIdentifierDetail(sub));
         }
+
+        // Relationship nodes button
+        Button relBtn = row.transform.Find("RelationshipNodesMoreInfoButton")?.GetComponent<Button>();
+        if (relBtn != null)
+        {
+            bool hasRelNodes = sub.RelationshipNodes != null && sub.RelationshipNodes.Count > 0;
+            relBtn.gameObject.SetActive(hasRelNodes);
+
+            if (hasRelNodes)
+            {
+                relBtn.onClick.RemoveAllListeners();
+                relBtn.onClick.AddListener(() => ShowRelationshipNodesDetail(sub));
+            }
+        }
+
 
         LayoutElement le = row.GetComponent<LayoutElement>();
         if (le == null)
@@ -189,6 +213,52 @@ public class RelationshipTreeDebugUI : MonoBehaviour
             foreach (var specific in sub.Specifics)
                 AppendSubIdentifierNode(specific, depth + 1);
         }
+    }
+
+    private void ShowRelationshipNodesDetail(SubIdentifierNode sub)
+    {
+        if (subIdentifierDetailPanel == null) return;
+
+        // Toggle off if already showing this sub’s relationships
+        if (currentlyShownSub == sub && subIdentifierDetailPanel.activeSelf)
+        {
+            subIdentifierDetailPanel.SetActive(false);
+            currentlyShownSub = null;
+            return;
+        }
+
+        subIdentifierDetailPanel.SetActive(true);
+        currentlyShownSub = sub;
+
+        detailPanelTitle.text = sub.SubIdentifierName + " - Relationships";
+
+        System.Text.StringBuilder sb = new System.Text.StringBuilder();
+
+        foreach (var rel in sub.RelationshipNodes)
+        {
+            sb.AppendLine($"<b>{rel.Name}</b>");
+            sb.AppendLine($"  Livelihood: {rel.ModRValues.LivelihoodValue}");
+            sb.AppendLine($"  DefensiveBelonging: {rel.ModRValues.DefensiveBelongingValue}");
+            sb.AppendLine($"  NurtureBelonging: {rel.ModRValues.NurtureBelongingValue}");
+
+
+            if (rel.ResponseNodes != null && rel.ResponseNodes.Count > 0)
+            {
+                sb.AppendLine("<color=blue>  Responses:</color>");
+                foreach (var response in rel.ResponseNodes)
+                {
+                    sb.AppendLine($"<color=blue>    - {response.Decision.Name}</color>");
+                    sb.AppendLine($"<color=blue>       Livelihood: {response.ModRValues.LivelihoodValue}</color>");
+                    sb.AppendLine($"<color=blue>       DefensiveBelonging: {response.ModRValues.DefensiveBelongingValue}</color>");
+                    sb.AppendLine($"<color=blue>       NurtureBelonging: {response.ModRValues.NurtureBelongingValue}</color>");
+                }
+            }
+
+
+            sb.AppendLine(); // spacing between relationship nodes
+        }
+
+        detailPanelContent.text = sb.ToString();
     }
 
 
