@@ -10,6 +10,7 @@ public class DecisionSO : ScriptableObject
     //public EnumActionCharacteristics Context;
     public DMTypes DMType;
     public List<Perspective> Perspectives;
+    public RelationshipNode TargetScenario;
     //The steps of actions in a complex goal 
     //Simple decisions does not use this list
     //To-DO Make a simple decision SO class without this list

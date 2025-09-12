@@ -65,6 +65,7 @@ public class RelationshipNode
     public RelationshipValues ModRValues;
     public EnumActionCharacteristics ActionContext;
     public List<RelationshipDecisionNode> ResponseNodes;
+    public List<RelationshipDecisionNode> ActionPlanNodes;
     public int HabitCounter;
 
     public RelationshipNode() { }
@@ -79,6 +80,7 @@ public class RelationshipNode
         ModRValues = new RelationshipValues(other.ModRValues);
         ActionContext = other.ActionContext; // enums are value types, so direct copy is fine
         ResponseNodes = new List<RelationshipDecisionNode>();
+        ActionPlanNodes = new List<RelationshipDecisionNode>();
 
         if(other.ResponseNodes != null)
         {
@@ -99,6 +101,7 @@ public class RelationshipNode
             new RelationshipValues(ModRValues),
             ActionContext,
             new List<RelationshipDecisionNode>(), // empty for now
+            new List<RelationshipDecisionNode>(),
             HabitCounter,
             copyParentSubIdentifierNode,
             copyParentIdentifierNode
@@ -113,11 +116,19 @@ public class RelationshipNode
             }
         }
 
+        if(ActionPlanNodes != null)
+        {
+            foreach (var actionPlan in ActionPlanNodes)
+            {
+                newNode.ActionPlanNodes.Add(new RelationshipDecisionNode(actionPlan, newNode));
+            }
+        }
+
         return newNode;
     }
 
     public RelationshipNode(string name, RelationshipValues pRValues, RelationshipValues modRValues, EnumActionCharacteristics actionContext, 
-        List<RelationshipDecisionNode> responseNodes, int habitCounter = 0, SubIdentifierNode parentSubIdentifierNode = null, 
+        List<RelationshipDecisionNode> responseNodes, List<RelationshipDecisionNode> actionPlanNodes, int habitCounter = 0, SubIdentifierNode parentSubIdentifierNode = null, 
         IdentifierNode parentIdentifierNode = null)
     {
         Name = name;
@@ -127,6 +138,7 @@ public class RelationshipNode
         ModRValues = modRValues;
         ActionContext = actionContext;
         ResponseNodes = responseNodes;
+        ActionPlanNodes = actionPlanNodes;
         HabitCounter = habitCounter;
     }
 }

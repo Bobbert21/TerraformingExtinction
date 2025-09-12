@@ -43,10 +43,7 @@ public class CharacterPsycheSO : ScriptableObject, ICharacterPsyche
     public List<RelationshipDecisionNode> NB_LearnedResponseDecisions;
     public List<RelationshipDecisionNode> DB_LearnedResponseDecisions;
     public ScenarioMemory ScenarioMemoryBank = new ScenarioMemory();
-    public List<RelationshipNode> L_LearnedScenarios;
-    public List<RelationshipNode> NB_LearnedScenarios;
-    public List<RelationshipNode> DB_LearnedScenarios;
-
+   
     [Header("Identifier Script Variables")]
     public double ProcessingSpeed;
     public float AwarenessLevel;
