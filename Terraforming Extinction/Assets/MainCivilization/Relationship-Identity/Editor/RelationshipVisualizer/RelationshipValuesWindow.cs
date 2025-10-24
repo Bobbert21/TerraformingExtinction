@@ -5,9 +5,9 @@ using UnityEngine;
 
 public class RelationshipValuesWindow : EditorWindow
 {
-    private static RelationshipNode currentNode;
+    private static NeScenarioNode currentNode;
 
-    public static void ShowWindow(RelationshipNode relationshipNode)
+    public static void ShowWindow(NeScenarioNode relationshipNode)
     {
         currentNode = relationshipNode;
         RelationshipValuesWindow window = GetWindow<RelationshipValuesWindow>("Edit Relationship Values");

@@ -3,10 +3,10 @@ using UnityEngine;
 
 public class RelationshipNameEditorWindow : EditorWindow
 {
-    private RelationshipNode relationshipNode;
+    private NeScenarioNode relationshipNode;
     private string newName;
 
-    public static void ShowWindow(RelationshipNode relationshipNode)
+    public static void ShowWindow(NeScenarioNode relationshipNode)
     {
         RelationshipNameEditorWindow window = GetWindow<RelationshipNameEditorWindow>("Edit Relationship Name");
         window.relationshipNode = relationshipNode;

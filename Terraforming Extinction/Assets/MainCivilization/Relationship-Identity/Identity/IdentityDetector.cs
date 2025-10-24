@@ -4,10 +4,10 @@ using UnityEngine;
 
 public class SubIdentifierRelationshipNodeInfo
 {
-    public RelationshipNode RelationshipNode;
+    public NeScenarioNode RelationshipNode;
     public SubIdentifierNode SubIdentifierNode;
 
-    public SubIdentifierRelationshipNodeInfo(SubIdentifierNode subIdentifierNode, RelationshipNode relationshipNode)
+    public SubIdentifierRelationshipNodeInfo(SubIdentifierNode subIdentifierNode, NeScenarioNode relationshipNode)
     {
         RelationshipNode = relationshipNode;
         SubIdentifierNode = subIdentifierNode;
@@ -136,7 +136,7 @@ public class IdentityDetector : MonoBehaviour
                 );
 
                 //This is the relationship node from the identifier node
-                RelationshipNode foundRelationshipNodeFromEnv = findRelationshipNode(foundEnvSubIdentifierInRPT, envMainCPort.characterPhysical.ActionCommitting);
+                NeScenarioNode foundRelationshipNodeFromEnv = findRelationshipNode(foundEnvSubIdentifierInRPT, envMainCPort.characterPhysical.ActionCommitting);
 
                 envCPortToSubIdMap[envMainCPort] = new SubIdentifierRelationshipNodeInfo(foundEnvSubIdentifierInRPT, foundRelationshipNodeFromEnv);
 
@@ -148,11 +148,11 @@ public class IdentityDetector : MonoBehaviour
 
     }
 
-    private RelationshipNode findRelationshipNode(SubIdentifierNode foundSubIdentifierNode, EnumActionCharacteristics actionCommitting)
+    private NeScenarioNode findRelationshipNode(SubIdentifierNode foundSubIdentifierNode, EnumActionCharacteristics actionCommitting)
     {
-        List<RelationshipNode> relationshipNodes = foundSubIdentifierNode.RelationshipNodes;
+        List<NeScenarioNode> relationshipNodes = foundSubIdentifierNode.RelationshipNodes;
 
-        foreach (RelationshipNode relationshipNode in relationshipNodes) 
+        foreach (NeScenarioNode relationshipNode in relationshipNodes) 
         { 
             if(relationshipNode.ActionContext == actionCommitting)
             {
@@ -162,7 +162,7 @@ public class IdentityDetector : MonoBehaviour
 
         //If hasn't found any nodes, then create a new one
 
-        RelationshipNode newRelationshipNode = new RelationshipNode(actionCommitting.ToString(), new RelationshipValues(0, 0, 0), new RelationshipValues(0, 0, 0), actionCommitting, null, null, 0, foundSubIdentifierNode);
+        NeScenarioNode newRelationshipNode = new NeScenarioNode(actionCommitting.ToString(), new RelationshipValues(0, 0, 0), new RelationshipValues(0, 0, 0), actionCommitting, null, null, 0, foundSubIdentifierNode);
         foundSubIdentifierNode.AddRelationshipNode(newRelationshipNode);
 
         return newRelationshipNode;
@@ -257,11 +257,11 @@ public class IdentityDetector : MonoBehaviour
                 }
 
                 //adopt the relationship nodes
-                foreach(RelationshipNode relationshipNode in foundSubIdentifierNode.RelationshipNodes)
+                foreach(NeScenarioNode relationshipNode in foundSubIdentifierNode.RelationshipNodes)
                 {
                     RelationshipValues newPRValues = new(relationshipNode.PRValues.LivelihoodValue * adoptedValue, relationshipNode.PRValues.DefensiveBelongingValue * adoptedValue, relationshipNode.PRValues.NurtureBelongingValue * adoptedValue);
                     RelationshipValues newModRValues = new(relationshipNode.ModRValues.LivelihoodValue * adoptedValue, relationshipNode.ModRValues.DefensiveBelongingValue * adoptedValue, relationshipNode.ModRValues.NurtureBelongingValue * adoptedValue);
-                    RelationshipNode newRelationshipNode = new RelationshipNode(relationshipNode.Name, newPRValues, 
+                    NeScenarioNode newRelationshipNode = new NeScenarioNode(relationshipNode.Name, newPRValues, 
                         newModRValues, relationshipNode.ActionContext, relationshipNode.ResponseNodes, relationshipNode.ActionPlanNodes, 0, foundSubIdentifierNode);
                     newSubIdentifierNode.AddRelationshipNode(newRelationshipNode);  
                 }
@@ -293,11 +293,11 @@ public class IdentityDetector : MonoBehaviour
                     float adoptedValue = 1.0f;
 
 
-                    foreach (RelationshipNode relationshipNode in identifierNode.RelationshipNodes)
+                    foreach (NeScenarioNode relationshipNode in identifierNode.RelationshipNodes)
                     {
                         RelationshipValues newPRValues = new(relationshipNode.PRValues.LivelihoodValue * adoptedValue, relationshipNode.PRValues.DefensiveBelongingValue * adoptedValue, relationshipNode.PRValues.NurtureBelongingValue * adoptedValue);
                         RelationshipValues newModRValues = new(relationshipNode.ModRValues.LivelihoodValue * adoptedValue, relationshipNode.ModRValues.DefensiveBelongingValue * adoptedValue, relationshipNode.ModRValues.NurtureBelongingValue * adoptedValue);
-                        RelationshipNode newRelationshipNode = new RelationshipNode(relationshipNode.Name, newPRValues, newModRValues, relationshipNode.ActionContext, 
+                        NeScenarioNode newRelationshipNode = new NeScenarioNode(relationshipNode.Name, newPRValues, newModRValues, relationshipNode.ActionContext, 
                             relationshipNode.ResponseNodes, relationshipNode.ActionPlanNodes, 0, newSubIdentifierNode);
                         Debug.Log("Adding relationship node " + newRelationshipNode.Name + " to subidentifier node " + newSubIdentifierNode.SubIdentifierName);
                         newSubIdentifierNode.AddRelationshipNode(newRelationshipNode);

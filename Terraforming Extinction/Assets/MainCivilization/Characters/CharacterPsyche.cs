@@ -2,12 +2,143 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
+
+public class DecisionMemoryEntry
+{
+    public float LastConsideredTime;
+    public NiDecisionNode Decision;
+
+    public DecisionMemoryEntry(NiDecisionNode decision)
+    {
+        Decision = decision;
+        LastConsideredTime = Time.time;
+    }
+}
+
+public class DecisionMemory
+{
+    public List<DecisionMemoryEntry> AllDecisions = new List<DecisionMemoryEntry>();
+    public List<DecisionMemoryEntry> RecentDecisions = new List<DecisionMemoryEntry>();
+    public List<DecisionMemoryEntry> LRecentDecisions = new List<DecisionMemoryEntry>();
+    public List<DecisionMemoryEntry> NBRecentDecisions = new List<DecisionMemoryEntry>();
+    public List<DecisionMemoryEntry> DBRecentDecisions = new List<DecisionMemoryEntry>();
+    public List<DecisionMemoryEntry> LDecisions = new List<DecisionMemoryEntry>();
+    public List<DecisionMemoryEntry> NBDecisions = new List<DecisionMemoryEntry>();
+    public List<DecisionMemoryEntry> DBDecisions = new List<DecisionMemoryEntry>();
+
+    public void AddScenario(NiDecisionNode scenario, EnumPersonalityStats scenarioOfInterest = EnumPersonalityStats.None)
+    {
+        DecisionMemoryEntry entry = new DecisionMemoryEntry(scenario);
+
+        // Add in order of habit counter for all scenarios
+        int index = AllDecisions.FindIndex(e => e.Decision.HabitCounter < entry.Decision.HabitCounter);
+        if (index >= 0)
+            AllDecisions.Insert(index, entry);
+        else
+            AllDecisions.Add(entry);
+
+        if (scenarioOfInterest == EnumPersonalityStats.L)
+        {
+            index = LDecisions.FindIndex(e => e.Decision.HabitCounter < entry.Decision.HabitCounter);
+            if (index >= 0)
+                LDecisions.Insert(index, entry);
+            else
+                LDecisions.Add(entry);
+
+            LRecentDecisions.Add(entry);
+        }
+        else if (scenarioOfInterest == EnumPersonalityStats.NB)
+        {
+            index = NBDecisions.FindIndex(e => e.Decision.HabitCounter < entry.Decision.HabitCounter);
+            if (index >= 0)
+                NBDecisions.Insert(index, entry);
+            else
+                NBDecisions.Add(entry);
+
+            NBRecentDecisions.Add(entry);
+        }
+        else if (scenarioOfInterest == EnumPersonalityStats.DB)
+        {
+            index = DBDecisions.FindIndex(e => e.Decision.HabitCounter < entry.Decision.HabitCounter);
+            if (index >= 0)
+                DBDecisions.Insert(index, entry);
+            else
+                DBDecisions.Add(entry);
+
+            DBRecentDecisions.Add(entry);
+        }
+
+        RecentDecisions.Add(entry);
+    }
+
+    // Return a list of scenarios that the character can consider
+    // Prioritizing the most recent scenarios first then grab rest from all scenarios
+    public List<NiDecisionNode> GetConsideredScenarios(EnumPersonalityStats scenarioOfInterest = EnumPersonalityStats.None, float workingMemoryScenarioCapacity = 3, float fixatationScenarioTime = 50f)
+    {
+        UpdateRecentScenarios(fixatationScenarioTime);
+
+        var results = new List<NiDecisionNode>();
+        var seen = new HashSet<NiDecisionNode>(); // avoid duplicates
+
+        List<DecisionMemoryEntry> AllScenariosOfInterest = AllDecisions;
+        List<DecisionMemoryEntry> RecentScenariosOfInterest = RecentDecisions;
+
+        if (scenarioOfInterest == EnumPersonalityStats.L)
+        {
+            AllScenariosOfInterest = LDecisions;
+            RecentScenariosOfInterest = LRecentDecisions;
+        }
+        else if (scenarioOfInterest == EnumPersonalityStats.NB)
+        {
+            AllScenariosOfInterest = NBDecisions;
+            RecentScenariosOfInterest = NBRecentDecisions;
+        }
+        else if (scenarioOfInterest == EnumPersonalityStats.DB)
+        {
+            AllScenariosOfInterest = DBDecisions;
+            RecentScenariosOfInterest = DBRecentDecisions;
+        }
+
+        // Step 1: take from RecentScenarios
+        foreach (var entry in RecentScenariosOfInterest)
+        {
+            if (results.Count >= workingMemoryScenarioCapacity) break;
+
+            // Only true if scenario isn't already in there
+            if (seen.Add(entry.Decision)) // only add if not already present
+                results.Add(entry.Decision);
+        }
+
+        // Step 2: Fill out remaining from all scenarios if needed
+        foreach (var entry in AllScenariosOfInterest)
+        {
+            if (results.Count >= workingMemoryScenarioCapacity) break;
+
+            if (seen.Add(entry.Decision))
+                results.Add(entry.Decision);
+        }
+
+        return results;
+    }
+
+    // Fixation scenario time is the amount of fixation a character has on a scenario before it isn't recent and removes it
+    public void UpdateRecentScenarios(float fixatationScenarioTime = 10f)
+    {
+        float currentTime = Time.time;
+        RecentDecisions.RemoveAll(entry => currentTime - entry.LastConsideredTime > fixatationScenarioTime);
+        LRecentDecisions.RemoveAll(entry => currentTime - entry.LastConsideredTime > fixatationScenarioTime);
+        NBRecentDecisions.RemoveAll(entry => currentTime - entry.LastConsideredTime > fixatationScenarioTime);
+        DBRecentDecisions.RemoveAll(entry => currentTime - entry.LastConsideredTime > fixatationScenarioTime);
+    }
+}
+
+
 public class ScenarioMemoryEntry
 {
     public float LastConsideredTime;
-    public RelationshipNode Scenario;
+    public NeScenarioNode Scenario;
 
-    public ScenarioMemoryEntry(RelationshipNode scenario)
+    public ScenarioMemoryEntry(NeScenarioNode scenario)
     {
         Scenario = scenario;
         LastConsideredTime = Time.time;
@@ -26,7 +157,7 @@ public class ScenarioMemory
     public List<ScenarioMemoryEntry> NBScenarios = new List<ScenarioMemoryEntry>();
     public List<ScenarioMemoryEntry> DBScenarios = new List<ScenarioMemoryEntry>();
 
-    public void AddScenario(RelationshipNode scenario, EnumPersonalityStats scenarioOfInterest = EnumPersonalityStats.None)
+    public void AddScenario(NeScenarioNode scenario, EnumPersonalityStats scenarioOfInterest = EnumPersonalityStats.None)
     {
         ScenarioMemoryEntry entry = new ScenarioMemoryEntry(scenario);
 
@@ -73,12 +204,12 @@ public class ScenarioMemory
 
     // Return a list of scenarios that the character can consider
     // Prioritizing the most recent scenarios first then grab rest from all scenarios
-    public List<RelationshipNode> GetConsideredScenarios(EnumPersonalityStats scenarioOfInterest = EnumPersonalityStats.None, float workingMemoryScenarioCapacity = 3, float fixatationScenarioTime = 50f)
+    public List<NeScenarioNode> GetConsideredScenarios(EnumPersonalityStats scenarioOfInterest = EnumPersonalityStats.None, float workingMemoryScenarioCapacity = 3, float fixatationScenarioTime = 50f)
     {
         UpdateRecentScenarios(fixatationScenarioTime);
 
-        var results = new List<RelationshipNode>();
-        var seen = new HashSet<RelationshipNode>(); // avoid duplicates
+        var results = new List<NeScenarioNode>();
+        var seen = new HashSet<NeScenarioNode>(); // avoid duplicates
 
         List<ScenarioMemoryEntry> AllScenariosOfInterest = AllScenarios;
         List<ScenarioMemoryEntry> RecentScenariosOfInterest = RecentScenarios;
@@ -154,6 +285,7 @@ public class CharacterPsyche
     public Dictionary<CharacterMainCPort, SubIdentifierNode> EnemiesCPortToSubNode = new Dictionary<CharacterMainCPort, SubIdentifierNode>();
     public EnumPersonalityStats BIdentity;
     public double OpportunismLevel;
+    public double PlanningFlexibility;
     public double RiskAversion;
     public double RewardCutoff;
     public double RiskCutoff;
@@ -169,9 +301,7 @@ public class CharacterPsyche
     public double AbstractInclination;
     //how many actions they can decide
     public int CognitiveStamina;
-    public List<RelationshipDecisionNode> L_LearnedResponseDecisions;
-    public List<RelationshipDecisionNode> NB_LearnedResponseDecisions;
-    public List<RelationshipDecisionNode> DB_LearnedResponseDecisions;
+    public DecisionMemory DecisionMemoryBank = new DecisionMemory();
     public ScenarioMemory ScenarioMemoryBank = new ScenarioMemory();
     public Dictionary<DecisionSO, int> Decision_Step_Tracker = new Dictionary<DecisionSO, int>();
 
@@ -193,6 +323,7 @@ public class CharacterPsyche
         EnemiesCPortToSubNode = characterPsycheSO.EnemiesCPortToSubNode;
         BIdentity = characterPsycheSO.BIdentity;
         OpportunismLevel = characterPsycheSO.OpportunismLevel;
+        PlanningFlexibility = characterPsycheSO.PlanningFlexibility;
         RiskAversion = characterPsycheSO.RiskAversion;
         RewardCutoff = characterPsycheSO.RewardCutoff;
         RiskCutoff = characterPsycheSO.RiskCutoff;
@@ -205,9 +336,7 @@ public class CharacterPsyche
         AbstractInclination = characterPsycheSO.AbstractInclination;
         PerspectiveAbility = characterPsycheSO.PerspectiveAbility;
         CognitiveStamina = characterPsycheSO.CognitiveStamina;
-        L_LearnedResponseDecisions = characterPsycheSO.L_LearnedResponseDecisions;
-        DB_LearnedResponseDecisions = characterPsycheSO.DB_LearnedResponseDecisions;
-        NB_LearnedResponseDecisions = characterPsycheSO.NB_LearnedResponseDecisions;
+        DecisionMemoryBank = characterPsycheSO.DecisionMemoryBank;
         ScenarioMemoryBank = characterPsycheSO.ScenarioMemoryBank;
 
         //Identifier Script Variables

@@ -22,13 +22,13 @@ public static class RepercussionFunctions
         float dbDelta = dbValue * learningRate;
         float nbDelta = nbValue * learningRate;
         Debug.Log("Changes in relationship: L value " + lDelta + " DB Value " + dbDelta + " NB Value " + nbDelta);
-        List<RelationshipNode> relationships = sourceNode.RelationshipNodes;
+        List<NeScenarioNode> relationships = sourceNode.RelationshipNodes;
 
-        RelationshipNode mainNode = null;
-        RelationshipNode actionNode = null;
+        NeScenarioNode mainNode = null;
+        NeScenarioNode actionNode = null;
 
         // Single pass: identify nodes that are main nodes (no actions) or the action node of interest
-        foreach (RelationshipNode node in relationships)
+        foreach (NeScenarioNode node in relationships)
         {
             if (node.ActionContext == EnumActionCharacteristics.Main)
                 mainNode = node;
@@ -50,10 +50,10 @@ public static class RepercussionFunctions
         else if(actionContext != EnumActionCharacteristics.Main) 
         {
             Debug.Log("No action node found and creating new one");
-            relationships.Add(new RelationshipNode(
+            relationships.Add(new NeScenarioNode(
                 actionContext.ToString(), new RelationshipValues(0,0,0),
                 new RelationshipValues(lDelta, dbDelta, nbDelta),
-                actionContext, null, 0, sourceNode));
+                actionContext, null, null, 0, sourceNode));
         }
 
         //Update or create Main (None) node
@@ -68,13 +68,14 @@ public static class RepercussionFunctions
         {
             Debug.Log("No main node found and creating new one");
             relationships.Add(
-                new RelationshipNode(
+                new NeScenarioNode(
                     "Main Node",
                     //PRValues
                     new RelationshipValues(0,0,0),
                     //ModRValues
                     new RelationshipValues(lDelta, dbDelta, nbDelta),
                     EnumActionCharacteristics.Main, 
+                    null,
                     null,
                     0,
                     sourceNode

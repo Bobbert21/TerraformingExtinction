@@ -30,7 +30,7 @@ public static class DMCalculationFunctions
         RegexOptions.Compiled);
     // Function to parse dynamic terms like N-ModR:L(E(1))
     //Could add F- or friend into this later on. Friend as target too
-    public static double ParseComplexTerm(Match match, CharacterMainCPort agent, CharacterMainCPort env, RelationshipNode envInAgentRPTNode)
+    public static double ParseComplexTerm(Match match, CharacterMainCPort agent, CharacterMainCPort env, NeScenarioNode envInAgentRPTNode)
     {
 
         if (!match.Success)
@@ -161,7 +161,7 @@ public static class DMCalculationFunctions
                     {
                         //Find the main relationship node which is context = none
                         SubIdentifierNode selfIdentifierNode = agent.characterPsyche.GetSelfSubIdentifier();
-                        RelationshipNode mainRelationshipNode = selfIdentifierNode.RelationshipNodes.FirstOrDefault(r => r.ActionContext == EnumActionCharacteristics.Main);
+                        NeScenarioNode mainRelationshipNode = selfIdentifierNode.RelationshipNodes.FirstOrDefault(r => r.ActionContext == EnumActionCharacteristics.Main);
 
                         targetInAgentRelationshipValues.Add(
                                 relationType switch
@@ -178,7 +178,7 @@ public static class DMCalculationFunctions
                         SubIdentifierNode envSubIdentifierNode = env.characterPsyche.GetSelfSubIdentifier();
                         SubIdentifierNode foundAgentInEnvRPT = AdaptiveIdentifierFunctions.FindSubidentifierNodeWithAppearanceAndAction(env.characterPsyche.RelationshipPersonalTree, envSubIdentifierNode.Parent.Identifier, agentAppearances, agentActions);
 
-                        RelationshipNode mainRelationshipNode = foundAgentInEnvRPT.RelationshipNodes.FirstOrDefault(r => r.ActionContext == EnumActionCharacteristics.Main);
+                        NeScenarioNode mainRelationshipNode = foundAgentInEnvRPT.RelationshipNodes.FirstOrDefault(r => r.ActionContext == EnumActionCharacteristics.Main);
 
                         targetInAgentRelationshipValues.Add(
                                 relationType switch
@@ -191,7 +191,7 @@ public static class DMCalculationFunctions
                     else if (entity == "N" && target == "N")
                     {
                         SubIdentifierNode envSubIdentifierNode = env.characterPsyche.GetSelfSubIdentifier();
-                        RelationshipNode mainRelationshipNode = envSubIdentifierNode.RelationshipNodes.FirstOrDefault(r => r.ActionContext == EnumActionCharacteristics.Main);
+                        NeScenarioNode mainRelationshipNode = envSubIdentifierNode.RelationshipNodes.FirstOrDefault(r => r.ActionContext == EnumActionCharacteristics.Main);
                         targetInAgentRelationshipValues.Add(
                                 relationType switch
                                 {
@@ -207,7 +207,7 @@ public static class DMCalculationFunctions
                         foreach (SubIdentifierNode enemyNode in targetEnemiesOrFriends)
                         {
                             //Get main RN (action context = none)
-                            RelationshipNode mainRelationshipNode = enemyNode.GetMainRelationshipNode();
+                            NeScenarioNode mainRelationshipNode = enemyNode.GetMainRelationshipNode();
                             if (mainRelationshipNode != null)
                             {
                                 targetInAgentRelationshipValues.Add(
@@ -400,7 +400,7 @@ public static class DMCalculationFunctions
         throw new ArgumentException($"Unable to parse simple term: {match}");
     }
 
-    public static double ParseEmpTerm(Match match, CharacterMainCPort agent, CharacterMainCPort env, RelationshipNode envInAgentRPTRelationshipNode)
+    public static double ParseEmpTerm(Match match, CharacterMainCPort agent, CharacterMainCPort env, NeScenarioNode envInAgentRPTRelationshipNode)
     {
         // Match the pattern "Emp(A-N)" or "Emp(N-A)"
         //NOTE: Could get rid of Emp(N-A). When is this ever going to be used??
@@ -455,7 +455,7 @@ public static class DMCalculationFunctions
 
     //get all the mod values for calculating formula/predictor adjusted with relationship value
     //Will use the relationship node of the env from the character's view
-    public static (double l, double db, double nb) ReturnModValuesWithCharacter(RelationshipNode envInCharacterRelationshipNode, double relationshipValueWithCharacter = 1)
+    public static (double l, double db, double nb) ReturnModValuesWithCharacter(NeScenarioNode envInCharacterRelationshipNode, double relationshipValueWithCharacter = 1)
     {
         RelationshipValues modRRelationshipValues = envInCharacterRelationshipNode.ModRValues;
         double l = modRRelationshipValues.LivelihoodValue * relationshipValueWithCharacter;
@@ -701,7 +701,7 @@ public static class DMCalculationFunctions
     //Ni decision making
     public static DMReturnPredictorCalculations CalculateSimplePositiveAndNegativePredictorChange(
         RelationshipValues modR, List<Perspective> perspectives, EnumPersonalityStats targetStat, AllStats allInitialStats, int habitCountDecision, 
-        CharacterMainCPort agent, CharacterMainCPort env, RelationshipNode envInAgentRPTNode)
+        CharacterMainCPort agent, CharacterMainCPort env, NeScenarioNode envInAgentRPTNode)
     {
         double largestPositivePredictorValue = double.MinValue;
         double largestNegativePredictorValue = double.MaxValue;
@@ -808,7 +808,7 @@ public static class DMCalculationFunctions
     //Change return value to class
     public static DMReturnPredictorCalculations CalculateComplexPositiveAndNegativePredictorChange(
         RelationshipValues goalModR, DecisionSO decisionSO, EnumPersonalityStats targetStat, AllStats allInitialStats, int habitCountDecision,
-        CharacterMainCPort agent, CharacterMainCPort env, RelationshipNode envInAgentRPTNode)
+        CharacterMainCPort agent, CharacterMainCPort env, NeScenarioNode envInAgentRPTNode)
     {
         double largestPositivePredictorValue = double.MinValue;
         double largestNegativePredictorValue = double.MaxValue;
@@ -1029,7 +1029,7 @@ public static class DMCalculationFunctions
     }
 
     public static (double predictor, double change) Translate_String_To_Formula_Calculations(string formula, string target, CharacterMainCPort agent,
-        CharacterMainCPort env, RelationshipNode envInAgentRPTNode)
+        CharacterMainCPort env, NeScenarioNode envInAgentRPTNode)
     {
 
         // Replace special terms in the formula

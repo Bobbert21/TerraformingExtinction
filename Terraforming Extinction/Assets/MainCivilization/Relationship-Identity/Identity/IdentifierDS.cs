@@ -25,7 +25,7 @@ public class IdentifierNode
     public EnumIdentifiers Identifier;
     public IdentifierNode Parent;
     public RelationshipPersonalTreeSO Tracker; // Reference to the parent ScriptableObject
-    public List<RelationshipNode> RelationshipNodes = new();
+    public List<NeScenarioNode> RelationshipNodes = new();
     public List<IdentifierNode> Children = new();
     public List<SubIdentifierNode> SubIdentifiers = new();
 
@@ -35,7 +35,7 @@ public class IdentifierNode
         {
             Identifier = this.Identifier,
             Tracker = newRPT,
-            RelationshipNodes = new List<RelationshipNode>(), // fill later
+            RelationshipNodes = new List<NeScenarioNode>(), // fill later
             Children = new List<IdentifierNode>(),
             SubIdentifiers = new List<SubIdentifierNode>()
         };
@@ -96,9 +96,9 @@ public class IdentifierNode
         }
     }
 
-    public void AddRelationshipNode(RelationshipNode relationshipNode)
+    public void AddRelationshipNode(NeScenarioNode relationshipNode)
     {
-        RelationshipNode existingRelationshipNode = RelationshipNodes.
+        NeScenarioNode existingRelationshipNode = RelationshipNodes.
             FirstOrDefault(r => r.ActionContext == relationshipNode.ActionContext);
 
         if (existingRelationshipNode != null)
@@ -110,7 +110,7 @@ public class IdentifierNode
         else
         {
             //Add deep copy
-            RelationshipNodes.Add(new RelationshipNode(relationshipNode, null, this));
+            RelationshipNodes.Add(new NeScenarioNode(relationshipNode, null, this));
         }
 
     }
@@ -125,9 +125,9 @@ public class SubIdentifierNode
     //Adopted values before zero point
     public List<ActionCharacteristicWithValue> LearningPeriodActionCharacteristicsWithValue = new();
     public List<AppearanceCharacteristicWithValue> LearningPeriodAppearanceCharacteristicsWithValue = new();
-    public List<RelationshipNode> RelationshipNodes = new();
+    public List<NeScenarioNode> RelationshipNodes = new();
     //adopted relationships values before zero value
-    public List<RelationshipNode> LearningPeriodRelationshipValues = new();
+    public List<NeScenarioNode> LearningPeriodRelationshipValues = new();
     public bool isZeroPoint = false;
     public bool isAnchor = false;
     public SubIdentifierNode Heuristic = null; 
@@ -162,9 +162,9 @@ public class SubIdentifierNode
         };
     }
 
-    public RelationshipNode GetMainRelationshipNode()
+    public NeScenarioNode GetMainRelationshipNode()
     {
-        RelationshipNode mainNode = RelationshipNodes
+        NeScenarioNode mainNode = RelationshipNodes
             .FirstOrDefault(r => r.ActionContext == EnumActionCharacteristics.Main);
 
         return mainNode;
@@ -226,9 +226,9 @@ public class SubIdentifierNode
     }
 
     //This is for mixing together relationship nodes when creating new collective node
-    public void AddRelationshipNode(RelationshipNode relationshipNode)
+    public void AddRelationshipNode(NeScenarioNode relationshipNode)
     {
-        RelationshipNode existingRelationshipNode = RelationshipNodes.
+        NeScenarioNode existingRelationshipNode = RelationshipNodes.
             FirstOrDefault(r => r.ActionContext == relationshipNode.ActionContext);
 
         if (existingRelationshipNode != null)
@@ -240,7 +240,7 @@ public class SubIdentifierNode
         else
         {
             //Add deep copy
-            RelationshipNodes.Add(new RelationshipNode(relationshipNode, this, null));
+            RelationshipNodes.Add(new NeScenarioNode(relationshipNode, this, null));
         }
     
     }

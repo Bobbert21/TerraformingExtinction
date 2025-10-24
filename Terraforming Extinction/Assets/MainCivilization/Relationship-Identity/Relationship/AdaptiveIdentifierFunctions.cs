@@ -650,11 +650,11 @@ public static class AdaptiveIdentifierFunctions
         //Mixing relationship nodes
         //Deep copy
         newCollectiveAnchor.RelationshipNodes = subIdentifierNode1.RelationshipNodes
-            .Select(rn => new RelationshipNode(rn, newCollectiveAnchor))
+            .Select(rn => new NeScenarioNode(rn, newCollectiveAnchor))
             .ToList();
 
 
-        foreach (RelationshipNode relationshipNode in subIdentifierNode1.RelationshipNodes)
+        foreach (NeScenarioNode relationshipNode in subIdentifierNode1.RelationshipNodes)
         {
             //Mixing means that it will add values together if they both exist in there
             newCollectiveAnchor.AddRelationshipNode(relationshipNode);

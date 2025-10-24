@@ -1,5 +1,6 @@
   using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 
 [System.Serializable]
@@ -55,8 +56,10 @@ public class RelationshipValues
     }
 }
 
+
+
 [System.Serializable]
-public class RelationshipNode
+public class NeScenarioNode
 {
     public string Name;
     public SubIdentifierNode ParentSubIdentifierNode;
@@ -64,14 +67,17 @@ public class RelationshipNode
     public RelationshipValues PRValues;
     public RelationshipValues ModRValues;
     public EnumActionCharacteristics ActionContext;
-    public List<RelationshipDecisionNode> ResponseNodes;
-    public List<RelationshipDecisionNode> ActionPlanNodes;
+    public List<NiDecisionNode> ResponseNodes;
+    public List<NiDecisionNode> ActionPlanNodes;
+    public List<(NeScenarioNode neNode, int habitCounter)> ProceedingScenarios = new();
+    public List<(NeScenarioNode neNode, int habitCounter)> PrecedingScenarios = new();
+
     public int HabitCounter;
 
-    public RelationshipNode() { }
+    public NeScenarioNode() { }
 
     //Copy constructor
-    public RelationshipNode(RelationshipNode other, SubIdentifierNode parentSubIdentifierNode = null, IdentifierNode parentIdentifierNode = null)
+    public NeScenarioNode(NeScenarioNode other, SubIdentifierNode parentSubIdentifierNode = null, IdentifierNode parentIdentifierNode = null)
     {
         Name = other.Name;
         ParentSubIdentifierNode = parentSubIdentifierNode;
@@ -79,29 +85,40 @@ public class RelationshipNode
         PRValues = new RelationshipValues(other.PRValues);  
         ModRValues = new RelationshipValues(other.ModRValues);
         ActionContext = other.ActionContext; // enums are value types, so direct copy is fine
-        ResponseNodes = new List<RelationshipDecisionNode>();
-        ActionPlanNodes = new List<RelationshipDecisionNode>();
+        ResponseNodes = new List<NiDecisionNode>();
+        ActionPlanNodes = new List<NiDecisionNode>();
+        //Deep copy the ProceedingScenarios list
+        ProceedingScenarios = other.ProceedingScenarios
+            .Select(ps => (ps.neNode != null ? new NeScenarioNode(ps.neNode, parentSubIdentifierNode, parentIdentifierNode) : null, ps.habitCounter))
+            .Where(t => t.Item1 != null) // skip nulls
+            .ToList();
 
-        if(other.ResponseNodes != null)
+        //Deep copy the PrecedingScenarios list
+        PrecedingScenarios = other.PrecedingScenarios
+            .Select(ps => (ps.neNode != null ? new NeScenarioNode(ps.neNode, parentSubIdentifierNode, parentIdentifierNode) : null, ps.habitCounter))
+            .Where(t => t.Item1 != null)
+            .ToList();
+
+        if (other.ResponseNodes != null)
         {
             foreach (var node in other.ResponseNodes)
             {
-                ResponseNodes.Add(new RelationshipDecisionNode(node, other));
+                ResponseNodes.Add(new NiDecisionNode(node, other));
             }
         }
         
     }
 
-    public RelationshipNode DeepCopy(SubIdentifierNode copyParentSubIdentifierNode = null, IdentifierNode copyParentIdentifierNode = null)
+    public NeScenarioNode DeepCopy(SubIdentifierNode copyParentSubIdentifierNode = null, IdentifierNode copyParentIdentifierNode = null)
     {
         // Create the new RelationshipNode shell first
-        var newNode = new RelationshipNode(
+        var newNode = new NeScenarioNode(
             Name,
             new RelationshipValues(PRValues),
             new RelationshipValues(ModRValues),
             ActionContext,
-            new List<RelationshipDecisionNode>(), // empty for now
-            new List<RelationshipDecisionNode>(),
+            new List<NiDecisionNode>(), // empty for now
+            new List<NiDecisionNode>(),
             HabitCounter,
             copyParentSubIdentifierNode,
             copyParentIdentifierNode
@@ -112,7 +129,7 @@ public class RelationshipNode
         {
             foreach (var response in ResponseNodes)
             {
-                newNode.ResponseNodes.Add(new RelationshipDecisionNode(response, newNode));
+                newNode.ResponseNodes.Add(new NiDecisionNode(response, newNode));
             }
         }
 
@@ -120,16 +137,17 @@ public class RelationshipNode
         {
             foreach (var actionPlan in ActionPlanNodes)
             {
-                newNode.ActionPlanNodes.Add(new RelationshipDecisionNode(actionPlan, newNode));
+                newNode.ActionPlanNodes.Add(new NiDecisionNode(actionPlan, newNode));
             }
         }
 
         return newNode;
     }
 
-    public RelationshipNode(string name, RelationshipValues pRValues, RelationshipValues modRValues, EnumActionCharacteristics actionContext, 
-        List<RelationshipDecisionNode> responseNodes, List<RelationshipDecisionNode> actionPlanNodes, int habitCounter = 0, SubIdentifierNode parentSubIdentifierNode = null, 
-        IdentifierNode parentIdentifierNode = null)
+    public NeScenarioNode(string name, RelationshipValues pRValues, RelationshipValues modRValues, EnumActionCharacteristics actionContext, 
+        List<NiDecisionNode> responseNodes, List<NiDecisionNode> actionPlanNodes, int habitCounter = 0, SubIdentifierNode parentSubIdentifierNode = null, 
+        IdentifierNode parentIdentifierNode = null, List<(NeScenarioNode neNode, int habitCounter)> proceedingScenarios = null,
+        List<(NeScenarioNode neNode, int habitCounter)> precedingScenarios = null)
     {
         Name = name;
         ParentSubIdentifierNode = parentSubIdentifierNode;
@@ -140,21 +158,23 @@ public class RelationshipNode
         ResponseNodes = responseNodes;
         ActionPlanNodes = actionPlanNodes;
         HabitCounter = habitCounter;
+        ProceedingScenarios = proceedingScenarios;
+        PrecedingScenarios = precedingScenarios;
     }
 }
 
 [System.Serializable]
-public class RelationshipDecisionNode
+public class NiDecisionNode
 {
     public DecisionSO Decision;
-    public RelationshipNode ParentRelationshipNode; 
+    public NeScenarioNode ParentNeScenarioNode; 
     public RelationshipValues ModRValues;
     public int HabitCounter;
 
-    public RelationshipDecisionNode(RelationshipDecisionNode other, RelationshipNode parentRelationshipNode) 
+    public NiDecisionNode(NiDecisionNode other, NeScenarioNode parentNeScenarioNode) 
     { 
         Decision = other.Decision;
-        ParentRelationshipNode = parentRelationshipNode;
+        ParentNeScenarioNode = parentNeScenarioNode;
         ModRValues = other.ModRValues;
         HabitCounter = other.HabitCounter;
     }

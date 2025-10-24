@@ -85,7 +85,7 @@ public class RelationshipNodeGraphWindow : EditorWindow
             // Add a new RelationshipNode to this IdentifierNode
             
             node.RelationshipNodes.Add(
-                new RelationshipNode
+                new NeScenarioNode
                     {
                         Name = "New Relationship",
                         PRValues = new RelationshipValues(),
@@ -214,7 +214,7 @@ public class RelationshipNodeGraphWindow : EditorWindow
 
     }
 
-    private void DrawRelationshipNode(RelationshipNode relationshipNode, Vector2 pos, Vector2 parentNodePos)
+    private void DrawRelationshipNode(NeScenarioNode relationshipNode, Vector2 pos, Vector2 parentNodePos)
     {
         Color originalColor = GUI.backgroundColor;
         GUI.backgroundColor = Color.red;

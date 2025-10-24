@@ -24,6 +24,7 @@ public class CharacterPsycheSO : ScriptableObject, ICharacterPsyche
     public EnumPersonalityStats BIdentity;
     //How much to consider stats not the lowest for Action Selection
     public double OpportunismLevel;
+    public double PlanningFlexibility;
     public double RiskAversion;
     public double RiskCutoff;
     public double RewardCutoff;
@@ -39,9 +40,7 @@ public class CharacterPsycheSO : ScriptableObject, ICharacterPsyche
     public double AbstractInclination;
     //how many actions they can decide
     public int CognitiveStamina;
-    public List<RelationshipDecisionNode> L_LearnedResponseDecisions;
-    public List<RelationshipDecisionNode> NB_LearnedResponseDecisions;
-    public List<RelationshipDecisionNode> DB_LearnedResponseDecisions;
+    public DecisionMemory DecisionMemoryBank = new DecisionMemory();
     public ScenarioMemory ScenarioMemoryBank = new ScenarioMemory();
    
     [Header("Identifier Script Variables")]

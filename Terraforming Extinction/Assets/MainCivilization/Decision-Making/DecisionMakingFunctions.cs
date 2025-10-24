@@ -17,12 +17,12 @@ public class ReturnDecision
     public double LargestNegativePredictorChange;
     public EnumPersonalityStats TargetPositiveStatOfInterest;
     public EnumPersonalityStats TargetNegativeStatOfInterest;
-    public RelationshipNode NePositiveDecision;
-    public RelationshipNode NeNegativeDecision;
+    public NeScenarioNode NePositiveDecision;
+    public NeScenarioNode NeNegativeDecision;
     public Perspective PositivePerspective;
     public Perspective NegativePerspective;
-    public RelationshipDecisionNode NiPositiveDecision;
-    public RelationshipDecisionNode NiNegativeDecision;
+    public NiDecisionNode NiPositiveDecision;
+    public NiDecisionNode NiNegativeDecision;
     public bool IsNiDecision = false;
     public bool IsNeDecision = false;
     public bool WillCommitAction = false;
@@ -31,7 +31,7 @@ public class ReturnDecision
     //Only for Ne Actions (can have both risky action and positive committed action)
     public bool HasRiskyAction = false;
 
-    public void SetNeValuesWithCommit(double largestPositivePredictorValue, double largestPositivePredictorChange, EnumPersonalityStats targetStatOfInterest, RelationshipNode nePositiveDecision)
+    public void SetNeValuesWithCommit(double largestPositivePredictorValue, double largestPositivePredictorChange, EnumPersonalityStats targetStatOfInterest, NeScenarioNode nePositiveDecision)
     {
         IsNeDecision = true;
         IsNiDecision = false;
@@ -44,7 +44,7 @@ public class ReturnDecision
         WillCommitAction = DecideCommitAction(IsRewardingEnough, IsSafeEnough);
     }
 
-    public void SetNeValuesWithoutCommitDueToNotRewarding(double largestPositivePredictorValue, double largestPositivePredictorChange, EnumPersonalityStats targetStatOfInterest, RelationshipNode nePositiveDecision)
+    public void SetNeValuesWithoutCommitDueToNotRewarding(double largestPositivePredictorValue, double largestPositivePredictorChange, EnumPersonalityStats targetStatOfInterest, NeScenarioNode nePositiveDecision)
     {
         IsNeDecision = true;
         IsNiDecision = false;
@@ -59,7 +59,7 @@ public class ReturnDecision
 
     //Ne can return with risky action along with committed positive action
     public void SetNeValuesWithRisk(double largestNegativePredictorValue, double largestNegativePredictorChange, EnumPersonalityStats targetNegativeStatOfInterest,
-        RelationshipNode neNegativeDecision)
+        NeScenarioNode neNegativeDecision)
     {
         IsNeDecision = true;
         IsNiDecision = false;
@@ -71,7 +71,7 @@ public class ReturnDecision
     }
 
     public void SetNiValuesWithCommit(double largestPositivePredictorValue, double largestPositivePredictorChange, 
-        EnumPersonalityStats targetStatOfInterest, RelationshipDecisionNode niDecision)
+        EnumPersonalityStats targetStatOfInterest, NiDecisionNode niDecision)
     {
         IsNeDecision = false;
         IsNiDecision = true;
@@ -84,7 +84,7 @@ public class ReturnDecision
         WillCommitAction = DecideCommitAction(IsRewardingEnough, IsSafeEnough);
     }
 
-    public void SetNiValuesWithoutCommitDueToNotRewarding(double largestPositivePredictorValue, double largestPositivePredictorChange, EnumPersonalityStats targetStatOfInterest, Perspective positivePerspective, RelationshipDecisionNode niPositiveDecision)
+    public void SetNiValuesWithoutCommitDueToNotRewarding(double largestPositivePredictorValue, double largestPositivePredictorChange, EnumPersonalityStats targetStatOfInterest, Perspective positivePerspective, NiDecisionNode niPositiveDecision)
     {
         IsNeDecision = false;
         IsNiDecision = true;
@@ -102,7 +102,7 @@ public class ReturnDecision
     public void SetNiValuesWithRisk(double largestPositivePredictorValue, double largestPositivePredictorChange, double largestNegativePredictorValue, 
         double largestNegativePredictorChange, EnumPersonalityStats targetPositiveStatOfInterest, EnumPersonalityStats targetNegativeStatOfInterest, 
         Perspective positivePerspective, Perspective negativePerspective, 
-        RelationshipDecisionNode niPositiveDecision, RelationshipDecisionNode niNegativeDecision)
+        NiDecisionNode niPositiveDecision, NiDecisionNode niNegativeDecision)
     {
         IsNeDecision = false;
         IsNiDecision = true;
@@ -197,11 +197,9 @@ public static class DecisionMakingFunctions
     }
 
 
-    
-
     //Predictor value, predictor change, stat of interest, and relationship node
-    public static ReturnDecision CalculateSiNeDecisions(List<RelationshipNode> neRelationshipNodes, EnumPersonalityStats statOfInterest, 
-        AllStats allInitialStats, CharacterPsyche characterPsyche)
+    public static ReturnDecision CalculateNeDecisions(List<NeScenarioNode> neRelationshipNodes, EnumPersonalityStats statOfInterest, 
+        AllStats allInitialStats, CharacterPsyche characterPsyche, bool isSiOrNiCrave)
     {
         // Order by habits
         neRelationshipNodes = neRelationshipNodes.OrderByDescending(rn => rn.HabitCounter).ToList();
@@ -209,15 +207,15 @@ public static class DecisionMakingFunctions
         double largestPositivePredictorChange = double.MinValue;
         double largestNegativePredictorValue = double.MaxValue;
         double largestNegativePredictorChange = double.MaxValue;
-        RelationshipNode largestNegativePredictorNode = null;
-        RelationshipNode largestPositivePredictorNode = null;
+        NeScenarioNode largestNegativePredictorNode = null;
+        NeScenarioNode largestPositivePredictorNode = null;
         EnumPersonalityStats largestPositivePredictorStat = statOfInterest; // Default to the stat of interest
         EnumPersonalityStats largestNegativePredictorStat = statOfInterest; // Default to the stat of interest
         int perspectivesExplored = 0;
 
         for(int i = 0; i < neRelationshipNodes.Count && i < characterPsyche.CognitiveStamina; i++)
         {
-            RelationshipNode neRelationshipNode = neRelationshipNodes[i];
+            NeScenarioNode neRelationshipNode = neRelationshipNodes[i];
             double changeValueOfInterest = 0;
             // Get the ModR values
             RelationshipValues modRValues = neRelationshipNode.ModRValues;
@@ -290,7 +288,7 @@ public static class DecisionMakingFunctions
             }
 
             //Adjust based on initial stats
-            //Not adjusted by habits nor survival stat
+            //Not adjusted by habits nor survival stat yet
             double predictorValueOfInterest = changeValueOfInterest + allInitialStats.StatOfInterest(statOfInterest);
 
             double adjustedChangeValueOfInterest = DMCalculationFunctions.ScaleSurvivalStatChange(changeValueOfInterest, allInitialStats.StatOfInterest(statOfInterest));
@@ -332,8 +330,8 @@ public static class DecisionMakingFunctions
 
                 //Adjust values based on initial and opportunism level
                 double adjustedChangeValue = DMCalculationFunctions.ScaleSurvivalStatChange(changeValue, allInitialStats.StatOfInterest(alternateStatPerspectiveValue.Key));
-                //Opportunism Adjustment debuffs because it's not target of interest
-                adjustedChangeValue = DMCalculationFunctions.OpportunismAdjustment(adjustedChangeValue, characterPsyche.OpportunismLevel);
+                //Opportunism Adjustment debuffs because it's not target of interest. Only used for Si and Ni crave
+                adjustedChangeValue = isSiOrNiCrave ? DMCalculationFunctions.OpportunismAdjustment(adjustedChangeValue, characterPsyche.OpportunismLevel) : adjustedChangeValue;
 
                 //Add habit contribution to m
                 double adjustedPositiveChangeValue = adjustedChangeValue + habitContribution;
@@ -388,10 +386,12 @@ public static class DecisionMakingFunctions
 
     }
 
+
     //Goes through all the decisions and perspectives for each decision
     //return predictor value, changebalue, personality stats of interest, and decision node
-    public static ReturnDecision CalculateSeNiDecisions(List<RelationshipDecisionNode> niResponseNodes, EnumPersonalityStats statOfInterest, 
-        AllStats allInitialStats, CharacterMainCPort agent, CharacterMainCPort env, RelationshipNode envInAgentRPTNode)
+    //Can use any crave type
+    public static ReturnDecision CalculateNiDecisions(List<NiDecisionNode> niResponseNodes, EnumPersonalityStats statOfInterest, 
+        AllStats allInitialStats, CharacterMainCPort agent, CharacterMainCPort env, NeScenarioNode envInAgentRPTNode)
     {
         // Order by habit counter
         niResponseNodes = niResponseNodes.OrderByDescending(rn => rn.HabitCounter).ToList();
@@ -400,8 +400,8 @@ public static class DecisionMakingFunctions
         double ultimateLargestPositivePredictorAdjustedChange = double.MinValue;
         double ultimateLargestNegativePredictorValue = double.MaxValue;
         double ultimateLargestNegativePredictorAdjustedChange = double.MaxValue;
-        RelationshipDecisionNode ultimateLargestPositivePredictorNode = null;
-        RelationshipDecisionNode ultimateLargestNegativePredictorNode = null;
+        NiDecisionNode ultimateLargestPositivePredictorNode = null;
+        NiDecisionNode ultimateLargestNegativePredictorNode = null;
         EnumPersonalityStats ultimateLargestPositivePredictorStat = statOfInterest; // Default to the stat of interest
         EnumPersonalityStats ultimateLargestNegativePredictorStat = statOfInterest; // Default to the stat of interest
         Perspective ultimateLargestPositivePredictorPerspective = null;
@@ -415,7 +415,7 @@ public static class DecisionMakingFunctions
             DMReturnPredictorCalculations dmReturnPredictorCalculations = new DMReturnPredictorCalculations(statOfInterest);
 
 
-            RelationshipDecisionNode niResponseNode = niResponseNodes[i];
+            NiDecisionNode niResponseNode = niResponseNodes[i];
             bool isComplexGoal = niResponseNode.Decision.DMType == DMTypes.Complex;
 
             //Goes through all the perspectives and picks the worst and best perspectives
@@ -570,7 +570,7 @@ public static class DecisionMakingFunctions
 
     //Can move to DM Functions
     //Env should be changed. This is for testing of character relationship with environment
-    public static (EnumPersonalityStats, double) FindStatOfInterest(CharacterMainCPort character, CharacterMainCPort env, RelationshipNode envRelationshipNodeInSelfRPT)
+    public static (EnumPersonalityStats, double) FindStatOfInterest(CharacterMainCPort character, CharacterMainCPort env, NeScenarioNode envRelationshipNodeInSelfRPT)
     {
         double L = character.characterPhysical.Stats.L;
         double B = 0;
@@ -596,7 +596,7 @@ public static class DecisionMakingFunctions
         foreach (CharacterMainCPort friendCPort in character.characterPsyche.FriendsCPortToSubNode.Keys)
         {
             SubIdentifierNode friendNode = character.characterPsyche.FriendsCPortToSubNode[friendCPort];
-            RelationshipNode friendRelationshipNode = friendNode.GetMainRelationshipNode();
+            NeScenarioNode friendRelationshipNode = friendNode.GetMainRelationshipNode();
             agentFriendPRScale = (friendRelationshipNode.ModRValues.NurtureBelongingValue + friendRelationshipNode.ModRValues.DefensiveBelongingValue) / 2;
             agentFriendPRScale /= 100;
 

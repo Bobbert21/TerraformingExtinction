@@ -193,9 +193,9 @@ public class RelationshipPersonalTree
                 }
 
                 //Transcend relationship
-                foreach (RelationshipNode relationshipNode in specificNode.RelationshipNodes)
+                foreach (NeScenarioNode relationshipNode in specificNode.RelationshipNodes)
                 {
-                    RelationshipNode newRelationshipNode = new RelationshipNode(relationshipNode, heuristicNode);
+                    NeScenarioNode newRelationshipNode = new NeScenarioNode(relationshipNode, heuristicNode);
 
                     //loop through pr and modr values and adjust them
                     //Create new array with PR and ModR and loop through them
@@ -213,9 +213,9 @@ public class RelationshipPersonalTree
             else
             {
                 //transcend to identifier node if there are no parent subidentifiers
-                foreach (RelationshipNode relationshipNode in specificNode.RelationshipNodes)
+                foreach (NeScenarioNode relationshipNode in specificNode.RelationshipNodes)
                 {
-                    RelationshipNode newRelationshipNode = new RelationshipNode(relationshipNode, null, specificNode.Parent);
+                    NeScenarioNode newRelationshipNode = new NeScenarioNode(relationshipNode, null, specificNode.Parent);
 
                     //loop through pr and modr values and adjust them
                     //Create new array with PR and ModR and loop through them
@@ -260,9 +260,9 @@ public class RelationshipPersonalTree
                 }
 
                 //Trickle relationship
-                foreach (RelationshipNode relationshipNode in heuristicNode.RelationshipNodes)
+                foreach (NeScenarioNode relationshipNode in heuristicNode.RelationshipNodes)
                 {
-                    RelationshipNode newRelationshipNode = new RelationshipNode(relationshipNode, specificNode);
+                    NeScenarioNode newRelationshipNode = new NeScenarioNode(relationshipNode, specificNode);
 
                     //loop through pr and modr values and adjust them
                     //Create new array with PR and ModR and loop through them
@@ -280,9 +280,9 @@ public class RelationshipPersonalTree
             //can only trickle relationship
             else
             {
-                foreach (RelationshipNode relationshipNode in specificNode.Parent.RelationshipNodes)
+                foreach (NeScenarioNode relationshipNode in specificNode.Parent.RelationshipNodes)
                 {
-                    RelationshipNode newRelationshipNode = new RelationshipNode(relationshipNode, specificNode);
+                    NeScenarioNode newRelationshipNode = new NeScenarioNode(relationshipNode, specificNode);
 
                     //loop through pr and modr values and adjust them
                     //Create new array with PR and ModR and loop through them

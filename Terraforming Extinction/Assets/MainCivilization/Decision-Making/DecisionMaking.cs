@@ -89,6 +89,14 @@ public enum CraveType
     Ni
 }
 
+public enum DecisionType
+{
+    Si,
+    Se,
+    Ne,
+    Ni
+}
+
 public class DecisionMaking : MonoBehaviour
 {
     private CharacterMainCPort selfMainCPort;
@@ -118,10 +126,10 @@ public class DecisionMaking : MonoBehaviour
         bool isUltimateActionNi = false;
         bool isSafeEnough = false;
         bool isRewardingEnough = false;
-        RelationshipNode ultimateNePositiveRelationshipNode = null;
-        RelationshipNode ultimateNeNegativeDecisionNode = null;
-        RelationshipDecisionNode ultimateNiPositiveDecisionNode = null;
-        RelationshipDecisionNode ultimateNiNegativeDecisionNode = null;
+        NeScenarioNode ultimateNePositiveRelationshipNode = null;
+        NeScenarioNode ultimateNeNegativeDecisionNode = null;
+        NiDecisionNode ultimateNiPositiveDecisionNode = null;
+        NiDecisionNode ultimateNiNegativeDecisionNode = null;
 
         CharacterPsyche selfPsyche = selfMainCPort.characterPsyche;
         CharacterPhysical selfPhysical = selfMainCPort.characterPhysical;
@@ -135,7 +143,7 @@ public class DecisionMaking : MonoBehaviour
 
             //Do I not use the env Subidentifier node?? It doesn't seem like it...
             SubIdentifierNode envSubIdentifier = envCPortToSubIdMap[envMainCPort].SubIdentifierNode;
-            RelationshipNode envRelationshipNode = envCPortToSubIdMap[envMainCPort].RelationshipNode;
+            NeScenarioNode envRelationshipNode = envCPortToSubIdMap[envMainCPort].RelationshipNode;
             //COHESIVE PLANNING
             //Si - Ne, Se - Ni
             //i.e. I am hungry, I'm thinking about the kitchen (Si - Ne)
@@ -161,26 +169,37 @@ public class DecisionMaking : MonoBehaviour
             };
 
             //Ni largest change
-            double niLChange = selfMainCPort.characterPsyche.L_LearnedResponseDecisions.Count > 0 ? 
-                DMCalculationFunctions.ScaleSurvivalStatChange(selfPsyche.L_LearnedResponseDecisions.First().ModRValues.LivelihoodValue, selfPhysical.Stats.L): 0;
-            double niDBChange = selfMainCPort.characterPsyche.DB_LearnedResponseDecisions.Count > 0 ?
-                DMCalculationFunctions.ScaleSurvivalStatChange(selfPsyche.DB_LearnedResponseDecisions.First().ModRValues.DefensiveBelongingValue, selfPhysical.Stats.DB) : 0;
-            double niNBChange = selfMainCPort.characterPsyche.NB_LearnedResponseDecisions.Count > 0 ? 
-                DMCalculationFunctions.ScaleSurvivalStatChange(selfPsyche.NB_LearnedResponseDecisions.First().ModRValues.NurtureBelongingValue, selfPhysical.Stats.NB) : 0;
+            //POTENTIAL CHANGE WITH NI AND NE. Instead of the most recent from each stat, just do the most recent any scenarios
+            DecisionMemory decisionMemoryBank = selfMainCPort.characterPsyche.DecisionMemoryBank;
+            List<NiDecisionNode> l_LearnedResponseDecisions = decisionMemoryBank.GetConsideredScenarios(EnumPersonalityStats.L, 1);
+            List<NiDecisionNode> db_LearnedResponseDecisions = decisionMemoryBank.GetConsideredScenarios(EnumPersonalityStats.DB, 1);
+            List<NiDecisionNode> nb_LearnedResponseDecisions = decisionMemoryBank.GetConsideredScenarios(EnumPersonalityStats.NB, 1);
 
-            double[] allNiModRValues =
+            double niLChange = l_LearnedResponseDecisions.Count > 0 ? 
+                DMCalculationFunctions.ScaleSurvivalStatChange(l_LearnedResponseDecisions.First().ModRValues.LivelihoodValue, selfPhysical.Stats.L): 0;
+            double niDBChange = db_LearnedResponseDecisions.Count > 0 ?
+                DMCalculationFunctions.ScaleSurvivalStatChange(db_LearnedResponseDecisions.First().ModRValues.DefensiveBelongingValue, selfPhysical.Stats.DB) : 0;
+            double niNBChange = nb_LearnedResponseDecisions.Count > 0 ? 
+                DMCalculationFunctions.ScaleSurvivalStatChange(nb_LearnedResponseDecisions.First().ModRValues.NurtureBelongingValue, selfPhysical.Stats.NB) : 0;
+
+            var allNiModRValues = new Dictionary<EnumPersonalityStats, double>
             {
-                niLChange,
-                niDBChange,
-                niNBChange
+                { EnumPersonalityStats.L ,niLChange },
+                {EnumPersonalityStats.DB, niDBChange },
+                {EnumPersonalityStats.NB, niNBChange }
             };
 
-            double largestNiChange = System.Math.Abs(allNiModRValues.OrderByDescending(v => System.Math.Abs(v)).First());
+            //Get the largest change of value
+            //Aggregate compares each 2 and slides window to the right
+            var largestNiChangeDict = allNiModRValues.Aggregate((l, r) => Math.Abs(l.Value) > Math.Abs(r.Value) ? l : r);
+            EnumPersonalityStats largestNiPersonalityStat = largestNiChangeDict.Key;
+
+            double largestNiChange = largestNiChangeDict.Value;
             ScenarioMemory scenarioMemoryBank = selfMainCPort.characterPsyche.ScenarioMemoryBank;
             //largest Ne Change scaled with survival
-            List<RelationshipNode> l_LearnedScenario = scenarioMemoryBank.GetConsideredScenarios(EnumPersonalityStats.L, 1);
-            List<RelationshipNode> db_LearnedScenario = scenarioMemoryBank.GetConsideredScenarios(EnumPersonalityStats.DB, 1);
-            List<RelationshipNode> nb_LearnedScenario = scenarioMemoryBank.GetConsideredScenarios(EnumPersonalityStats.NB, 1);
+            List<NeScenarioNode> l_LearnedScenario = scenarioMemoryBank.GetConsideredScenarios(EnumPersonalityStats.L, 1);
+            List<NeScenarioNode> db_LearnedScenario = scenarioMemoryBank.GetConsideredScenarios(EnumPersonalityStats.DB, 1);
+            List<NeScenarioNode> nb_LearnedScenario = scenarioMemoryBank.GetConsideredScenarios(EnumPersonalityStats.NB, 1);
 
             double neLChange = l_LearnedScenario.Count > 0 ? 
                 DMCalculationFunctions.ScaleSurvivalStatChange(l_LearnedScenario.First().ModRValues.LivelihoodValue, selfPhysical.Stats.L) : 0;
@@ -212,7 +231,7 @@ public class DecisionMaking : MonoBehaviour
             //Whether your hunger or friend's hunger focus should be based on empathy
 
             //can delete isInternalCrave (changed to craveType)
-            bool isInternalCrave = DecisionMakingFunctions.IsInternalCrave(selfMainCPort.characterPsyche.InternalMotivationLevel, lowestSiValue, largestSeChange, externalMotivationCutoff);
+            //bool isInternalCrave = DecisionMakingFunctions.IsInternalCrave(selfMainCPort.characterPsyche.InternalMotivationLevel, lowestSiValue, largestSeChange, externalMotivationCutoff);
             CraveType craveType = DecisionMakingFunctions.DetermineCraveType(lowestSiValue, largestNiChange, largestSeChange, largestNeChange, selfMainCPort.characterPsyche.InternalMotivationLevel, 
                 selfMainCPort.characterPsyche.AbstractInclination, externalMotivationCutoff);
             DebugManager.Instance?.SetActionSelectionDebugValue("Crave Type: ", craveType.ToString());
@@ -220,72 +239,151 @@ public class DecisionMaking : MonoBehaviour
             //2. Find the appropriate response (Ne or Ni) 
 
             //Get all the Decisions (done before) based on the env Relationship Node
-            List<RelationshipDecisionNode> niDecisionNodes = null;
-            List<RelationshipNode> neRelationshipNodes = null;
+            List<NiDecisionNode> niDecisionNodes = null;
+            List<NeScenarioNode> neRelationshipNodes = null;
 
-            //Getting the options from the crave
+            //--DECISION TYPE LOGIC--//
+            //Only do it without blurred
+            //TO-DO: Will need to implement the code above to below. Because will decide how to pick the decisions to pick from
+            DecisionType decisionType = DecisionType.Si;
+            System.Random rnd = new System.Random();
+
+            // Get a random integer between 1 (inclusive) and 101 (exclusive)
+            int chanceOfBlurryPlanning = rnd.Next(1, 101);
             if (craveType == CraveType.Si)
             {
-                //Ne
-
-                //To-Do: Incorporate Planning Flexibility Stat to not always be Ne (or Ni if external crave)
-                //To-Do: Figure out what to do if internal crave is Env's stats (i.e. my friend has low DB)
-
-                
-
-                if (lowestSiStatType == EnumPersonalityStats.L || lowestSiStatType == EnumPersonalityStats.NL)
+                DebugManager.Instance?.SetActionSelectionDebugValue("CraveType", "Si");
+                if(chanceOfBlurryPlanning <= selfMainCPort.characterPsyche.PlanningFlexibility)
                 {
-                    neRelationshipNodes = scenarioMemoryBank.GetConsideredScenarios(EnumPersonalityStats.L);
-                }
-                else if (lowestSiStatType == EnumPersonalityStats.DB || lowestSiStatType == EnumPersonalityStats.NDB)
-                {
-                    neRelationshipNodes = scenarioMemoryBank.GetConsideredScenarios(EnumPersonalityStats.DB);
-                }
-                else if (lowestSiStatType == EnumPersonalityStats.NB || lowestSiStatType == EnumPersonalityStats.NNB)
-                {
-                    neRelationshipNodes = scenarioMemoryBank.GetConsideredScenarios(EnumPersonalityStats.NB);
-                }
-
-            }
-            //External crave
-            else if (craveType == CraveType.Se)
-            {
-                //Ni
-                niDecisionNodes = envRelationshipNode.ResponseNodes;
-            }
-            
-            //Ne - Ni for now
-            else if (craveType == CraveType.Ne)
-            {
-                //Get all the relevant Ne of interest. Then get all the action plan nodes for them
-                List<RelationshipNode> neImagedScenario = scenarioMemoryBank.GetConsideredScenarios(largestNePersonalityStat);
-                foreach(RelationshipNode neScenario in neImagedScenario)
-                {
-                    if(neScenario.ActionPlanNodes != null && neScenario.ActionPlanNodes.Count > 0)
+                    //Blurry
+                    //Si - Ni
+                    decisionType = DecisionType.Ni;
+                    if (lowestSiStatType == EnumPersonalityStats.L || lowestSiStatType == EnumPersonalityStats.NL)
                     {
-                        if(niDecisionNodes == null)
-                        {
-                            niDecisionNodes = new List<RelationshipDecisionNode>();
-                        }
-                        niDecisionNodes.AddRange(neScenario.ActionPlanNodes);
+                        niDecisionNodes = decisionMemoryBank.GetConsideredScenarios(EnumPersonalityStats.L);
+                    }
+                    else if (lowestSiStatType == EnumPersonalityStats.DB || lowestSiStatType == EnumPersonalityStats.NDB)
+                    {
+                        niDecisionNodes = decisionMemoryBank.GetConsideredScenarios(EnumPersonalityStats.DB);
+                    }
+                    else if (lowestSiStatType == EnumPersonalityStats.NB || lowestSiStatType == EnumPersonalityStats.NNB)
+                    {
+                        niDecisionNodes = decisionMemoryBank.GetConsideredScenarios(EnumPersonalityStats.NB);
+                    }
+                }
+                else
+                {
+                    //Cohesive
+                    //Si - Ne
+                    decisionType = DecisionType.Ne;
+                    //To-Do: Figure out what to do if internal crave is Env's stats (i.e. my friend has low DB)
+
+                    if (lowestSiStatType == EnumPersonalityStats.L || lowestSiStatType == EnumPersonalityStats.NL)
+                    {
+                        neRelationshipNodes = scenarioMemoryBank.GetConsideredScenarios(EnumPersonalityStats.L);
+                    }
+                    else if (lowestSiStatType == EnumPersonalityStats.DB || lowestSiStatType == EnumPersonalityStats.NDB)
+                    {
+                        neRelationshipNodes = scenarioMemoryBank.GetConsideredScenarios(EnumPersonalityStats.DB);
+                    }
+                    else if (lowestSiStatType == EnumPersonalityStats.NB || lowestSiStatType == EnumPersonalityStats.NNB)
+                    {
+                        neRelationshipNodes = scenarioMemoryBank.GetConsideredScenarios(EnumPersonalityStats.NB);
                     }
                 }
             }
-
-                //Action Selection Logic 
-
-                //Si - Ne
-            if (craveType == CraveType.Si)
+            else if (craveType == CraveType.Se)
             {
-                //TO-DO: Will start to pass incoherent and blurry planning which will require changes in implementation (since not all of the time it is Si)
+                DebugManager.Instance?.SetActionSelectionDebugValue("CraveType", "Se");
+                if(chanceOfBlurryPlanning <= selfMainCPort.characterPsyche.PlanningFlexibility)
+                {
+                    //Blurry
+                    //Se - Ne
+                    decisionType = DecisionType.Ne;
+                }
 
+
+                if(chanceOfBlurryPlanning > selfMainCPort.characterPsyche.PlanningFlexibility)
+                {
+                    //Cohesive
+                    //Se - Ni
+                    niDecisionNodes = envRelationshipNode.ResponseNodes;
+                    decisionType = DecisionType.Ni;
+                }
+            }
+            else if (craveType == CraveType.Ni)
+            {
+                DebugManager.Instance?.SetActionSelectionDebugValue("CraveType", "Ni");
+                if(chanceOfBlurryPlanning <= selfMainCPort.characterPsyche.PlanningFlexibility)
+                {
+                    //Blurry
+                    //Ni - Ni
+                    decisionType = DecisionType.Ni;
+                }
+                else
+                {
+                    //Cohesive
+                    //Ni - Ne
+                    decisionType = DecisionType.Ne;
+                    //Find Ne nodes to consider based on highest Ni change stat
+                    if (largestNiPersonalityStat == EnumPersonalityStats.L || largestNiPersonalityStat == EnumPersonalityStats.NL)
+                    {
+                        neRelationshipNodes = scenarioMemoryBank.GetConsideredScenarios(EnumPersonalityStats.L);
+                    }
+                    else if (largestNiPersonalityStat == EnumPersonalityStats.DB || largestNiPersonalityStat == EnumPersonalityStats.NDB)
+                    {
+                        neRelationshipNodes = scenarioMemoryBank.GetConsideredScenarios(EnumPersonalityStats.DB);
+                    }
+                    else if (largestNiPersonalityStat == EnumPersonalityStats.NB || largestNiPersonalityStat == EnumPersonalityStats.NNB)
+                    {
+                        neRelationshipNodes = scenarioMemoryBank.GetConsideredScenarios(EnumPersonalityStats.NB);
+                    }
+                }
+            }
+            else if(craveType == CraveType.Ne)
+            {
+                DebugManager.Instance?.SetActionSelectionDebugValue("CraveType", "Ne");
+                if(chanceOfBlurryPlanning <= selfMainCPort.characterPsyche.PlanningFlexibility)
+                {
+                    //Blurry
+                    //Ne - Ne
+                    decisionType = DecisionType.Ne;
+                }
+                else
+                {
+                    //Cohesive
+                    //Ne - Ni
+                    decisionType = DecisionType.Ni;
+                    //Get all the relevant Ne of interest. Then get all the action plan nodes for them
+                    List<NeScenarioNode> neImagedScenario = scenarioMemoryBank.GetConsideredScenarios(largestNePersonalityStat);
+                    foreach (NeScenarioNode neScenario in neImagedScenario)
+                    {
+                        if (neScenario.ActionPlanNodes != null && neScenario.ActionPlanNodes.Count > 0)
+                        {
+                            if (niDecisionNodes == null)
+                            {
+                                niDecisionNodes = new List<NiDecisionNode>();
+                            }
+                            niDecisionNodes.AddRange(neScenario.ActionPlanNodes);
+                        }
+                    }
+                }
+            } 
+
+            //---DECISION CALCULATION LOGIC---//
+
+            //Si - Ne
+            //Ni - Ne
+            //Once I do Ne - Ne, then I will need to eliminate the opportunism
+            if (decisionType == DecisionType.Ne)
+            {
                 Stats selfStats = selfMainCPort.characterPhysical.Stats;
                 Stats envStats = envMainCPort.characterPhysical.Stats;
                 AllStats allInitialStats = new AllStats(selfStats.L, selfStats.DB, selfStats.NB, envStats.L, envStats.DB, envStats.NB);
-
+                bool isSiOrNiCrave = (craveType == CraveType.Si || craveType == CraveType.Ni);
                 //Original return: (largestPositivePredictorValue, largestPositivePredictorChange, targetStatType, neDecisionNode)
                 //Accounts for habits, opportunism, risk aversion, and reward cutoff
-                ReturnDecision returnSiNeDecision = DecisionMakingFunctions.CalculateSiNeDecisions(neRelationshipNodes, lowestSiStatType, allInitialStats, selfMainCPort.characterPsyche);
+                ReturnDecision returnSiNeDecision = DecisionMakingFunctions.CalculateNeDecisions(neRelationshipNodes, lowestSiStatType, allInitialStats, selfMainCPort.characterPsyche, isSiOrNiCrave);
 
                 //Commit action
                 //To-Do: Make this more abstracted so i'm not setting this manually (instead it will just be a function)
@@ -344,9 +442,10 @@ public class DecisionMaking : MonoBehaviour
                 }
             }
             //Se - Ni
-
+            //Ne - Ni
+            //Once I do Ne - Ne, then I will need to include the opportunism
             //Should have action selection be decision be Ni
-            else if (craveType == CraveType.Se)
+            else if (decisionType == DecisionType.Ni)
             {
                 //1. Pass through the action nodes and crave stat
                 //2. Get the largest change from the crave stat with function
@@ -356,7 +455,7 @@ public class DecisionMaking : MonoBehaviour
                 Stats envStats = envMainCPort.characterPhysical.Stats;
 
                 AllStats allInitialStats = new AllStats(selfStats.L, selfStats.DB, selfStats.NB, envStats.L, envStats.DB, envStats.NB);
-                ReturnDecision returnSeNiDecision = DecisionMakingFunctions.CalculateSeNiDecisions(niDecisionNodes, lowestSiStatType, allInitialStats, selfMainCPort, envMainCPort, envRelationshipNode);
+                ReturnDecision returnSeNiDecision = DecisionMakingFunctions.CalculateNiDecisions(niDecisionNodes, lowestSiStatType, allInitialStats, selfMainCPort, envMainCPort, envRelationshipNode);
 
 
                 if (returnSeNiDecision.IsNiDecision)
@@ -375,7 +474,7 @@ public class DecisionMaking : MonoBehaviour
                             isUltimateActionNi = true;
                             isSafeEnough = returnSeNiDecision.IsSafeEnough;
                             isRewardingEnough = returnSeNiDecision.IsRewardingEnough;
-                            DebugManager.Instance?.SetActionSelectionDebugValue("Planning Style", "Safe and Reward Se-Ni");
+                            DebugManager.Instance?.SetActionSelectionDebugValue("Decision Type", "Safe and Reward Ni");
                             DebugManager.Instance?.SetActionSelectionDebugValue("Largest Positive Predictor Change", ultimateLargestPositivePredictorChange);
                             DebugManager.Instance?.SetActionSelectionDebugValue("Largest Positive Predictor Value", ultimateLargestPositivePredictorValue);
                             DebugManager.Instance?.SetActionSelectionDebugValue("Largest Negative Predictor Change", ultimateLargestNegativePredictorChange);
@@ -401,7 +500,7 @@ public class DecisionMaking : MonoBehaviour
                             ultimateNiNegativeDecisionNode = returnSeNiDecision.NiNegativeDecision;
                             isSafeEnough = false;
                             isUltimateActionNi = true;
-                            DebugManager.Instance?.SetActionSelectionDebugValue("Planning Style", "Too Risky Se-Ni");
+                            DebugManager.Instance?.SetActionSelectionDebugValue("Decision Type", "Too Risky Ni");
                             DebugManager.Instance?.SetActionSelectionDebugValue("Largest Positive Predictor Change", ultimateLargestPositivePredictorChange);
                             DebugManager.Instance?.SetActionSelectionDebugValue("Largest Positive Predictor Value", ultimateLargestPositivePredictorValue);
                             DebugManager.Instance?.SetActionSelectionDebugValue("Largest Negative Predictor Change", ultimateLargestNegativePredictorChange);
@@ -421,7 +520,7 @@ public class DecisionMaking : MonoBehaviour
                         ultimateNiPositiveDecisionNode = returnSeNiDecision.NiPositiveDecision;
                         isRewardingEnough = false;
                         //Debug.Log("No rewarding decisions found for Si - Ne action selection.");
-                        DebugManager.Instance?.SetActionSelectionDebugValue("Planning Style", "No rewarding decisions found for Se-Ni");
+                        DebugManager.Instance?.SetActionSelectionDebugValue("Decision Type", "No rewarding decisions found for Ni");
                         DebugManager.Instance?.SetActionSelectionDebugValue("Largest Positive Predictor Change", ultimateLargestPositivePredictorChange);
                         DebugManager.Instance?.SetActionSelectionDebugValue("Largest Positive Predictor Value", ultimateLargestPositivePredictorValue);
                         DebugManager.Instance?.SetActionSelectionDebugValue("Positive Target Stat Type", ultimatePositiveTargetStatType.ToString());
@@ -432,6 +531,7 @@ public class DecisionMaking : MonoBehaviour
                 {
                     Debug.LogWarning("Se - Ni decision node is not a Ni decision. This should not happen in the current implementation.");
                 }
+
 
             }
 
