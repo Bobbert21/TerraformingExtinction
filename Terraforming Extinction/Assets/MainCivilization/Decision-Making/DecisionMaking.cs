@@ -131,6 +131,9 @@ public class DecisionMaking : MonoBehaviour
         NiDecisionNode ultimateNiPositiveDecisionNode = null;
         NiDecisionNode ultimateNiNegativeDecisionNode = null;
 
+        DecisionSO instinctDecision = null;
+        double largestInstinctChangeAboveTrigger = double.MinValue;
+
         CharacterPsyche selfPsyche = selfMainCPort.characterPsyche;
         CharacterPhysical selfPhysical = selfMainCPort.characterPhysical;
 
@@ -160,13 +163,21 @@ public class DecisionMaking : MonoBehaviour
             (EnumPersonalityStats lowestSiStatType, double lowestSiValue) = DecisionMakingFunctions.FindStatOfInterest(selfMainCPort, envMainCPort, envRelationshipNode);
 
             //External: Largest env change
-            double[] allSeModRValues =
+            double seLChange = DMCalculationFunctions.ScaleSurvivalStatChange(envRelationshipNode.ModRValues.LivelihoodValue, selfPhysical.Stats.L);
+            double seDBChange = DMCalculationFunctions.ScaleSurvivalStatChange(envRelationshipNode.ModRValues.DefensiveBelongingValue, selfPhysical.Stats.DB);
+            double seNBChange = DMCalculationFunctions.ScaleSurvivalStatChange(envRelationshipNode.ModRValues.NurtureBelongingValue, selfPhysical.Stats.NB);
+
+            var allSeModRValues = new Dictionary<EnumPersonalityStats, double>
             {
-                //scale with survival
-                DMCalculationFunctions.ScaleSurvivalStatChange(envRelationshipNode.ModRValues.LivelihoodValue, selfPhysical.Stats.L),
-                DMCalculationFunctions.ScaleSurvivalStatChange(envRelationshipNode.ModRValues.DefensiveBelongingValue, selfPhysical.Stats.DB),
-                DMCalculationFunctions.ScaleSurvivalStatChange(envRelationshipNode.ModRValues.NurtureBelongingValue, selfPhysical.Stats.NB)
+                { EnumPersonalityStats.L ,seLChange },
+                {EnumPersonalityStats.DB, seDBChange },
+                {EnumPersonalityStats.NB, seNBChange }
             };
+
+            //Get largest change (whether positive or negative)
+            var largestSeChangeDict = allSeModRValues.Aggregate((l, r) => Math.Abs(l.Value) > Math.Abs(r.Value) ? l : r);
+            double largestSeChange = largestSeChangeDict.Value;
+            EnumPersonalityStats largestSePersonalityStat = largestSeChangeDict.Key;
 
             //Ni largest change
             //POTENTIAL CHANGE WITH NI AND NE. Instead of the most recent from each stat, just do the most recent any scenarios
@@ -222,9 +233,8 @@ public class DecisionMaking : MonoBehaviour
             double largestNeChange = largestNeChangeDict.Value;
             EnumPersonalityStats largestNePersonalityStat = largestNeChangeDict.Key;
 
-            //Get largest change (whether positive or negative)
-            double largestSeChange = System.Math.Abs(allSeModRValues.OrderByDescending(v => System.Math.Abs(v)).First());
             
+
             //Note: Even if considering env stats, will be considered internal
             //i.e. Friend's hunger is internal and Friend yelling at you is external
             //If internal, you are more worried about your friend being hungry rather than them yelling at you right now
@@ -232,10 +242,79 @@ public class DecisionMaking : MonoBehaviour
 
             //can delete isInternalCrave (changed to craveType)
             //bool isInternalCrave = DecisionMakingFunctions.IsInternalCrave(selfMainCPort.characterPsyche.InternalMotivationLevel, lowestSiValue, largestSeChange, externalMotivationCutoff);
-            CraveType craveType = DecisionMakingFunctions.DetermineCraveType(lowestSiValue, largestNiChange, largestSeChange, largestNeChange, selfMainCPort.characterPsyche.InternalMotivationLevel, 
+            CraveType craveType = DecisionMakingFunctions.DetermineCraveType(lowestSiValue, largestNiChange, largestSeChange, largestNeChange, selfMainCPort.characterPsyche.RiskAversion, selfMainCPort.characterPsyche.InternalMotivationLevel, 
                 selfMainCPort.characterPsyche.AbstractInclination, externalMotivationCutoff);
-            DebugManager.Instance?.SetActionSelectionDebugValue("Crave Type: ", craveType.ToString());
-            DebugManager.Instance?.SetActionSelectionDebugValue("Target stat type", lowestSiStatType);
+
+            //-----INSTINCT INCORPORATION HERE (After determining crave importance)-----//
+            // Check if it hits the trigger and if not below the limit
+            if(craveType != CraveType.Si)
+            {
+
+                var craveChanges = new Dictionary<CraveType, double>
+                {
+                    { CraveType.Se, largestSeChange },
+                    { CraveType.Ne, largestNeChange },
+                    { CraveType.Ni, largestNiChange }
+                };
+
+                var craveStats = new Dictionary<CraveType, EnumPersonalityStats>
+                {
+                    { CraveType.Se, largestSePersonalityStat },
+                    { CraveType.Ne, largestNePersonalityStat },
+                    { CraveType.Ni, largestNiPersonalityStat }
+                };
+
+                double craveChange = craveChanges[craveType];
+                EnumPersonalityStats craveStat = craveStats[craveType];
+
+                DebugManager.Instance?.SetActionSelectionDebugValue("Crave state type detection in instinct: ", craveStat + " Crave change: " + craveChange);
+
+
+                //Finds the instinct with the largest change from trigger
+                foreach (InstinctSO instinct in selfMainCPort.characterPsyche.Instincts)
+                {
+                    Debug.Log("Instinct into loop: " + instinct.name + " and crave stat: " + craveStat);
+                    var impulsiveControl = instinct.ImpulsiveControlCutoff.Find(c => c.Stat == craveStat);
+
+                    if (impulsiveControl != null) {
+                        bool controlUpperLimit = impulsiveControl.UpperLimit;
+                        double adjustedControlLimit = impulsiveControl.Limit * (200 - selfPsyche.ImpulsiveControlLevel) / 100;
+
+                        if (!PassesLimitCheck(craveChange, adjustedControlLimit, controlUpperLimit))
+                        {
+                            continue;
+                        }
+                    }
+                    
+
+                    var impulsiveTrigger = instinct.Triggers.Find(t => t.Stat == craveStat);
+                    
+                    if (impulsiveTrigger == null) continue;
+                    bool triggersWhenAbove = impulsiveTrigger.TriggersWhenAbove;
+
+                    double adjustedTriggerValue = impulsiveTrigger.Value * selfPsyche.ImpulsiveInclinationLevel / 100;
+                    Debug.Log("Adjusted Trigger Value: " + adjustedTriggerValue);
+                    //Inverse the trigger above because a triggersWhenAbove 
+                    if (PassesLimitCheck(craveChange, adjustedTriggerValue, !triggersWhenAbove))
+                    {
+                        if(Math.Abs(craveChange - adjustedTriggerValue) > largestInstinctChangeAboveTrigger){
+                            instinctDecision = instinct.Decision;
+                            largestInstinctChangeAboveTrigger = Math.Abs(craveChange - adjustedTriggerValue);
+                            Debug.Log("Instinct Selected: " + instinctDecision.name);
+                        }
+                        
+                    }
+                }
+            }
+
+            //If an instinct decision was made, skip the rest of the action selection and check next instinct
+            if (instinctDecision != null)
+            {
+                continue;
+            }
+
+
+
             //2. Find the appropriate response (Ne or Ni) 
 
             //Get all the Decisions (done before) based on the env Relationship Node
@@ -243,7 +322,6 @@ public class DecisionMaking : MonoBehaviour
             List<NeScenarioNode> neRelationshipNodes = null;
 
             //--DECISION TYPE LOGIC--//
-            //Only do it without blurred
             //TO-DO: Will need to implement the code above to below. Because will decide how to pick the decisions to pick from
             DecisionType decisionType = DecisionType.Si;
             System.Random rnd = new System.Random();
@@ -368,19 +446,20 @@ public class DecisionMaking : MonoBehaviour
                         }
                     }
                 }
-            } 
+            }
 
             //---DECISION CALCULATION LOGIC---//
 
             //Si - Ne
             //Ni - Ne
             //Once I do Ne - Ne, then I will need to eliminate the opportunism
+            bool isSiOrNiCrave = (craveType == CraveType.Si || craveType == CraveType.Ni);
             if (decisionType == DecisionType.Ne)
             {
                 Stats selfStats = selfMainCPort.characterPhysical.Stats;
                 Stats envStats = envMainCPort.characterPhysical.Stats;
                 AllStats allInitialStats = new AllStats(selfStats.L, selfStats.DB, selfStats.NB, envStats.L, envStats.DB, envStats.NB);
-                bool isSiOrNiCrave = (craveType == CraveType.Si || craveType == CraveType.Ni);
+                
                 //Original return: (largestPositivePredictorValue, largestPositivePredictorChange, targetStatType, neDecisionNode)
                 //Accounts for habits, opportunism, risk aversion, and reward cutoff
                 ReturnDecision returnSiNeDecision = DecisionMakingFunctions.CalculateNeDecisions(neRelationshipNodes, lowestSiStatType, allInitialStats, selfMainCPort.characterPsyche, isSiOrNiCrave);
@@ -455,7 +534,7 @@ public class DecisionMaking : MonoBehaviour
                 Stats envStats = envMainCPort.characterPhysical.Stats;
 
                 AllStats allInitialStats = new AllStats(selfStats.L, selfStats.DB, selfStats.NB, envStats.L, envStats.DB, envStats.NB);
-                ReturnDecision returnSeNiDecision = DecisionMakingFunctions.CalculateNiDecisions(niDecisionNodes, lowestSiStatType, allInitialStats, selfMainCPort, envMainCPort, envRelationshipNode);
+                ReturnDecision returnSeNiDecision = DecisionMakingFunctions.CalculateNiDecisions(niDecisionNodes, lowestSiStatType, allInitialStats, selfMainCPort, envMainCPort, envRelationshipNode, isSiOrNiCrave);
 
 
                 if (returnSeNiDecision.IsNiDecision)
@@ -541,6 +620,11 @@ public class DecisionMaking : MonoBehaviour
         //Can test final output
         //Final output
 
+        if (instinctDecision) { 
+            DebugManager.Instance?.SetActionSelectionDebugValue("Instinct Decision Selected", instinctDecision.name);
+            DebugManager.Instance?.SetActionSelectionDebugValue("Instinct Decision Change Above Trigger", largestInstinctChangeAboveTrigger);
+        }
+
         //Ni
         if (isUltimateActionNi)
         {
@@ -566,8 +650,20 @@ public class DecisionMaking : MonoBehaviour
             
 
     }
-
-
+    private bool PassesLimitCheck(
+    double change,
+    double limit,
+    bool upperLimit
+    )
+    {
+        return upperLimit
+            ? change <= limit   // upper limit: must be below
+            : change >= limit;  // lower limit: must be above
     }
+
+}
+
+    
+
 
     

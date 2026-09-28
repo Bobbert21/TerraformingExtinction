@@ -698,10 +698,15 @@ public static class DMCalculationFunctions
         return delta * (1 + (max - current) / max);
     }
 
+    public static double RiskAdjustment(double changeValue, double riskAversionLevel)
+    {
+        return changeValue * riskAversionLevel/40;
+    }
+
     //Ni decision making
     public static DMReturnPredictorCalculations CalculateSimplePositiveAndNegativePredictorChange(
         RelationshipValues modR, List<Perspective> perspectives, EnumPersonalityStats targetStat, AllStats allInitialStats, int habitCountDecision, 
-        CharacterMainCPort agent, CharacterMainCPort env, NeScenarioNode envInAgentRPTNode)
+        CharacterMainCPort agent, CharacterMainCPort env, NeScenarioNode envInAgentRPTNode, bool isSiOrNiCrave)
     {
         double largestPositivePredictorValue = double.MinValue;
         double largestNegativePredictorValue = double.MaxValue;
@@ -766,6 +771,12 @@ public static class DMCalculationFunctions
 
             Debug.Log(sortedHabitPerspectives[i].Name + " predictor value: " + predictorValue + " Change value: " + changeValue + "adjusted change value: " + adjustedChangeValue);
 
+            if (isSiOrNiCrave)
+            {
+                adjustedChangeValue = OpportunismAdjustment(adjustedChangeValue, agent.characterPsyche.OpportunismLevel);
+            }
+
+
             //Add the habit contribution from both the decision and the perspective
             double habitDecisionContribution = HabitContribution(habitCountDecision, agent.characterPsyche.MaxHabitCounter, agent.characterPsyche.HabitualTendencies);
             double habitPerspectiveContribution = HabitContribution(sortedHabitPerspectives[i].HabitCounter, agent.characterPsyche.MaxHabitCounter, agent.characterPsyche.HabitualTendencies);
@@ -808,7 +819,7 @@ public static class DMCalculationFunctions
     //Change return value to class
     public static DMReturnPredictorCalculations CalculateComplexPositiveAndNegativePredictorChange(
         RelationshipValues goalModR, DecisionSO decisionSO, EnumPersonalityStats targetStat, AllStats allInitialStats, int habitCountDecision,
-        CharacterMainCPort agent, CharacterMainCPort env, NeScenarioNode envInAgentRPTNode)
+        CharacterMainCPort agent, CharacterMainCPort env, NeScenarioNode envInAgentRPTNode, bool isSiOrNiCrave)
     {
         double largestPositivePredictorValue = double.MinValue;
         double largestNegativePredictorValue = double.MaxValue;
@@ -847,14 +858,15 @@ public static class DMCalculationFunctions
 
 
         //get the targetStat change that matters
-        for (int i = 0; i < sortedHabitGoalPerspectives.Count && i <= agent.characterPsyche.PerspectiveAbility; i++)
+        //CONSIDER: The goal perspective only looks at the target stat and not any other ones
+        for (int i = 0; i <= sortedHabitGoalPerspectives.Count && i <= agent.characterPsyche.PerspectiveAbility; i++)
         {
             string target;
             double predictorValue = 0;
             double changeValue = 0;
 
-            //if doesn't go through all perspectives, will consider ModR
-            if (i == agent.characterPsyche.PerspectiveAbility)
+            //if doesn't go through all perspectives or goes through all of it (so essentially will always do this), will consider Goal ModR of target
+            if (i == agent.characterPsyche.PerspectiveAbility || i == sortedHabitActionPerspectives.Count)
             {
                 target = targetStat.ToString();
                 switch (target)
@@ -977,6 +989,12 @@ public static class DMCalculationFunctions
 
 
             double adjustedChangeValue = ScaleSurvivalStatChange(changeValue, allInitialStats.StatOfInterest(target));
+
+            //Opportunism adjustment
+            if(isSiOrNiCrave)
+            {
+                adjustedChangeValue = OpportunismAdjustment(adjustedChangeValue, agent.characterPsyche.OpportunismLevel);
+            }
 
             //Get habit contribution
             double habitDecisionContribution = HabitContribution(decisionSO.HabitCounter, agent.characterPsyche.MaxHabitCounter, agent.characterPsyche.HabitualTendencies);

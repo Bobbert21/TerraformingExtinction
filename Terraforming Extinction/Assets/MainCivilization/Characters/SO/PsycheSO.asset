@@ -16,48 +16,42 @@ MonoBehaviour:
   FriendsRanked: []
   EnemiesRanked: []
   BIdentity: 2
-  OpportunismLevel: 90
+  OpportunismLevel: 100
+  PlanningFlexibility: 0
   RiskAversion: 10
-  RiskCutoff: 10
-  RewardCutoff: 10
-  EmpathyLevel: 10
-  SelfEfficacy: 10
+  RiskCutoff: 20
+  RewardCutoff: 5
+  EmpathyLevel: 0
+  SelfEfficacy: 20
   ProgressInclination: 10
-  InternalMotivationLevel: 1
+  InternalMotivationLevel: 30
   MaxHabitCounter: 10
   HabitualTendencies: 50
   PerspectiveAbility: 60
+  AbstractInclination: 0
+  Instincts:
+  - {fileID: 11400000, guid: 16a855613734a8c4a948120d8e424a2f, type: 2}
+  ImpulsiveControlLevel: 5
+  ImpulsiveInclinationLevel: 90
   CognitiveStamina: 7
-  L_LearnedResponseDecisions: []
-  NB_LearnedResponseDecisions: []
-  DB_LearnedResponseDecisions: []
-  L_LearnedEnvironment:
-  - Name: 
-    PRValues:
-      DefensiveBelongingValue: 0
-      NurtureBelongingValue: 0
-      LivelihoodValue: 0
-    ModRValues:
-      DefensiveBelongingValue: 0
-      NurtureBelongingValue: 0
-      LivelihoodValue: 0
-    ActionContext: 0
-    ResponseNodes: []
-    HabitCounter: 0
-  NB_LearnedEnvironment: []
-  DB_LearnedEnvironment:
-  - Name: Battle Cage
-    PRValues:
-      DefensiveBelongingValue: 0
-      NurtureBelongingValue: 0
-      LivelihoodValue: 0
-    ModRValues:
-      DefensiveBelongingValue: 20
-      NurtureBelongingValue: 0
-      LivelihoodValue: 0
-    ActionContext: 1
-    ResponseNodes: []
-    HabitCounter: 0
+  DecisionMemoryBank:
+    AllDecisions: []
+    RecentDecisions: []
+    LRecentDecisions: []
+    NBRecentDecisions: []
+    DBRecentDecisions: []
+    LDecisions: []
+    NBDecisions: []
+    DBDecisions: []
+  ScenarioMemoryBank:
+    AllScenarios: []
+    RecentScenarios: []
+    LRecentScenarios: []
+    NBRecentScenarios: []
+    DBRecentScenarios: []
+    LScenarios: []
+    NBScenarios: []
+    DBScenarios: []
   ProcessingSpeed: 1
   AwarenessLevel: 100
   DistinctiveAbility: 0

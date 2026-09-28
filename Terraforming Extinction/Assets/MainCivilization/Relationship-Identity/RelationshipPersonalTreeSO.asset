@@ -17,6 +17,29 @@ MonoBehaviour:
     Tracker: {fileID: 0}
     RelationshipNodes:
     - Name: Main Node
+      ParentSubIdentifierNode:
+        SubIdentifierName: 
+        ActionCharacteristicsWithValue: []
+        AppearanceCharacteristicsWithValue: []
+        LearningPeriodActionCharacteristicsWithValue: []
+        LearningPeriodAppearanceCharacteristicsWithValue: []
+        RelationshipNodes: []
+        LearningPeriodRelationshipValues: []
+        isZeroPoint: 0
+        isAnchor: 0
+        Specifics: []
+        Parent:
+          Identifier: 0
+          Tracker: {fileID: 0}
+          RelationshipNodes: []
+          Children: []
+          SubIdentifiers: []
+      ParentIdentifierNode:
+        Identifier: 0
+        Tracker: {fileID: 0}
+        RelationshipNodes: []
+        Children: []
+        SubIdentifiers: []
       PRValues:
         DefensiveBelongingValue: 0
         NurtureBelongingValue: 0
@@ -28,11 +51,49 @@ MonoBehaviour:
       ActionContext: 0
       ResponseNodes:
       - Decision: {fileID: 11400000, guid: e5f0aecc9f8ecae49965c64877c30a6b, type: 2}
+        ParentNeScenarioNode:
+          Name: 
+          ParentSubIdentifierNode:
+            SubIdentifierName: 
+            ActionCharacteristicsWithValue: []
+            AppearanceCharacteristicsWithValue: []
+            LearningPeriodActionCharacteristicsWithValue: []
+            LearningPeriodAppearanceCharacteristicsWithValue: []
+            RelationshipNodes: []
+            LearningPeriodRelationshipValues: []
+            isZeroPoint: 0
+            isAnchor: 0
+            Specifics: []
+            Parent:
+              Identifier: 0
+              Tracker: {fileID: 0}
+              RelationshipNodes: []
+              Children: []
+              SubIdentifiers: []
+          ParentIdentifierNode:
+            Identifier: 0
+            Tracker: {fileID: 0}
+            RelationshipNodes: []
+            Children: []
+            SubIdentifiers: []
+          PRValues:
+            DefensiveBelongingValue: 0
+            NurtureBelongingValue: 0
+            LivelihoodValue: 0
+          ModRValues:
+            DefensiveBelongingValue: 0
+            NurtureBelongingValue: 0
+            LivelihoodValue: 0
+          ActionContext: 0
+          ResponseNodes: []
+          ActionPlanNodes: []
+          HabitCounter: 0
         ModRValues:
           DefensiveBelongingValue: 0
-          NurtureBelongingValue: -60
-          LivelihoodValue: -60
+          NurtureBelongingValue: 60
+          LivelihoodValue: 60
         HabitCounter: 0
+      ActionPlanNodes: []
       HabitCounter: 0
     Children:
     - Identifier: 4

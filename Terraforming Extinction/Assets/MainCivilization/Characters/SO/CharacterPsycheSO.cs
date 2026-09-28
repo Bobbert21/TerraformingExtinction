@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using JetBrains.Annotations;
 using UnityEngine;
 
 
@@ -39,6 +40,19 @@ public class CharacterPsycheSO : ScriptableObject, ICharacterPsyche
     //Consideration of abstract concepts vs. concrete concepts
     public double AbstractInclination;
     //how many actions they can decide
+    //Instincts
+    public List<InstinctSO> Instincts;
+
+    //Adjust the instinct cutoff
+    public double ImpulsiveControlLevel;
+    //Adjust the instinct personality trigger value. How likely to do instinct
+    public double ImpulsiveInclinationLevel;
+
+    //Learning Variables
+    public double ExpectationLearningThreshold;
+    public double GroundedLearningThreshold;
+
+
     public int CognitiveStamina;
     public DecisionMemory DecisionMemoryBank = new DecisionMemory();
     public ScenarioMemory ScenarioMemoryBank = new ScenarioMemory();

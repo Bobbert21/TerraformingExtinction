@@ -137,16 +137,34 @@ public class ReturnDecision
 public static class DecisionMakingFunctions 
 {
 
-    private static double FulcrumStatScale = 30;
+    //private static double FulcrumStatScale = 30;
 
     public static CraveType DetermineCraveType(double lowestSi, double largestNi, double largestSe, 
-        double largestNe, double internalMotivationLevel, double abstractInclination, double cutOff)
+        double largestNe, double riskAversionLevel, double internalMotivationLevel, double abstractInclination, double cutOff)
     {
         //Everything except Si is considered external since even Ni is based on an abstract external self
         //Si: If all other values are below the cutoff
         //Ne: Greatest value after internal motivation adjustment and abstract inclination
         //Ni: Greatest value after internal motivation adjustment and abstract inclination
         //S2: Greatest value
+
+        Debug.Log("Determining Crave Type with values - lowestSi: " + lowestSi + ", largestNi: " + largestNi + ", largestSe: " + largestSe + ", largestNe: " + largestNe +
+            ", internalMotivationLevel: " + internalMotivationLevel + ", abstractInclination: " + abstractInclination + ", cutOff: " + cutOff);
+
+        //Risk Adjustments if the values are negative
+        if(largestNe < 0)
+        {
+            largestNe = DMCalculationFunctions.RiskAdjustment(largestNe, riskAversionLevel);
+        }
+
+        if(largestNi < 0)
+        {
+            largestNi = DMCalculationFunctions.RiskAdjustment(largestNi, riskAversionLevel);
+        }
+        
+        if(largestSe < 0) {
+            largestSe = DMCalculationFunctions.RiskAdjustment(largestSe, riskAversionLevel);
+        }
 
         double internalMotivationFactor = (100 - internalMotivationLevel) / 50.0;
         double siFactor = (100 - lowestSi) / 50.0;
@@ -161,19 +179,23 @@ public static class DecisionMakingFunctions
         double largestAdjustedNi = largestNi * abstractModifier * internalModifier;
         double largestAdjustedNe = largestNe * abstractModifier * internalModifier;
 
-        double largestValue = Math.Max(largestAdjustedNi, Math.Max(largestAdjustedNe, largestSe));
+        //Absolute values of these
+        double largestValue = Math.Max(Math.Abs(largestAdjustedNi), Math.Max(Math.Abs(largestAdjustedNe), Math.Abs(largestSe)));
+
+        Debug.Log("Largest value calculation - largestAdjustedNi: " + largestAdjustedNi + ", largestAdjustedNe: " + largestAdjustedNe + ", largestSe: " + largestSe + ", largestValue: " + largestValue +
+            ", adjustedConcreteCutoff: " + adjustedConcreteCutoff);
 
         //if the largest value is not above the cutoff, then Si
-        if(largestValue < adjustedConcreteCutoff)
+        if (largestValue < adjustedConcreteCutoff)
         {
             return CraveType.Si;
         }
 
-        if (largestValue == largestSe)
+        if (largestValue == Math.Abs(largestSe))
         {
             return CraveType.Se;
         }
-        else if(largestValue == largestAdjustedNe)
+        else if(largestValue == Math.Abs(largestAdjustedNe))
         {
             return CraveType.Ne;
         }
@@ -361,7 +383,7 @@ public static class DecisionMakingFunctions
         //Check if goes above the reward inclination
         //Check if risk is above risk cutoff
 
-        double largestNegativePredictorAdjustedChangeWithRisk = largestNegativePredictorChange * characterPsyche.RiskAversion;
+        double largestNegativePredictorAdjustedChangeWithRisk = DMCalculationFunctions.RiskAdjustment(largestNegativePredictorChange, characterPsyche.RiskAversion);
         ReturnDecision returnDecision = new ReturnDecision();
 
         //Input risking decision (can have both risky and commited decision)
@@ -391,9 +413,14 @@ public static class DecisionMakingFunctions
     //return predictor value, changebalue, personality stats of interest, and decision node
     //Can use any crave type
     public static ReturnDecision CalculateNiDecisions(List<NiDecisionNode> niResponseNodes, EnumPersonalityStats statOfInterest, 
-        AllStats allInitialStats, CharacterMainCPort agent, CharacterMainCPort env, NeScenarioNode envInAgentRPTNode)
+        AllStats allInitialStats, CharacterMainCPort agent, CharacterMainCPort env, NeScenarioNode envInAgentRPTNode, bool isSiOrNiCrave)
     {
         // Order by habit counter
+        if(niResponseNodes == null || niResponseNodes.Count == 0)
+        {
+            Debug.LogWarning("No Ni response nodes to consider.");
+            return null;
+        }
         niResponseNodes = niResponseNodes.OrderByDescending(rn => rn.HabitCounter).ToList();
 
         double ultimateLargestPositivePredictorValue = double.MinValue;
@@ -424,19 +451,19 @@ public static class DecisionMakingFunctions
             {
                dmReturnPredictorCalculations = DMCalculationFunctions.CalculateComplexPositiveAndNegativePredictorChange(niResponseNode.ModRValues, 
                    niResponseNode.Decision, statOfInterest, allInitialStats, 
-                    niResponseNode.Decision.HabitCounter, agent, env, envInAgentRPTNode);
+                    niResponseNode.Decision.HabitCounter, agent, env, envInAgentRPTNode, isSiOrNiCrave);
             }
             else
             {
                 dmReturnPredictorCalculations =
                     DMCalculationFunctions.CalculateSimplePositiveAndNegativePredictorChange(niResponseNode.ModRValues, niResponseNode.Decision.Perspectives, statOfInterest, allInitialStats, 
-                    niResponseNode.Decision.HabitCounter, agent, env, envInAgentRPTNode);
+                    niResponseNode.Decision.HabitCounter, agent, env, envInAgentRPTNode, isSiOrNiCrave);
             }
 
             //Calculate reward and risk cutoffs for all these decision's perspectives to see if worth 
             //Pick best safe and rewarding actions
             //Adjust based on 40
-            double largestNegativePredictorAdjustedChangeWithRisk = dmReturnPredictorCalculations.largestNegativePredictorAdjustedChange * agent.characterPsyche.RiskAversion/40;
+            double largestNegativePredictorAdjustedChangeWithRisk = DMCalculationFunctions.RiskAdjustment(dmReturnPredictorCalculations.largestNegativePredictorAdjustedChange, agent.characterPsyche.RiskAversion);
 
             if(dmReturnPredictorCalculations.largestPositivePredictorAdjustedChange > Math.Abs(largestNegativePredictorAdjustedChangeWithRisk))
             {

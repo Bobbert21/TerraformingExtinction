@@ -31,16 +31,18 @@ public class IdentityDetector : MonoBehaviour
 
     private CharacterMainCPort selfMainCPort;
     private DecisionMaking decisionMaking;
+    private TriggerProcessing triggerProcessing;
     private List<CharacterMainCPort> envMainCPorts;
     private double timePassed = 0;
 
     //Get all the surrounding env then process all the identifiers and pass it to DM
     private void Start()
     {
-        if(IsDebugging == false)
+        if (IsDebugging == false)
         {
             selfMainCPort = GetComponent<CharacterMainCPort>();
             decisionMaking = GetComponent<DecisionMaking>();
+            triggerProcessing = GetComponent<TriggerProcessing>();
 
             selfMainCPort.Initialize();
 
@@ -54,7 +56,16 @@ public class IdentityDetector : MonoBehaviour
                 Debug.Log("characterPsyche is null — it may not have been initialized in CharacterMainCPort.Awake()");
             }
 
+            if (triggerProcessing == null)
+            {
+                Debug.Log("triggerProcessing is null — is TriggerProcessing on this GameObject?");
 
+            }
+
+            if (decisionMaking == null)
+            {
+                Debug.Log("decisionMaking is null — is DecisionMaking on this GameObject?");
+            }
         }
         
     }
@@ -120,12 +131,17 @@ public class IdentityDetector : MonoBehaviour
             Dictionary<CharacterMainCPort, SubIdentifierRelationshipNodeInfo> envCPortToSubIdMap = new Dictionary<CharacterMainCPort, SubIdentifierRelationshipNodeInfo>();
             foreach (CharacterMainCPort envMainCPort in envMainCPorts)
             {
+                List<EnumActionCharacteristics> characterActions = new List<EnumActionCharacteristics>
+                {
+                    envMainCPort.characterPhysical.ActionCommitting
+                };
+                
                 //This is the subidentifier node of the env found in self's relationship personal tree
                 //To-do: Convert this to a class to pass to
                 SubIdentifierNode foundEnvSubIdentifierInRPT = RunSingle(
                     envMainCPort.Name,
                     envMainCPort.characterPhysical.appearanceCharacteristics,
-                    envMainCPort.characterPhysical.actionCharacteristics,
+                    characterActions,
                     envMainCPort.characterPhysical.Identifier,
                     selfMainCPort.characterPsyche.RelationshipPersonalTree,
                     selfMainCPort.characterPsyche.DistinctiveAbility,
@@ -135,14 +151,16 @@ public class IdentityDetector : MonoBehaviour
                     selfMainCPort.characterPsyche.GeneralizationLevel
                 );
 
-                //This is the relationship node from the identifier node
+                //This is the relationship node from the identifier node (with action context)
                 NeScenarioNode foundRelationshipNodeFromEnv = findRelationshipNode(foundEnvSubIdentifierInRPT, envMainCPort.characterPhysical.ActionCommitting);
 
                 envCPortToSubIdMap[envMainCPort] = new SubIdentifierRelationshipNodeInfo(foundEnvSubIdentifierInRPT, foundRelationshipNodeFromEnv);
 
                 
             }
-
+            //Calls for potential learning (Expectation)
+            triggerProcessing.CheckExpectationalTrigger(envCPortToSubIdMap);
+            triggerProcessing.CheckGroundedTrigger(envCPortToSubIdMap);
             decisionMaking.ActionSelection(envCPortToSubIdMap);
         }
 
@@ -154,7 +172,7 @@ public class IdentityDetector : MonoBehaviour
 
         foreach (NeScenarioNode relationshipNode in relationshipNodes) 
         { 
-            if(relationshipNode.ActionContext == actionCommitting)
+            if(relationshipNode.ActionContext == actionCommitting)  
             {
                 return relationshipNode;
             }

@@ -88,16 +88,22 @@ public class NeScenarioNode
         ResponseNodes = new List<NiDecisionNode>();
         ActionPlanNodes = new List<NiDecisionNode>();
         //Deep copy the ProceedingScenarios list
-        ProceedingScenarios = other.ProceedingScenarios
+        if(other.ProceedingScenarios != null)
+            ProceedingScenarios = other.ProceedingScenarios
             .Select(ps => (ps.neNode != null ? new NeScenarioNode(ps.neNode, parentSubIdentifierNode, parentIdentifierNode) : null, ps.habitCounter))
             .Where(t => t.Item1 != null) // skip nulls
             .ToList();
+        else
+            ProceedingScenarios = new List<(NeScenarioNode neNode, int habitCounter)>();
 
         //Deep copy the PrecedingScenarios list
-        PrecedingScenarios = other.PrecedingScenarios
-            .Select(ps => (ps.neNode != null ? new NeScenarioNode(ps.neNode, parentSubIdentifierNode, parentIdentifierNode) : null, ps.habitCounter))
-            .Where(t => t.Item1 != null)
-            .ToList();
+        if (other.PrecedingScenarios != null)
+            PrecedingScenarios = other.PrecedingScenarios
+                .Select(ps => (ps.neNode != null ? new NeScenarioNode(ps.neNode, parentSubIdentifierNode, parentIdentifierNode) : null, ps.habitCounter))
+                .Where(t => t.Item1 != null)
+                .ToList();
+        else
+            PrecedingScenarios = new List<(NeScenarioNode neNode, int habitCounter)>();
 
         if (other.ResponseNodes != null)
         {

@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using UnityEngine;
 
 
+
+[System.Serializable]
 public class DecisionMemoryEntry
 {
     public float LastConsideredTime;
@@ -15,6 +17,7 @@ public class DecisionMemoryEntry
     }
 }
 
+[System.Serializable]
 public class DecisionMemory
 {
     public List<DecisionMemoryEntry> AllDecisions = new List<DecisionMemoryEntry>();
@@ -133,6 +136,7 @@ public class DecisionMemory
 }
 
 
+[System.Serializable]
 public class ScenarioMemoryEntry
 {
     public float LastConsideredTime;
@@ -145,6 +149,8 @@ public class ScenarioMemoryEntry
     }
 }
 
+
+[System.Serializable]
 //These are for craves
 public class ScenarioMemory
 {
@@ -301,6 +307,17 @@ public class CharacterPsyche
     public double AbstractInclination;
     //how many actions they can decide
     public int CognitiveStamina;
+    public List<InstinctSO> Instincts;
+
+    //Adjust the instinct cutoff
+    public double ImpulsiveControlLevel;
+    //Adjust the instinct personality trigger value
+    public double ImpulsiveInclinationLevel;
+
+    //Learning Variables
+    public double ExpectationLearningThreshold;
+    public double GroundedLearningThreshold;
+
     public DecisionMemory DecisionMemoryBank = new DecisionMemory();
     public ScenarioMemory ScenarioMemoryBank = new ScenarioMemory();
     public Dictionary<DecisionSO, int> Decision_Step_Tracker = new Dictionary<DecisionSO, int>();
@@ -338,6 +355,24 @@ public class CharacterPsyche
         CognitiveStamina = characterPsycheSO.CognitiveStamina;
         DecisionMemoryBank = characterPsycheSO.DecisionMemoryBank;
         ScenarioMemoryBank = characterPsycheSO.ScenarioMemoryBank;
+
+        //Clone the instincts instead of monobehavior inheritance
+        Instincts = new List<InstinctSO>();
+        foreach (var instinct in characterPsycheSO.Instincts)
+        {
+            if (instinct == null) continue;
+            var clone = Object.Instantiate(instinct);   // <— Use UnityEngine.Object.Instantiate
+            Instincts.Add(clone);
+        }
+
+        //Adjust the instinct cutoff
+        ImpulsiveControlLevel = characterPsycheSO.ImpulsiveControlLevel;
+        //Adjust the instinct personality trigger value
+        ImpulsiveInclinationLevel = characterPsycheSO.ImpulsiveInclinationLevel;
+
+        //Learning Variables
+        ExpectationLearningThreshold = characterPsycheSO.ExpectationLearningThreshold;
+        GroundedLearningThreshold = characterPsycheSO.GroundedLearningThreshold;
 
         //Identifier Script Variables
         ProcessingSpeed = characterPsycheSO.ProcessingSpeed;

@@ -12,6 +12,7 @@ public static class RepercussionFunctions
     public static void ImplementRepercussion(
          SubIdentifierNode sourceNode,
          EnumActionCharacteristics actionContext,
+         TriggerProcessing triggerProcessing,
          float lValue = 0,
          float dbValue = 0,
          float nbValue = 0,
@@ -82,7 +83,10 @@ public static class RepercussionFunctions
                     )
                 );
         }
-        
+
+        //Process the triggers
+        triggerProcessing.CheckGroundedTrigger(lValue, dbValue, nbValue);
+
     }
 
 }
